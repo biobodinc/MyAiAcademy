@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PhaseNotice } from "@/components/PhaseNotice";
 import { fetchLatestRelease, formatSize, type Platform } from "@/lib/releases";
@@ -30,6 +31,18 @@ export default async function DownloadPage() {
           The desktop app bundles the local AI service; nothing phones home.
         </p>
       </div>
+
+      <PhaseNotice phase={1}>
+        Until signed installers exist, use the{" "}
+        <Link className="underline" href="/cli">
+          command-line interface
+        </Link>{" "}
+        from a source checkout. Read the{" "}
+        <Link className="underline" href="/disclosures">
+          disclosures
+        </Link>{" "}
+        first.
+      </PhaseNotice>
 
       {release ? (
         <p className="text-sm text-fg-muted">
