@@ -22,6 +22,7 @@ from myai_core.models.catalog import (
     all_catalog_models,
     get_catalog_model,
 )
+from myai_core.models.download import IMPORTED, UNVERIFIED, VERIFICATION_LABELS
 from myai_core.schemas import ApiModel
 from myai_core.storage import StorageCategory, StorageManager
 
@@ -64,7 +65,15 @@ class ModelEntry(ApiModel):
     license_accepted: bool
     file_path: str | None
     size_bytes: int | None
-    verified_sha256: str | None
+    file_sha256: str | None = Field(
+        default=None, description="The hash computed on download. Not proof of verification."
+    )
+    verification: str | None = Field(
+        default=None, description="What that hash was checked against, if anything."
+    )
+    verification_detail: str | None = Field(
+        default=None, description="A sentence the UI can show verbatim."
+    )
     fit: HardwareFit
     download: DownloadStatus | None
 
@@ -233,7 +242,11 @@ class ModelService:
                     license_accepted=model.id in accepted,
                     file_path=installed.file_path if installed else None,
                     size_bytes=installed.size_bytes if installed else None,
-                    verified_sha256=installed.sha256 if installed else None,
+                    file_sha256=installed.sha256 if installed else None,
+                    verification=installed.verified_against if installed else None,
+                    verification_detail=(
+                        VERIFICATION_LABELS.get(installed.verified_against) if installed else None
+                    ),
                     fit=hardware_fit(model, hardware),
                     download=DownloadStatus.model_validate(download)
                     if download and download.status in {"queued", "running", "verifying", "failed"}
@@ -256,7 +269,9 @@ class ModelService:
                     license_accepted=True,
                     file_path=row.file_path,
                     size_bytes=row.size_bytes,
-                    verified_sha256=row.sha256,
+                    file_sha256=row.sha256,
+                    verification=row.verified_against,
+                    verification_detail=VERIFICATION_LABELS.get(row.verified_against),
                     fit=fit_for_size(row.size_bytes, hardware),
                     download=None,
                 )
@@ -316,6 +331,7 @@ class ModelService:
             file_path=str(dest),
             size_bytes=size,
             sha256=digest,
+            verified_against=IMPORTED,
             license_id=USER_SUPPLIED.id,
         )
         self._session.add(row)
@@ -376,7 +392,12 @@ class ModelService:
         return model, self.target_path(model), job
 
     def record_installed(
-        self, model: CatalogModel, path: Path, size_bytes: int, sha256: str | None
+        self,
+        model: CatalogModel,
+        path: Path,
+        size_bytes: int,
+        sha256: str | None,
+        verified_against: str = UNVERIFIED,
     ) -> InstalledModel:
         row = InstalledModel(
             id=model.id,
@@ -385,6 +406,7 @@ class ModelService:
             file_path=str(path),
             size_bytes=size_bytes,
             sha256=sha256,
+            verified_against=verified_against,
             license_id=model.license.id,
         )
         self._session.merge(row)

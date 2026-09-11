@@ -180,6 +180,9 @@ class InstalledModel(Base):
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    """The hash we computed while downloading. Present even when nothing verified it."""
+    verified_against: Mapped[str] = mapped_column(String(24), nullable=False, default="none")
+    """What ``sha256`` was checked against: pinned, publisher-hash, host-etag or none."""
     license_id: Mapped[str] = mapped_column(String(64), nullable=False)
     installed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

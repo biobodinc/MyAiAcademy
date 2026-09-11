@@ -487,6 +487,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/models/{model_id}/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Source Info
+         * @description Ask the host what it declares for this file. Downloads nothing.
+         */
+        get: operations["source_info_api_models__model_id__source_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/models/active": {
         parameters: {
             query?: never;
@@ -1718,6 +1738,11 @@ export interface components {
             download: components["schemas"]["DownloadStatus"] | null;
             /** File Path */
             file_path: string | null;
+            /**
+             * File Sha256
+             * @description The hash computed on download. Not proof of verification.
+             */
+            file_sha256: string | null;
             fit: components["schemas"]["HardwareFit"];
             /** Id */
             id: string;
@@ -1735,8 +1760,16 @@ export interface components {
              * @enum {string}
              */
             source: "catalog" | "imported";
-            /** Verified Sha256 */
-            verified_sha256: string | null;
+            /**
+             * Verification
+             * @description What that hash was checked against, if anything.
+             */
+            verification: string | null;
+            /**
+             * Verification Detail
+             * @description A sentence the UI can show verbatim.
+             */
+            verification_detail: string | null;
         };
         /** ModelIdBody */
         ModelIdBody: {
@@ -1765,6 +1798,45 @@ export interface components {
             summary: string;
             /** Url */
             url: string;
+        };
+        /**
+         * ModelSourceInfo
+         * @description What the file host declares for a catalog model, without downloading it.
+         *
+         *     Exists because a download that fails its integrity check is otherwise impossible to
+         *     diagnose from the outside: this shows whether the publisher actually publishes a
+         *     content hash for the file, and what the host's own ETag is.
+         */
+        ModelSourceInfo: {
+            /**
+             * Etag Sha256
+             * @description The host's ETag when it looks like a SHA-256. Advisory only.
+             */
+            etag_sha256: string | null;
+            /** Final Url */
+            final_url: string;
+            /** Model Id */
+            model_id: string;
+            /** Note */
+            note: string;
+            /**
+             * Pinned Sha256
+             * @description The hash pinned in our catalog.
+             */
+            pinned_sha256: string | null;
+            /**
+             * Publisher Sha256
+             * @description A hash the publisher promises. A mismatch fails a download.
+             */
+            publisher_sha256: string | null;
+            /** Size Bytes */
+            size_bytes: number | null;
+            /** Status Code */
+            status_code: number;
+            /** Url */
+            url: string;
+            /** Will Verify */
+            will_verify: boolean;
         };
         /** ModelsOverview */
         ModelsOverview: {
@@ -2424,6 +2496,7 @@ export type SchemaMessageRead = components['schemas']['MessageRead'];
 export type SchemaModelEntry = components['schemas']['ModelEntry'];
 export type SchemaModelIdBody = components['schemas']['ModelIdBody'];
 export type SchemaModelLicense = components['schemas']['ModelLicense'];
+export type SchemaModelSourceInfo = components['schemas']['ModelSourceInfo'];
 export type SchemaModelsOverview = components['schemas']['ModelsOverview'];
 export type SchemaOnboardingStep = components['schemas']['OnboardingStep'];
 export type SchemaOsInfo = components['schemas']['OsInfo'];
@@ -3434,6 +3507,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DownloadStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    source_info_api_models__model_id__source_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                model_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelSourceInfo"];
                 };
             };
             /** @description Validation Error */

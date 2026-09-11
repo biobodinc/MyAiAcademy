@@ -241,12 +241,15 @@ function ModelCard({
             <Button size="sm" variant="ghost" onClick={onRemove}>
               <Trash2 className="h-3.5 w-3.5" aria-hidden /> Remove
             </Button>
-            {entry.verified_sha256 && (
+            {entry.file_sha256 && (
               <span
                 className="ml-auto font-mono text-[10px] text-fg-muted"
-                title="SHA-256 verified"
+                title={entry.verification_detail ?? undefined}
               >
-                sha256 {entry.verified_sha256.slice(0, 12)}…
+                {entry.verification === "pinned" || entry.verification === "publisher-hash"
+                  ? "✓ verified"
+                  : "unverified"}{" "}
+                sha256 {entry.file_sha256.slice(0, 12)}…
               </span>
             )}
           </>

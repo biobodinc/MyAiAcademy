@@ -112,8 +112,8 @@ def models_show(model_id: str, data_dir: DataDirOpt = None) -> None:
                     [
                         f"{entry['name']}  (imported)",
                         entry["description"],
-                        f"Size: {human_bytes(entry['size_bytes'])}  "
-                        f"sha256 {entry['verified_sha256']}",
+                        f"Size: {human_bytes(entry['size_bytes'])}  sha256 {entry['file_sha256']}",
+                        entry["verification_detail"] or "",
                         f"Licence: {lic['name']} — {lic['summary']}",
                         *[f"  • {r}" for r in entry["fit"]["reasons"]],
                     ]
@@ -134,6 +134,8 @@ def models_show(model_id: str, data_dir: DataDirOpt = None) -> None:
         f"Licence: {lic['name']}  ({lic['url']})",
         f"  {lic['summary']}",
         f"  Commercial use: {lic['commercial_use']}",
+        "",
+        f"Verification: {entry['verification_detail'] or 'not installed yet'}",
         "",
         "Fit: "
         + (
@@ -224,6 +226,31 @@ def models_import(
     )
     entry = next(m for m in data["models"] if m["source"] == "imported" and m["installed"])
     console.print(f"[green]Imported {entry['name']} as {entry['id']}[/green]  {entry['file_path']}")
+
+
+@models_app.command("check")
+def models_check(model_id: str, data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Ask the file host what it declares for a model. Downloads nothing.
+
+    Use this when a download fails its integrity check: it shows whether the publisher
+    actually publishes a content hash for the file.
+    """
+    data = _call(_service(data_dir).get, f"/models/{model_id}/source")
+    if as_json:
+        return _emit_json(data)
+    lines = [
+        f"URL:        {data['url']}",
+        f"Served by:  {data['final_url']}",
+        f"Status:     {data['status_code']}",
+        f"Size:       {human_bytes(data['size_bytes'])}",
+        "",
+        f"Publisher hash: {data['publisher_sha256'] or 'not published'}",
+        f"Pinned hash:    {data['pinned_sha256'] or 'none in the catalog'}",
+        f"Host ETag:      {data['etag_sha256'] or 'not a SHA-256'}  (advisory only)",
+        "",
+        data["note"],
+    ]
+    console.print(Panel("\n".join(lines), title=f"Source for {data['model_id']}"))
 
 
 @models_app.command("providers")

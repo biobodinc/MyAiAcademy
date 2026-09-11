@@ -2198,6 +2198,18 @@
             ],
             "title": "File Path"
           },
+          "file_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The hash computed on download. Not proof of verification.",
+            "title": "File Sha256"
+          },
           "fit": {
             "$ref": "#/components/schemas/HardwareFit"
           },
@@ -2239,7 +2251,7 @@
             "title": "Source",
             "type": "string"
           },
-          "verified_sha256": {
+          "verification": {
             "anyOf": [
               {
                 "type": "string"
@@ -2248,7 +2260,20 @@
                 "type": "null"
               }
             ],
-            "title": "Verified Sha256"
+            "description": "What that hash was checked against, if anything.",
+            "title": "Verification"
+          },
+          "verification_detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A sentence the UI can show verbatim.",
+            "title": "Verification Detail"
           }
         },
         "required": [
@@ -2263,7 +2288,9 @@
           "license_accepted",
           "file_path",
           "size_bytes",
-          "verified_sha256",
+          "file_sha256",
+          "verification",
+          "verification_detail",
           "fit",
           "download"
         ],
@@ -2333,6 +2360,96 @@
           "commercial_use"
         ],
         "title": "ModelLicense",
+        "type": "object"
+      },
+      "ModelSourceInfo": {
+        "description": "What the file host declares for a catalog model, without downloading it.\n\nExists because a download that fails its integrity check is otherwise impossible to\ndiagnose from the outside: this shows whether the publisher actually publishes a\ncontent hash for the file, and what the host's own ETag is.",
+        "properties": {
+          "etag_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The host's ETag when it looks like a SHA-256. Advisory only.",
+            "title": "Etag Sha256"
+          },
+          "final_url": {
+            "title": "Final Url",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "pinned_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The hash pinned in our catalog.",
+            "title": "Pinned Sha256"
+          },
+          "publisher_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A hash the publisher promises. A mismatch fails a download.",
+            "title": "Publisher Sha256"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "status_code": {
+            "title": "Status Code",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "will_verify": {
+            "title": "Will Verify",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "model_id",
+          "url",
+          "final_url",
+          "status_code",
+          "size_bytes",
+          "publisher_sha256",
+          "etag_sha256",
+          "pinned_sha256",
+          "will_verify",
+          "note"
+        ],
+        "title": "ModelSourceInfo",
         "type": "object"
       },
       "ModelsOverview": {
@@ -5729,6 +5846,49 @@
           }
         },
         "summary": "Start Download",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/{model_id}/source": {
+      "get": {
+        "description": "Ask the host what it declares for this file. Downloads nothing.",
+        "operationId": "source_info_api_models__model_id__source_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelSourceInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Source Info",
         "tags": [
           "models"
         ]

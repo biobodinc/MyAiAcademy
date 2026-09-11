@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from myai_core.api.deps import AuditDep, PreferencesDep, SessionDep, StateDep, StorageDep
 from myai_core.api.model_loading import load_prepared, prepare_active_model
 from myai_core.audit.service import AuditCategory
 from myai_core.db.models import ModelDownload
-from myai_core.models.catalog import CatalogModel
+from myai_core.models.catalog import CatalogModel, get_catalog_model
+from myai_core.models.download import DownloadError
 from myai_core.models.service import (
     DownloadStatus,
     ImportRequest,
@@ -20,6 +21,7 @@ from myai_core.models.service import (
     list_providers,
     recommended_for,
 )
+from myai_core.schemas import ApiModel
 
 router = APIRouter(prefix="/models", tags=["models"])
 
@@ -74,6 +76,62 @@ async def import_model(
         {"model_id": row.id, "path": row.file_path, "sha256": row.sha256},
     )
     return overview(state, session, storage)
+
+
+class ModelSourceInfo(ApiModel):
+    """What the file host declares for a catalog model, without downloading it.
+
+    Exists because a download that fails its integrity check is otherwise impossible to
+    diagnose from the outside: this shows whether the publisher actually publishes a
+    content hash for the file, and what the host's own ETag is.
+    """
+
+    model_id: str
+    url: str
+    final_url: str
+    status_code: int
+    size_bytes: int | None
+    publisher_sha256: str | None = Field(
+        default=None, description="A hash the publisher promises. A mismatch fails a download."
+    )
+    etag_sha256: str | None = Field(
+        default=None, description="The host's ETag when it looks like a SHA-256. Advisory only."
+    )
+    pinned_sha256: str | None = Field(default=None, description="The hash pinned in our catalog.")
+    will_verify: bool
+    note: str
+
+
+@router.get("/{model_id}/source", response_model=ModelSourceInfo)
+async def source_info(model_id: str, state: StateDep) -> ModelSourceInfo:
+    """Ask the host what it declares for this file. Downloads nothing."""
+    model = get_catalog_model(model_id)
+    if model is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown model '{model_id}'.")
+    try:
+        info = await run_in_threadpool(state.downloads.downloader.inspect, model.download_url)
+    except DownloadError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
+    will_verify = bool(model.sha256 or info.publisher_sha256)
+    return ModelSourceInfo(
+        model_id=model.id,
+        url=model.download_url,
+        final_url=info.final_url,
+        status_code=info.status_code,
+        size_bytes=info.size_bytes,
+        publisher_sha256=info.publisher_sha256,
+        etag_sha256=info.etag_sha256,
+        pinned_sha256=model.sha256,
+        will_verify=will_verify,
+        note=(
+            "The download will be verified against a published content hash."
+            if will_verify
+            else (
+                "No content hash is published for this file, so the download can only be "
+                "checked for completeness. The host's ETag is not a content hash."
+            )
+        ),
+    )
 
 
 @router.get("/recommended", response_model=CatalogModel)

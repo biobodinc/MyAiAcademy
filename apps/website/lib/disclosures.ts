@@ -22,6 +22,10 @@ export const DISCLOSURES = [
     body: "Skills are learned from bundled packages (instructions plus a 12-task benchmark) and a skill's level is the score its benchmark produced with your local model. /train shows its information and states that training jobs arrive in Phase 4. Creative skills (images, video, music, games) have no benchmark yet and cannot be learned.",
   },
   {
+    title: "Not every model download can be hash-verified.",
+    body: "A download is only failed when it disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or Hugging Face's X-Linked-Etag header). A plain ETag is an opaque validator rather than a content hash, so it is never used to reject a file. Where no published hash exists the download is checked for completeness only, and the app labels that model \u201cunverified\u201d rather than implying it was checked.",
+  },
+  {
     title: "The coding benchmark executes code written by your local model.",
     body: "It runs in a separate interpreter with an import allow-list, a scratch directory, a timeout and resource limits. That contains accidents; it is not a security boundary against a hostile model, so treat imported models with the same care as any software you run.",
   },
