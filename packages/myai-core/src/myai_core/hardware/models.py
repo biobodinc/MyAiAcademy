@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from pydantic import Field
 
+from myai_core.hardware.benchmark import BenchmarkResult
 from myai_core.schemas import ApiModel
 
 
@@ -96,6 +97,9 @@ class HardwareReport(ApiModel):
     gpus: list[GpuInfo] = Field(default_factory=list)
     volumes: list[StorageVolume] = Field(default_factory=list)
     tier: TierEstimate
+    benchmark: BenchmarkResult | None = Field(
+        default=None, description="The most recent measured benchmark, if one was run."
+    )
     warnings: list[str] = Field(
         default_factory=list,
         description="Probes that failed or were unavailable. Shown to the user, not hidden.",

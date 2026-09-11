@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
@@ -10,6 +9,7 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import iterate_in_threadpool
 
 from myai_core.api.deps import PreferencesDep, ProfileDep, SessionDep, StateDep, StorageDep
+from myai_core.api.model_loading import prepare_active_model
 from myai_core.chat.service import (
     ChatError,
     ChatService,
@@ -22,7 +22,6 @@ from myai_core.commands.parser import is_command
 from myai_core.hardware import HardwareReport, detect_hardware
 from myai_core.memory.service import MemoryService
 from myai_core.models.provider import ProviderError
-from myai_core.models.runtime import load_config_for
 from myai_core.models.service import ModelService
 from myai_core.skills.service import SkillsService
 
@@ -101,28 +100,16 @@ async def send_message(
         result = _run_command(body.content, state, session, profile, prefs, storage)
         return StreamingResponse(iter([_sse("command", result)]), media_type="text/event-stream")
 
-    models = ModelService(session, storage)
-    active = models.active_model_id()
-    runtime_ok, runtime_detail = state.runtime.provider.availability()
-    if not runtime_ok:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, runtime_detail)
-    if active is None:
-        raise HTTPException(
-            status.HTTP_409_CONFLICT, "No local model is set up. Download one under Models."
-        )
-    installed = models.get_installed(active)
-    assert installed is not None
-    config = load_config_for(active, state.hardware_cache, prefs.get().compute_preset)
-    model_path = Path(installed.file_path)
+    prepared = prepare_active_model(state, ModelService(session, storage), prefs.get())
 
     def events() -> Iterator[str]:
         try:
-            state.runtime.ensure_loaded(model_path, config)
+            state.runtime.ensure_loaded(prepared.path, prepared.config)
         except ProviderError as exc:
             yield _sse("error", {"message": str(exc)})
             return
         for event in chat.send(
-            conversation_id, body, generate=state.runtime.generate, model_id=active
+            conversation_id, body, generate=state.runtime.generate, model_id=prepared.model_id
         ):
             yield _sse(event.kind, event.payload)
 

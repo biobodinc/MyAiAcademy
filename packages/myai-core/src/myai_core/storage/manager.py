@@ -152,6 +152,9 @@ class StorageManager:
             category_overrides=dict(config.category_overrides),
         )
 
+    def category_paths(self) -> dict[StorageCategory, Path]:
+        return {category: self.category_path(category) for category in StorageCategory}
+
     def detect_external_candidates(self) -> list[StorageVolume]:
         """Removable volumes worth offering to the user (spec §22)."""
         volumes, _ = self._volumes_probe()

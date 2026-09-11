@@ -24,6 +24,7 @@ import {
   useUpdatePreferences,
   useUpdateProfile,
 } from "../../lib/api";
+import { GuidePanel } from "../guide/GuidePanel";
 import { HardwareSummary } from "../hardware/HardwareSummary";
 import { LicenseDialog } from "../models/LicenseDialog";
 import { INTEREST_OPTIONS, toCreatePayload } from "../profile/model";
@@ -192,6 +193,9 @@ function Welcome({ onNext }: { onNext: () => void }) {
         <Button size="lg" onClick={onNext}>
           Let's begin
         </Button>
+      </div>
+      <div className="mt-10 border-t border-border pt-6 text-left">
+        <GuidePanel compact />
       </div>
     </div>
   );
@@ -515,6 +519,9 @@ function DoneStep({ onFinish, busy }: { onFinish: () => void; busy: boolean }) {
         <Button size="lg" onClick={onFinish} disabled={busy}>
           Start chatting
         </Button>
+      </div>
+      <div className="mt-10 border-t border-border pt-6 text-left">
+        <GuidePanel compact />
       </div>
     </div>
   );

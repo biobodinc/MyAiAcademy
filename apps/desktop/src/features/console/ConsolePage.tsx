@@ -17,7 +17,14 @@ interface Entry {
   error?: string;
 }
 
-const STARTERS = ["/help", "/status", "/hardware", "/skills", "teach yourself coding"];
+const STARTERS = [
+  "/help",
+  "/status",
+  "/hardware",
+  "/skills",
+  "teach yourself coding",
+  "What is training?",
+];
 
 export function ConsolePage() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -51,7 +58,7 @@ export function ConsolePage() {
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       <PageHeader
         title="Console"
-        subtitle="Talk to your AI with commands. Chat arrives once a local model is set up."
+        subtitle="Run commands and ask about MyAI Academy itself. Conversation with your AI lives in Chat."
       />
       <div className="flex-1 space-y-4 overflow-y-auto pr-1">
         {entries.length === 0 && (
@@ -135,6 +142,9 @@ function ResultBubble({
       )}
       <Alert tone={tone[result.outcome]} title={result.title}>
         <pre className="font-sans whitespace-pre-wrap">{result.message}</pre>
+        {result.data["source"] === "guide" && (
+          <p className="mt-2 text-xs text-fg-muted">Built-in guide (not your AI model)</p>
+        )}
       </Alert>
       {result.suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2">

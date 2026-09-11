@@ -107,6 +107,16 @@ class AuditEvent(Base):
     device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
+class HardwareBenchmark(Base):
+    """A recorded benchmark run (spec §30). The JSON is a ``BenchmarkResult``."""
+
+    __tablename__ = "hardware_benchmarks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ran_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    result: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+
+
 # --- Phase 2: local AI --------------------------------------------------------------------
 
 

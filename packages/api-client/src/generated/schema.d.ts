@@ -98,6 +98,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/guide/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask Guide
+         * @description Answer a question about MyAI Academy from the curated guide. Questions are not
+         *     logged anywhere.
+         */
+        post: operations["ask_guide_api_guide_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guide/topics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Topics */
+        get: operations["list_topics_api_guide_topics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/hardware": {
         parameters: {
             query?: never;
@@ -107,6 +145,47 @@ export interface paths {
         };
         /** Read Hardware */
         get: operations["read_hardware_api_hardware_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hardware/benchmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Benchmark */
+        get: operations["read_benchmark_api_hardware_benchmark_get"];
+        put?: never;
+        /**
+         * Run Hardware Benchmark
+         * @description Run the short benchmark (spec §30) and record the result.
+         */
+        post: operations["run_hardware_benchmark_api_hardware_benchmark_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/hardware/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Metrics
+         * @description Live whole-machine utilisation for the dashboard. Cheap; safe to poll.
+         */
+        get: operations["read_metrics_api_hardware_metrics_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -532,6 +611,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/storage/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cleanup Plan
+         * @description What could be deleted safely, with protected items flagged (spec §63).
+         */
+        get: operations["cleanup_plan_api_storage_cleanup_get"];
+        put?: never;
+        /** Cleanup */
+        post: operations["cleanup_api_storage_cleanup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/storage/external-candidates": {
         parameters: {
             query?: never;
@@ -624,6 +724,44 @@ export interface components {
          * @enum {string}
          */
         Availability: "available" | "unavailable" | "not_configured" | "unknown";
+        /** BatteryMetrics */
+        BatteryMetrics: {
+            /** Percent */
+            percent: number | null;
+            /** Plugged In */
+            plugged_in: boolean | null;
+            /** Seconds Left */
+            seconds_left: number | null;
+        };
+        /** BenchmarkResult */
+        BenchmarkResult: {
+            /** Duration Seconds */
+            duration_seconds: number;
+            inference: components["schemas"]["InferenceBenchmark"] | null;
+            /** Inference Note */
+            inference_note: string;
+            /** Memory Available Bytes */
+            memory_available_bytes: number | null;
+            /**
+             * Memory Copy Gbps
+             * @description Single-thread memcpy bandwidth in GB/s (decimal gigabytes).
+             */
+            memory_copy_gbps: number | null;
+            /**
+             * Memory Pressure Percent
+             * @description Share of RAM in use at benchmark time (whole machine).
+             */
+            memory_pressure_percent: number | null;
+            /** Memory Total Bytes */
+            memory_total_bytes: number | null;
+            /** Notes */
+            notes: string[];
+            /**
+             * Ran At
+             * Format: date-time
+             */
+            ran_at: string;
+        };
         /** CatalogModel */
         CatalogModel: {
             /** Approx Size Bytes */
@@ -682,6 +820,59 @@ export interface components {
              * @description Warn before deleting (checkpoints, training data, memory).
              */
             protected: boolean;
+        };
+        /** CleanupCandidate */
+        CleanupCandidate: {
+            category: components["schemas"]["StorageCategory"];
+            kind: components["schemas"]["CleanupKind"];
+            /** Path */
+            path: string;
+            /**
+             * Protected
+             * @description Under a category that warns before deletion.
+             */
+            protected: boolean;
+            /** Reason */
+            reason: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
+        /**
+         * CleanupKind
+         * @enum {string}
+         */
+        CleanupKind: "partial_download" | "orphaned_model";
+        /** CleanupPlan */
+        CleanupPlan: {
+            /** Candidates */
+            candidates: components["schemas"]["CleanupCandidate"][];
+            /** Protected Bytes */
+            protected_bytes: number;
+            /** Reclaimable Bytes */
+            reclaimable_bytes: number;
+        };
+        /** CleanupRequest */
+        CleanupRequest: {
+            /**
+             * Acknowledge Protected
+             * @description Must be true to delete anything under a protected category.
+             * @default false
+             */
+            acknowledge_protected: boolean;
+            /** Paths */
+            paths: string[];
+        };
+        /** CleanupResult */
+        CleanupResult: {
+            /** Deleted */
+            deleted: string[];
+            /** Freed Bytes */
+            freed_bytes: number;
+            /**
+             * Refused
+             * @description Paths that were not deleted and why.
+             */
+            refused: string[];
         };
         /**
          * CommandName
@@ -875,11 +1066,63 @@ export interface components {
             /** Vram Used Bytes */
             vram_used_bytes: number | null;
         };
+        /** GpuMetrics */
+        GpuMetrics: {
+            /** Name */
+            name: string;
+            /** Source */
+            source: string;
+            /** Temperature C */
+            temperature_c: number | null;
+            /** Utilization Percent */
+            utilization_percent: number | null;
+            /** Vram Total Bytes */
+            vram_total_bytes: number | null;
+            /** Vram Used Bytes */
+            vram_used_bytes: number | null;
+        };
         /**
          * GpuVendor
          * @enum {string}
          */
         GpuVendor: "nvidia" | "amd" | "intel" | "apple" | "unknown";
+        /** GuideAnswer */
+        GuideAnswer: {
+            /** Answer */
+            answer: string;
+            /** Confidence */
+            confidence: number;
+            /**
+             * Matched
+             * @description False when no topic fit; ``answer`` then says so.
+             */
+            matched: boolean;
+            /** Related */
+            related: components["schemas"]["GuideTopicRead"][];
+            /**
+             * Source
+             * @default Built-in guide (not your AI model)
+             */
+            source: string;
+            /** Title */
+            title: string;
+            /** Topic Id */
+            topic_id: string | null;
+        };
+        /** GuideQuestion */
+        GuideQuestion: {
+            /** Question */
+            question: string;
+        };
+        /** GuideTopicRead */
+        GuideTopicRead: {
+            /** Id */
+            id: string;
+            /** Question */
+            question: string;
+            /** Title */
+            title: string;
+        };
         /** HardwareFit */
         HardwareFit: {
             /** Ok */
@@ -891,6 +1134,8 @@ export interface components {
         };
         /** HardwareReport */
         HardwareReport: {
+            /** @description The most recent measured benchmark, if one was run. */
+            benchmark: components["schemas"]["BenchmarkResult"] | null;
             cpu: components["schemas"]["CpuInfo"];
             /**
              * Detected At
@@ -919,6 +1164,24 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InferenceBenchmark */
+        InferenceBenchmark: {
+            /** Backend */
+            backend: string | null;
+            /** Completion Tokens */
+            completion_tokens: number;
+            /** Generation Tokens Per Second */
+            generation_tokens_per_second: number;
+            /** Model Id */
+            model_id: string;
+            /**
+             * Prompt Seconds
+             * @description Time to the first generated token.
+             */
+            prompt_seconds: number;
+            /** Prompt Tokens */
+            prompt_tokens: number | null;
         };
         /** KnowledgeOverview */
         KnowledgeOverview: {
@@ -1133,8 +1396,12 @@ export interface components {
              * @default false
              */
             contributor_mode: boolean;
+            /** Cpu Utilization Percent */
+            cpu_utilization_percent: number | null;
             /** @default beginner */
             experience_mode: components["schemas"]["ExperienceMode"];
+            /** Gpu Utilization Percent */
+            gpu_utilization_percent: number | null;
             /**
              * Onboarding Completed
              * @default false
@@ -1144,19 +1411,38 @@ export interface components {
             onboarding_step: components["schemas"]["OnboardingStep"];
             /** @default private */
             privacy_mode: components["schemas"]["PrivacyMode"];
+            /** Ram Limit Gib */
+            ram_limit_gib: number | null;
+            /** Temperature Limit C */
+            temperature_limit_c: number | null;
             /** @default system */
             theme: components["schemas"]["Theme"];
+            /** Time Limit Minutes */
+            time_limit_minutes: number | null;
         };
-        /** PreferencesUpdate */
+        /**
+         * PreferencesUpdate
+         * @description All fields optional. Advanced fields accept ``null`` to clear an override.
+         */
         PreferencesUpdate: {
             compute_preset?: components["schemas"]["ComputePreset"] | null;
             /** Contributor Mode */
             contributor_mode?: boolean | null;
+            /** Cpu Utilization Percent */
+            cpu_utilization_percent?: number | null;
             experience_mode?: components["schemas"]["ExperienceMode"] | null;
+            /** Gpu Utilization Percent */
+            gpu_utilization_percent?: number | null;
             /** Onboarding Completed */
             onboarding_completed?: boolean | null;
             onboarding_step?: components["schemas"]["OnboardingStep"] | null;
+            /** Ram Limit Gib */
+            ram_limit_gib?: number | null;
+            /** Temperature Limit C */
+            temperature_limit_c?: number | null;
             theme?: components["schemas"]["Theme"] | null;
+            /** Time Limit Minutes */
+            time_limit_minutes?: number | null;
         };
         /**
          * PrivacyMode
@@ -1473,6 +1759,25 @@ export interface components {
             /** Total Bytes */
             total_bytes: number | null;
         };
+        /** SystemMetrics */
+        SystemMetrics: {
+            battery: components["schemas"]["BatteryMetrics"] | null;
+            /** Cpu Percent */
+            cpu_percent: number | null;
+            gpu: components["schemas"]["GpuMetrics"] | null;
+            memory: components["schemas"]["MemoryInfo"];
+            /** Memory Percent */
+            memory_percent: number | null;
+            /** Memory Used Bytes */
+            memory_used_bytes: number | null;
+            /**
+             * Sampled At
+             * Format: date-time
+             */
+            sampled_at: string;
+            /** Warnings */
+            warnings: string[];
+        };
         /**
          * Theme
          * @enum {string}
@@ -1544,9 +1849,16 @@ export type SchemaAcceleratorBackend = components['schemas']['AcceleratorBackend
 export type SchemaAuditCategory = components['schemas']['AuditCategory'];
 export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
 export type SchemaAvailability = components['schemas']['Availability'];
+export type SchemaBatteryMetrics = components['schemas']['BatteryMetrics'];
+export type SchemaBenchmarkResult = components['schemas']['BenchmarkResult'];
 export type SchemaCatalogModel = components['schemas']['CatalogModel'];
 export type SchemaCategoryOverrideRequest = components['schemas']['CategoryOverrideRequest'];
 export type SchemaCategoryUsage = components['schemas']['CategoryUsage'];
+export type SchemaCleanupCandidate = components['schemas']['CleanupCandidate'];
+export type SchemaCleanupKind = components['schemas']['CleanupKind'];
+export type SchemaCleanupPlan = components['schemas']['CleanupPlan'];
+export type SchemaCleanupRequest = components['schemas']['CleanupRequest'];
+export type SchemaCleanupResult = components['schemas']['CleanupResult'];
 export type SchemaCommandName = components['schemas']['CommandName'];
 export type SchemaCommandOutcome = components['schemas']['CommandOutcome'];
 export type SchemaCommandRequest = components['schemas']['CommandRequest'];
@@ -1562,11 +1874,16 @@ export type SchemaDownloadStatus = components['schemas']['DownloadStatus'];
 export type SchemaExperienceMode = components['schemas']['ExperienceMode'];
 export type SchemaGenerationOptions = components['schemas']['GenerationOptions'];
 export type SchemaGpuInfo = components['schemas']['GpuInfo'];
+export type SchemaGpuMetrics = components['schemas']['GpuMetrics'];
 export type SchemaGpuVendor = components['schemas']['GpuVendor'];
+export type SchemaGuideAnswer = components['schemas']['GuideAnswer'];
+export type SchemaGuideQuestion = components['schemas']['GuideQuestion'];
+export type SchemaGuideTopicRead = components['schemas']['GuideTopicRead'];
 export type SchemaHardwareFit = components['schemas']['HardwareFit'];
 export type SchemaHardwareReport = components['schemas']['HardwareReport'];
 export type SchemaHardwareTier = components['schemas']['HardwareTier'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaInferenceBenchmark = components['schemas']['InferenceBenchmark'];
 export type SchemaKnowledgeOverview = components['schemas']['KnowledgeOverview'];
 export type SchemaLevelBand = components['schemas']['LevelBand'];
 export type SchemaMemoryCategory = components['schemas']['MemoryCategory'];
@@ -1601,6 +1918,7 @@ export type SchemaStorageLocationCheck = components['schemas']['StorageLocationC
 export type SchemaStorageOverview = components['schemas']['StorageOverview'];
 export type SchemaStorageSetupRequest = components['schemas']['StorageSetupRequest'];
 export type SchemaStorageVolume = components['schemas']['StorageVolume'];
+export type SchemaSystemMetrics = components['schemas']['SystemMetrics'];
 export type SchemaTheme = components['schemas']['Theme'];
 export type SchemaTierEstimate = components['schemas']['TierEstimate'];
 export type SchemaTrainTarget = components['schemas']['TrainTarget'];
@@ -1820,6 +2138,59 @@ export interface operations {
             };
         };
     };
+    ask_guide_api_guide_ask_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuideQuestion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideAnswer"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_topics_api_guide_topics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuideTopicRead"][];
+                };
+            };
+        };
+    };
     read_hardware_api_hardware_get: {
         parameters: {
             query?: {
@@ -1848,6 +2219,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_benchmark_api_hardware_benchmark_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkResult"] | null;
+                };
+            };
+        };
+    };
+    run_hardware_benchmark_api_hardware_benchmark_post: {
+        parameters: {
+            query?: {
+                /** @description Also time the active local model, if one is installed. */
+                include_inference?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_metrics_api_hardware_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemMetrics"];
                 };
             };
         };
@@ -2665,6 +3108,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorageLocationCheck"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cleanup_plan_api_storage_cleanup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanupPlan"];
+                };
+            };
+        };
+    };
+    cleanup_api_storage_cleanup_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CleanupRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanupResult"];
                 };
             };
             /** @description Validation Error */

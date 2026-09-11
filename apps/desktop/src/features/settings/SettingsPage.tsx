@@ -1,6 +1,13 @@
-import type { ComputePreset, ExperienceMode, Theme } from "@myai/api-client";
+import type {
+  ComputePreset,
+  ExperienceMode,
+  Preferences,
+  PreferencesUpdate,
+  Theme,
+} from "@myai/api-client";
+import { useState } from "react";
 
-import { Alert, Card, PageHeader, Spinner } from "../../components/ui";
+import { Alert, Button, Card, Field, Input, PageHeader, Spinner } from "../../components/ui";
 import { describeError, usePreferences, useUpdatePreferences } from "../../lib/api";
 
 const COMPUTE: Array<{ value: ComputePreset; label: string; percent: number }> = [
@@ -57,6 +64,7 @@ export function SettingsPage() {
             never bypassed.
           </p>
         </Card>
+        {p.experience_mode === "advanced" && <AdvancedCompute prefs={p} />}
         <Card title="Appearance">
           <Segmented<Theme>
             name="theme"
@@ -113,5 +121,116 @@ function Segmented<T extends string>({
         );
       })}
     </div>
+  );
+}
+
+type AdvancedKey =
+  | "cpu_utilization_percent"
+  | "gpu_utilization_percent"
+  | "ram_limit_gib"
+  | "temperature_limit_c"
+  | "time_limit_minutes";
+
+const ADVANCED: Array<{
+  key: AdvancedKey;
+  label: string;
+  unit: string;
+  min: number;
+  max: number;
+  step?: number;
+  enforced: string;
+}> = [
+  {
+    key: "cpu_utilization_percent",
+    label: "CPU utilisation",
+    unit: "%",
+    min: 10,
+    max: 100,
+    enforced: "Enforced now: caps the threads used for chat.",
+  },
+  {
+    key: "ram_limit_gib",
+    label: "RAM limit",
+    unit: "GB",
+    min: 1,
+    max: 4096,
+    step: 0.5,
+    enforced: "Enforced now: a model larger than this is refused instead of loaded.",
+  },
+  {
+    key: "gpu_utilization_percent",
+    label: "GPU utilisation",
+    unit: "%",
+    min: 10,
+    max: 100,
+    enforced: "Stored now; applied by training jobs (Phase 4).",
+  },
+  {
+    key: "temperature_limit_c",
+    label: "Temperature limit",
+    unit: "°C",
+    min: 50,
+    max: 100,
+    enforced: "Stored now; training pauses above it once telemetry exists (Phase 4).",
+  },
+  {
+    key: "time_limit_minutes",
+    label: "Time limit",
+    unit: "min",
+    min: 1,
+    max: 43200,
+    enforced: "Stored now; caps a training job's duration (Phase 4).",
+  },
+];
+
+function AdvancedCompute({ prefs }: { prefs: Preferences }) {
+  const update = useUpdatePreferences();
+  const [draft, setDraft] = useState<Record<AdvancedKey, string>>(() => {
+    const initial = {} as Record<AdvancedKey, string>;
+    for (const f of ADVANCED) initial[f.key] = prefs[f.key] == null ? "" : String(prefs[f.key]);
+    return initial;
+  });
+
+  const save = () => {
+    const body: PreferencesUpdate = {};
+    for (const f of ADVANCED) {
+      const raw = draft[f.key].trim();
+      body[f.key] = raw === "" ? null : Number(raw);
+    }
+    update.mutate(body);
+  };
+
+  return (
+    <Card title="Advanced compute limits">
+      <p className="text-xs text-warning">
+        Changing advanced settings can reduce training quality or cause failures. Leave a field
+        empty to let the compute preset decide. Hardware safety controls are never bypassed.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {ADVANCED.map((f) => (
+          <Field key={f.key} label={`${f.label} (${f.unit})`} htmlFor={f.key} hint={f.enforced}>
+            <Input
+              id={f.key}
+              type="number"
+              inputMode="decimal"
+              min={f.min}
+              max={f.max}
+              step={f.step ?? 1}
+              placeholder="preset decides"
+              value={draft[f.key]}
+              onChange={(e) => {
+                setDraft({ ...draft, [f.key]: e.target.value });
+              }}
+            />
+          </Field>
+        ))}
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <Button onClick={save} disabled={update.isPending}>
+          {update.isPending ? "Saving…" : "Save limits"}
+        </Button>
+        {update.isSuccess && <span className="text-xs text-success">Saved.</span>}
+      </div>
+    </Card>
   );
 }

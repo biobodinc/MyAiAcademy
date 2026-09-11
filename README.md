@@ -62,6 +62,10 @@ uv run myai storage set-root ~/MyAI
 uv run myai models list
 uv run myai models download qwen2.5-1.5b-instruct-q4km   # shows the licence, asks, then downloads
 uv run myai chat
+uv run myai ask "what is training?"                  # built-in guide, not the model
+uv run myai hardware --benchmark                     # memory bandwidth + measured tokens/s
+uv run myai storage cleanup                          # leftovers; --delete removes them
+uv run myai settings set --mode advanced --cpu 50    # advanced compute limits
 ```
 
 `uv run myai --help` lists every command. The desktop app (`pnpm --filter @myai/desktop

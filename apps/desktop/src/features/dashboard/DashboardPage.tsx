@@ -7,18 +7,21 @@ import {
   Card,
   LevelBadge,
   PhaseTag,
+  ProgressBar,
   Spinner,
   StatusPill,
 } from "../../components/ui";
 import {
   describeError,
   useHardware,
+  useMetrics,
   useProfile,
   useSkills,
   useStatus,
   useStorage,
 } from "../../lib/api";
 import { primaryGpu } from "../hardware/model";
+import { headline } from "./model";
 
 const quickActions = [
   { to: "/chat", label: "Chat", hint: "Talk to your AI locally", ready: true },
@@ -35,11 +38,14 @@ export function DashboardPage() {
   const status = useStatus();
   const hardware = useHardware();
   const storage = useStorage();
+  const metrics = useMetrics();
 
   if (profile.isPending || skills.isPending) return <Spinner />;
   if (profile.isError) return <Alert tone="danger">{describeError(profile.error)}</Alert>;
   const p = profile.data;
   const gpu = hardware.data ? primaryGpu(hardware.data) : null;
+  const current = headline(status.data);
+  const m = metrics.data;
 
   return (
     <div className="space-y-5">
@@ -54,14 +60,8 @@ export function DashboardPage() {
             <p className="text-sm text-fg-muted">{p?.personality || "No personality set yet."}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <StatusPill tone="success">Running locally</StatusPill>
-            <StatusPill tone={status.data?.ai === "available" ? "success" : "warning"}>
-              {status.data?.ai === "available"
-                ? `Model: ${status.data.active_model_id ?? ""}`
-                : status.data?.ai === "unavailable"
-                  ? "Inference runtime missing"
-                  : "No model installed"}
-            </StatusPill>
+            <div className="text-xs text-fg-muted">Current status</div>
+            <StatusPill tone={current.tone}>{current.text}</StatusPill>
           </div>
         </div>
       </Card>
@@ -96,7 +96,7 @@ export function DashboardPage() {
         </Card>
 
         <Card title="System">
-          <dl className="space-y-2 text-sm">
+          <dl className="space-y-3 text-sm">
             <Row
               label="Internet"
               value={
@@ -107,9 +107,43 @@ export function DashboardPage() {
                     : "…"
               }
             />
-            <Row label="GPU" value={gpu ? gpu.name : hardware.isPending ? "…" : "None"} />
-            <Row label="VRAM" value={gpu ? formatBytes(gpu.vram_total_bytes, 0) : "—"} />
-            <Row label="RAM" value={formatBytes(hardware.data?.memory.total_bytes, 0)} />
+            <Meter
+              label="CPU"
+              percent={m?.cpu_percent ?? null}
+              detail={
+                hardware.data?.cpu.physical_cores ? `${hardware.data.cpu.physical_cores} cores` : ""
+              }
+            />
+            <Meter
+              label="RAM"
+              percent={m?.memory_percent ?? null}
+              detail={
+                m?.memory_used_bytes != null
+                  ? `${formatBytes(m.memory_used_bytes, 0)} of ${formatBytes(m.memory.total_bytes, 0)}`
+                  : formatBytes(hardware.data?.memory.total_bytes, 0)
+              }
+            />
+            <Meter
+              label="GPU"
+              percent={m?.gpu?.utilization_percent ?? null}
+              detail={
+                m?.gpu
+                  ? m.gpu.utilization_percent == null
+                    ? `${m.gpu.name} · no live counters`
+                    : `${m.gpu.name}${m.gpu.temperature_c != null ? ` · ${Math.round(m.gpu.temperature_c)}°C` : ""}`
+                  : gpu
+                    ? gpu.name
+                    : hardware.isPending
+                      ? "…"
+                      : "None detected"
+              }
+            />
+            {m?.battery?.percent != null && (
+              <Row
+                label="Battery"
+                value={`${Math.round(m.battery.percent)}% · ${m.battery.plugged_in ? "plugged in" : "on battery"}`}
+              />
+            )}
             <Row
               label="Tier"
               value={hardware.data ? (TIER_LABELS[hardware.data.tier.tier] ?? "") : "…"}
@@ -124,6 +158,9 @@ export function DashboardPage() {
             />
             <Row label="Cloud uploads" value={String(status.data?.cloud_uploads ?? 0)} />
           </dl>
+          <p className="mt-3 text-[10px] text-fg-muted">
+            Whole-machine figures, refreshed every few seconds.
+          </p>
         </Card>
       </div>
 
@@ -179,6 +216,39 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between gap-3">
       <dt className="text-fg-muted">{label}</dt>
       <dd className="truncate text-right font-medium">{value}</dd>
+    </div>
+  );
+}
+
+function Meter({
+  label,
+  percent,
+  detail,
+}: {
+  label: string;
+  percent: number | null;
+  detail: string;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between gap-3">
+        <dt className="text-fg-muted">{label}</dt>
+        <dd className="truncate text-right font-medium">
+          {percent == null ? detail || "—" : `${Math.round(percent)}%`}
+        </dd>
+      </div>
+      {percent != null && (
+        <>
+          <div className="mt-1">
+            <ProgressBar
+              value={percent}
+              label={`${label} utilisation`}
+              tone={percent > 90 ? "danger" : percent > 70 ? "warning" : "accent"}
+            />
+          </div>
+          {detail && <div className="mt-0.5 text-[10px] text-fg-muted">{detail}</div>}
+        </>
+      )}
     </div>
   );
 }

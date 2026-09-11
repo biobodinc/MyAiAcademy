@@ -5,7 +5,9 @@
 import {
   ApiError,
   createLocalServiceClient,
+  type CleanupRequest,
   type CommandResult,
+  type GuideAnswer,
   type PreferencesUpdate,
   type ProfileCreate,
   type ProfileUpdate,
@@ -23,6 +25,10 @@ export const api = createLocalServiceClient(async () => {
 export const keys = {
   status: ["status"] as const,
   hardware: ["hardware"] as const,
+  metrics: ["hardware", "metrics"] as const,
+  benchmark: ["hardware", "benchmark"] as const,
+  cleanup: ["storage", "cleanup"] as const,
+  guideTopics: ["guide", "topics"] as const,
   storage: ["storage"] as const,
   storageCheck: (path: string) => ["storage", "check", path] as const,
   externalCandidates: ["storage", "external"] as const,
@@ -60,6 +66,68 @@ export function useRefreshHardware() {
   return useMutation({
     mutationFn: () => unwrap(api.GET("/api/hardware", { params: { query: { refresh: true } } })),
     onSuccess: (data) => qc.setQueryData(keys.hardware, data),
+  });
+}
+
+/** Whole-machine utilisation; polled while the dashboard is visible. */
+export function useMetrics(refetchInterval: number | false = 5_000) {
+  return useQuery({
+    queryKey: keys.metrics,
+    queryFn: () => unwrap(api.GET("/api/hardware/metrics")),
+    refetchInterval,
+  });
+}
+
+export function useBenchmark() {
+  return useQuery({
+    queryKey: keys.benchmark,
+    queryFn: () => unwrap(api.GET("/api/hardware/benchmark")),
+  });
+}
+
+export function useRunBenchmark() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/api/hardware/benchmark")),
+    onSuccess: (data) => {
+      qc.setQueryData(keys.benchmark, data);
+      void qc.invalidateQueries({ queryKey: keys.hardware });
+      void qc.invalidateQueries({ queryKey: keys.audit });
+    },
+  });
+}
+
+export function useCleanupPlan() {
+  return useQuery({
+    queryKey: keys.cleanup,
+    queryFn: () => unwrap(api.GET("/api/storage/cleanup")),
+  });
+}
+
+export function useRunCleanup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CleanupRequest) => unwrap(api.POST("/api/storage/cleanup", { body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.cleanup });
+      void qc.invalidateQueries({ queryKey: keys.storage });
+      void qc.invalidateQueries({ queryKey: keys.audit });
+    },
+  });
+}
+
+export function useGuideTopics() {
+  return useQuery({
+    queryKey: keys.guideTopics,
+    queryFn: () => unwrap(api.GET("/api/guide/topics")),
+    staleTime: Infinity,
+  });
+}
+
+export function useAskGuide() {
+  return useMutation({
+    mutationFn: (question: string): Promise<GuideAnswer> =>
+      unwrap(api.POST("/api/guide/ask", { body: { question } })),
   });
 }
 

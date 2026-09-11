@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from myai_core.db.models import Preference
-from myai_core.preferences.schemas import Preferences, PreferencesUpdate
+from myai_core.preferences.schemas import ADVANCED_KEYS, Preferences, PreferencesUpdate
 
 
 class PreferencesService:
@@ -24,7 +24,9 @@ class PreferencesService:
 
     def update(self, changes: PreferencesUpdate) -> Preferences:
         payload = changes.model_dump(exclude_unset=True)
-        payload = {k: v for k, v in payload.items() if v is not None}
+        # ``None`` means "not provided" for ordinary fields but "clear it" for advanced
+        # overrides, which are nullable by design.
+        payload = {k: v for k, v in payload.items() if v is not None or k in ADVANCED_KEYS}
         # Validate the merged result before persisting anything.
         merged = self.get().model_copy(update=payload)
         Preferences.model_validate(merged.model_dump())
