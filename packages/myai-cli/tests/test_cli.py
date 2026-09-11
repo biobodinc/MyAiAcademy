@@ -104,3 +104,18 @@ def test_storage_cleanup_and_benchmark(running_service: Path, tmp_path: Path) ->
 def test_models_unload_is_safe_when_nothing_loaded(running_service: Path) -> None:
     code, out = _run("models", "unload", data_dir=running_service)
     assert code == 0 and "unloaded" in out
+
+
+def test_models_import_and_providers(running_service: Path, tmp_path: Path) -> None:
+    code, out = _run("models", "providers", data_dir=running_service)
+    assert code == 0 and "planned" in out
+    gguf = tmp_path / "mine.gguf"
+    gguf.write_bytes(b"m" * 4096)
+    code, out = _run("models", "import", str(gguf), data_dir=running_service)
+    assert code == 1 and "confirm-rights" in out
+    code, out = _run("models", "import", str(gguf), "--confirm-rights", data_dir=running_service)
+    assert code == 0 and "local-mine" in out
+    code, out = _run("models", "list", data_dir=running_service)
+    assert code == 0 and "(imported)" in out
+    code, out = _run("models", "show", "local-mine", data_dir=running_service)
+    assert code == 0 and "Your own licence" in out

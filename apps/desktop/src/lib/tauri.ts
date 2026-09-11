@@ -48,6 +48,20 @@ export async function pickDirectory(title: string): Promise<string | null> {
   return typeof selected === "string" ? selected : null;
 }
 
+export async function pickFile(title: string, extensions: string[]): Promise<string | null> {
+  if (!inTauri) {
+    return window.prompt(`${title}\n(enter an absolute path)`) ?? null;
+  }
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const selected = await open({
+    directory: false,
+    multiple: false,
+    title,
+    filters: [{ name: extensions.join(", "), extensions }],
+  });
+  return typeof selected === "string" ? selected : null;
+}
+
 export async function openExternal(url: string): Promise<void> {
   if (!/^https:\/\//.test(url)) throw new Error("Only https links may be opened.");
   if (inTauri) {

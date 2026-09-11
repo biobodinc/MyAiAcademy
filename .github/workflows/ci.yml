@@ -44,6 +44,23 @@ jobs:
           uv run python scripts/export_openapi.py
           git diff --exit-code -- packages/api-client/openapi.json
 
+  inference:
+    name: Python (real llama.cpp runtime)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv python install 3.11
+      - name: Install with the local-inference extra (builds llama.cpp from source)
+        run: uv sync --all-packages --all-groups --all-extras --locked
+        env:
+          CMAKE_ARGS: "-DGGML_NATIVE=OFF"
+      - name: End-to-end with the real runtime and a synthetic model
+        run: uv run pytest -p no:warnings packages/myai-core/tests/test_real_runtime.py packages/myai-core/tests/test_chat_cancel.py
+
   web:
     name: TypeScript (api-client, desktop UI, website, mobile)
     runs-on: ubuntu-latest

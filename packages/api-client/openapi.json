@@ -1352,6 +1352,39 @@
         "title": "HardwareTier",
         "type": "string"
       },
+      "ImportRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "path": {
+            "description": "Absolute path to a .gguf file.",
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "rights_confirmed": {
+            "default": false,
+            "description": "Must be true: you confirm you may use this file under its licence.",
+            "title": "Rights Confirmed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportRequest",
+        "type": "object"
+      },
       "InferenceBenchmark": {
         "properties": {
           "backend": {
@@ -1701,14 +1734,26 @@
         "type": "object"
       },
       "ModelEntry": {
-        "description": "A catalog model joined with local state, as the UI shows it.",
+        "description": "A model as the UI shows it: a catalog entry or a file the user imported, joined\nwith local state.",
         "properties": {
           "active": {
             "title": "Active",
             "type": "boolean"
           },
           "catalog": {
-            "$ref": "#/components/schemas/CatalogModel"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present for catalog models; ``None`` for imported files."
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
           },
           "download": {
             "anyOf": [
@@ -1734,13 +1779,24 @@
           "fit": {
             "$ref": "#/components/schemas/HardwareFit"
           },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
           "installed": {
             "title": "Installed",
             "type": "boolean"
           },
+          "license": {
+            "$ref": "#/components/schemas/ModelLicense"
+          },
           "license_accepted": {
             "title": "License Accepted",
             "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
           },
           "size_bytes": {
             "anyOf": [
@@ -1752,6 +1808,14 @@
               }
             ],
             "title": "Size Bytes"
+          },
+          "source": {
+            "enum": [
+              "catalog",
+              "imported"
+            ],
+            "title": "Source",
+            "type": "string"
           },
           "verified_sha256": {
             "anyOf": [
@@ -1766,6 +1830,11 @@
           }
         },
         "required": [
+          "id",
+          "name",
+          "source",
+          "license",
+          "description",
           "catalog",
           "installed",
           "active",
@@ -2621,6 +2690,49 @@
           }
         },
         "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "ProviderInfo": {
+        "description": "One entry of the provider architecture (spec \u00a746), reported truthfully.",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "available",
+              "unavailable",
+              "planned"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "status",
+          "detail"
+        ],
+        "title": "ProviderInfo",
         "type": "object"
       },
       "RetrievedChunk": {
@@ -4553,6 +4665,48 @@
         ]
       }
     },
+    "/api/models/import": {
+      "post": {
+        "description": "Register a GGUF file you already have. Hashing and copying run off the event loop.",
+        "operationId": "import_model_api_models_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
     "/api/models/load": {
       "post": {
         "description": "Load the active model now (chat loads it lazily; this lets the UI warm it up).",
@@ -4570,6 +4724,32 @@
           }
         },
         "summary": "Load Active",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/providers": {
+      "get": {
+        "description": "The model-provider tree (spec \u00a746) with each entry's real status.",
+        "operationId": "providers_api_models_providers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProviderInfo"
+                  },
+                  "title": "Response Providers Api Models Providers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Providers",
         "tags": [
           "models"
         ]

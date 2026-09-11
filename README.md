@@ -26,12 +26,13 @@ in the product as clearly labelled "Planned · Phase N" states; nothing is faked
 Read this before relying on the software. These statements hold until this section is
 updated.
 
-- **Local chat has not yet been exercised end to end with a real model by the authors.**
-  The environment the code was written in could not reach Hugging Face, so model
-  downloads and generation were verified against a local test server and an injected
-  fake inference backend. The real path (download a catalog model, chat with it) is
-  expected to work and reports any failure in the UI, but treat it as unconfirmed until
-  someone runs it on real hardware and this line is removed.
+- **Catalog models have not yet been downloaded and run by the authors on consumer
+  hardware.** The real llama.cpp runtime is exercised end to end in the test suite
+  (`test_real_runtime.py`: loading, chat templating, streaming, benchmarking, unloading)
+  with a small synthetic model, and downloads are verified against a local server. What
+  remains unconfirmed is the full path with a catalog model from Hugging Face on an
+  ordinary PC, because the environment the code was written in could not reach Hugging
+  Face. Any failure is reported in the UI rather than hidden.
 - **No signed installers are published yet.** The release workflow builds Windows, macOS
   and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded
   to GitHub Releases, Google Play or the App Store. The download page will say
@@ -62,6 +63,7 @@ uv run myai storage set-root ~/MyAI
 uv run myai models list
 uv run myai models download qwen2.5-1.5b-instruct-q4km   # shows the licence, asks, then downloads
 uv run myai chat
+uv run myai models import ~/models/some.gguf --confirm-rights   # use a GGUF you already have
 uv run myai ask "what is training?"                  # built-in guide, not the model
 uv run myai hardware --benchmark                     # memory bandwidth + measured tokens/s
 uv run myai storage cleanup                          # leftovers; --delete removes them

@@ -72,7 +72,8 @@ def models_list(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
     table.add_column("Fit")
     table.add_column("State")
     for m in data["models"]:
-        c = m["catalog"]
+        c = m["catalog"] or {}
+        size = c.get("approx_size_bytes") or m.get("size_bytes")
         fit = "recommended" if m["fit"]["recommended"] else ("ok" if m["fit"]["ok"] else "too big")
         if m["active"]:
             state = "[green]active[/green]"
@@ -84,10 +85,10 @@ def models_list(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
         else:
             state = "licence accepted" if m["license_accepted"] else "—"
         table.add_row(
-            c["id"],
-            c["name"],
-            human_bytes(c["approx_size_bytes"]),
-            c["license"]["name"],
+            m["id"],
+            m["name"] + (" (imported)" if m["source"] == "imported" else ""),
+            human_bytes(size),
+            m["license"]["name"],
             fit,
             state,
         )
@@ -98,12 +99,29 @@ def models_list(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
 def models_show(model_id: str, data_dir: DataDirOpt = None) -> None:
     """Show a model's description, licence and fit reasons."""
     data = _call(_service(data_dir).get, "/models")
-    entry = next((m for m in data["models"] if m["catalog"]["id"] == model_id), None)
+    entry = next((m for m in data["models"] if m["id"] == model_id), None)
     if entry is None:
         err_console.print(f"[red]Unknown model '{model_id}'.[/red]")
         raise typer.Exit(code=1)
     c = entry["catalog"]
-    lic = c["license"]
+    lic = entry["license"]
+    if c is None:
+        console.print(
+            Panel(
+                "\n".join(
+                    [
+                        f"{entry['name']}  (imported)",
+                        entry["description"],
+                        f"Size: {human_bytes(entry['size_bytes'])}  "
+                        f"sha256 {entry['verified_sha256']}",
+                        f"Licence: {lic['name']} — {lic['summary']}",
+                        *[f"  • {r}" for r in entry["fit"]["reasons"]],
+                    ]
+                ),
+                title=entry["id"],
+            )
+        )
+        return
     lines = [
         f"{c['name']}  ({c['parameters_billion']}B, {c['quantization']}, "
         f"context {c['context_length']})",
@@ -175,6 +193,54 @@ def models_use(model_id: str, data_dir: DataDirOpt = None) -> None:
     """Make an installed model the active one."""
     _call(_service(data_dir).post, "/models/active", {"model_id": model_id})
     console.print(f"[green]{model_id} is now active.[/green]")
+
+
+@models_app.command("import")
+def models_import(
+    path: str,
+    name: Annotated[
+        str | None, typer.Option(help="Display name (defaults to the file name).")
+    ] = None,
+    confirm_rights: Annotated[
+        bool,
+        typer.Option(
+            "--confirm-rights",
+            help="Confirm you may use this file under its licence. Required.",
+        ),
+    ] = False,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Register a GGUF file you already have. Files outside Models/ are copied in."""
+    if not confirm_rights:
+        err_console.print(
+            "[red]Pass --confirm-rights to confirm you may use this model file under its "
+            "licence. MyAI Academy does not verify licences for imported files.[/red]"
+        )
+        raise typer.Exit(code=1)
+    data = _call(
+        _service(data_dir).post,
+        "/models/import",
+        {"path": str(Path(path).expanduser().resolve()), "name": name, "rights_confirmed": True},
+    )
+    entry = next(m for m in data["models"] if m["source"] == "imported" and m["installed"])
+    console.print(f"[green]Imported {entry['name']} as {entry['id']}[/green]  {entry['file_path']}")
+
+
+@models_app.command("providers")
+def models_providers(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Show the model-provider tree and each provider's real status."""
+    data = _call(_service(data_dir).get, "/models/providers")
+    if as_json:
+        return _emit_json(data)
+    table = Table(title="Model providers")
+    table.add_column("Provider")
+    table.add_column("Kind")
+    table.add_column("Status")
+    table.add_column("Detail")
+    for p in data:
+        colour = {"available": "green", "unavailable": "red", "planned": "yellow"}[p["status"]]
+        table.add_row(p["name"], p["kind"], f"[{colour}]{p['status']}[/{colour}]", p["detail"])
+    console.print(table)
 
 
 @models_app.command("unload")

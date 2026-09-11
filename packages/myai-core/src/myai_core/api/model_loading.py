@@ -12,8 +12,9 @@ from pathlib import Path
 from fastapi import HTTPException, status
 
 from myai_core.api.state import AppState
+from myai_core.models.catalog import get_catalog_model
 from myai_core.models.provider import LoadConfig, ProviderError
-from myai_core.models.runtime import load_config_for, memory_budget_problem
+from myai_core.models.runtime import DEFAULT_CONTEXT, load_config_for, memory_budget_problem
 from myai_core.models.service import ModelService
 from myai_core.preferences.schemas import Preferences
 
@@ -42,10 +43,13 @@ def prepare_active_model(
     problem = memory_budget_problem(installed.size_bytes, preferences.ram_limit_gib)
     if problem:
         raise HTTPException(status.HTTP_409_CONFLICT, problem)
+    catalog = get_catalog_model(active)
+    context = min(catalog.context_length, DEFAULT_CONTEXT) if catalog else DEFAULT_CONTEXT
     config = load_config_for(
         active,
         state.hardware_cache,
         preferences.compute_preset,
+        context_length=context,
         cpu_utilization_percent=preferences.cpu_utilization_percent,
     )
     return PreparedModel(model_id=active, path=Path(installed.file_path), config=config)

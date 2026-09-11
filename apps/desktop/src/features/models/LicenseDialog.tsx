@@ -1,4 +1,4 @@
-import { formatBytes, type ModelEntry } from "@myai/api-client";
+import { formatBytes, type CatalogModel, type ModelEntry } from "@myai/api-client";
 import { ExternalLink } from "lucide-react";
 
 import { Alert, Button } from "../../components/ui";
@@ -10,16 +10,17 @@ import { openExternal } from "../../lib/tauri";
  */
 export function LicenseDialog({
   entry,
+  catalog,
   busy,
   onAccept,
   onClose,
 }: {
   entry: ModelEntry;
+  catalog: CatalogModel;
   busy: boolean;
   onAccept: () => void;
   onClose: () => void;
 }) {
-  const { catalog } = entry;
   const lic = catalog.license;
   return (
     <div

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
@@ -183,11 +184,14 @@ class ChatService:
         generate: Generator,
         model_id: str,
         default_options: GenerationOptions | None = None,
+        cancel: threading.Event | None = None,
     ) -> Iterator[StreamEvent]:
         """Persist the user turn, stream the reply, persist the assistant turn.
 
         Yields events suitable for SSE. The assistant message is written even when the
-        stream fails part-way, with ``finish_reason='error'``, so nothing is silently lost.
+        stream fails part-way (``finish_reason='error'``), is cancelled through ``cancel``
+        or is closed by the consumer (``finish_reason='cancelled'``), so nothing is
+        silently lost and the backend's generator is always closed.
         """
         conversation = self.get_conversation(conversation_id)
         user_msg = Message(conversation_id=conversation.id, role="user", content=data.content)
@@ -216,37 +220,50 @@ class ChatService:
         prompt_tokens: int | None = None
         completion_tokens: int | None = None
         error: str | None = None
-        try:
-            for chunk in generate(messages, data.options or default_options or GenerationOptions()):
-                if chunk.text:
-                    buffer.append(chunk.text)
-                    yield StreamEvent("delta", {"text": chunk.text})
-                if chunk.prompt_tokens is not None:
-                    prompt_tokens = chunk.prompt_tokens
-                if chunk.completion_tokens is not None:
-                    completion_tokens = chunk.completion_tokens
-                if chunk.done:
-                    finish = chunk.finish_reason or "stop"
-        except Exception as exc:
-            error = str(exc)
-            finish = "error"
-
-        duration_ms = int((time.monotonic() - started) * 1000)
+        options = data.options or default_options or GenerationOptions()
+        stream = generate(messages, options)
         reply = Message(
             conversation_id=conversation.id,
             role="assistant",
-            content="".join(buffer),
+            content="",
             model_id=model_id,
-            prompt_tokens=prompt_tokens,
-            completion_tokens=completion_tokens,
-            duration_ms=duration_ms,
             retrieved_chunk_ids=chunk_ids,
-            finish_reason=finish or "stop",
         )
-        self._session.add(reply)
-        conversation.version += 1
-        self._session.flush()
-        self._session.commit()
+        try:
+            try:
+                for chunk in stream:
+                    if chunk.text:
+                        buffer.append(chunk.text)
+                        yield StreamEvent("delta", {"text": chunk.text})
+                    if chunk.prompt_tokens is not None:
+                        prompt_tokens = chunk.prompt_tokens
+                    if chunk.completion_tokens is not None:
+                        completion_tokens = chunk.completion_tokens
+                    if chunk.done:
+                        finish = chunk.finish_reason or "stop"
+                    if cancel is not None and cancel.is_set():
+                        finish = "cancelled"
+                        break
+            except Exception as exc:
+                error = str(exc)
+                finish = "error"
+        except GeneratorExit:
+            # The consumer stopped reading (client disconnect). Record what we have.
+            finish = "cancelled"
+            raise
+        finally:
+            _close(stream)  # releases the backend's context and the runtime lock
+            reply.content = "".join(buffer)
+            reply.prompt_tokens = prompt_tokens
+            reply.completion_tokens = completion_tokens
+            reply.duration_ms = int((time.monotonic() - started) * 1000)
+            reply.finish_reason = finish or "stop"
+            self._session.add(reply)
+            conversation.version += 1
+            self._session.flush()
+            self._session.commit()
+
+        duration_ms = reply.duration_ms
         if error:
             yield StreamEvent("error", {"message": error, "assistant_message_id": reply.id})
         else:
@@ -260,6 +277,13 @@ class ChatService:
                     "completion_tokens": completion_tokens,
                 },
             )
+
+
+def _close(stream: Iterator[GenerationChunk]) -> None:
+    """Close a generator-backed stream; plain iterators have nothing to release."""
+    close = getattr(stream, "close", None)
+    if callable(close):
+        close()
 
 
 def _title_from(text_: str) -> str:

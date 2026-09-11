@@ -38,8 +38,8 @@ KIND_DESCRIPTIONS: dict[CleanupKind, str] = {
         "instead of resuming."
     ),
     CleanupKind.ORPHANED_MODEL: (
-        "A model file that MyAI no longer tracks (removed from the catalog or copied in by "
-        "hand). Chat cannot use it until it is re-registered."
+        "A model file that MyAI does not track (removed from the catalog or copied in by "
+        "hand). Import it under Models to use it, or delete it here."
     ),
 }
 

@@ -1,5 +1,5 @@
 import { formatBytes, type ModelEntry } from "@myai/api-client";
-import { CheckCircle2, Download, Trash2, XCircle } from "lucide-react";
+import { CheckCircle2, Download, FileUp, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -15,13 +15,16 @@ import {
   describeError,
   useAcceptLicense,
   useCancelDownload,
+  useImportModel,
   useLoadActiveModel,
   useModels,
+  useProviders,
   useRemoveModel,
   useSetActiveModel,
   useStartDownload,
   useUnloadModel,
 } from "../../lib/api";
+import { pickFile } from "../../lib/tauri";
 import { LicenseDialog } from "./LicenseDialog";
 
 export function ModelsPage() {
@@ -41,9 +44,9 @@ export function ModelsPage() {
   const anyError = [accept, start, cancel, activate, remove, load, unload].find((m) => m.isError);
 
   const beginDownload = (entry: ModelEntry) => {
-    accept.mutate(entry.catalog.id, {
+    accept.mutate(entry.id, {
       onSuccess: () => {
-        start.mutate(entry.catalog.id, {
+        start.mutate(entry.id, {
           onSettled: () => {
             setLicenseFor(null);
           },
@@ -99,7 +102,7 @@ export function ModelsPage() {
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         {data.models.map((entry) => (
           <ModelCard
-            key={entry.catalog.id}
+            key={entry.id}
             entry={entry}
             onDownload={() => {
               setLicenseFor(entry);
@@ -108,11 +111,10 @@ export function ModelsPage() {
               cancel.mutate(jobId);
             }}
             onActivate={() => {
-              activate.mutate(entry.catalog.id);
+              activate.mutate(entry.id);
             }}
             onRemove={() => {
-              if (window.confirm(`Delete ${entry.catalog.name} from disk?`))
-                remove.mutate(entry.catalog.id);
+              if (window.confirm(`Delete ${entry.name} from disk?`)) remove.mutate(entry.id);
             }}
             onLoad={() => {
               load.mutate();
@@ -121,9 +123,14 @@ export function ModelsPage() {
           />
         ))}
       </div>
-      {licenseFor && (
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <ImportCard />
+        <ProvidersCard />
+      </div>
+      {licenseFor?.catalog && (
         <LicenseDialog
           entry={licenseFor}
+          catalog={licenseFor.catalog}
           busy={accept.isPending || start.isPending}
           onAccept={() => {
             beginDownload(licenseFor);
@@ -163,15 +170,17 @@ function ModelCard({
     <Card className={entry.active ? "border-accent" : undefined}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-semibold">{c.name}</h3>
+          <h3 className="font-semibold">{entry.name}</h3>
           <p className="text-xs text-fg-muted">
-            {c.parameters_billion}B · {c.quantization} · {formatBytes(c.approx_size_bytes, 1)} ·{" "}
-            {c.license.name}
+            {c
+              ? `${c.parameters_billion}B · ${c.quantization} · ${formatBytes(c.approx_size_bytes, 1)}`
+              : `Imported · ${formatBytes(entry.size_bytes, 1)}`}{" "}
+            · {entry.license.name}
           </p>
         </div>
         <StatusPill tone={fitTone}>{fitLabel}</StatusPill>
       </div>
-      <p className="mt-2 text-sm text-fg-muted">{c.description}</p>
+      <p className="mt-2 text-sm text-fg-muted">{entry.description}</p>
       {entry.fit.reasons.length > 0 && (
         <ul className="mt-2 list-disc pl-5 text-xs text-fg-muted">
           {entry.fit.reasons.map((r) => (
@@ -185,7 +194,7 @@ function ModelCard({
           <ProgressBar
             value={download.bytes_done}
             max={download.bytes_total ?? Math.max(download.bytes_done, 1)}
-            label={`Downloading ${c.name}`}
+            label={`Downloading ${entry.name}`}
           />
           <div className="flex items-center justify-between text-xs text-fg-muted">
             <span>
@@ -250,6 +259,110 @@ function ModelCard({
           )
         )}
       </div>
+    </Card>
+  );
+}
+
+function ImportCard() {
+  const importModel = useImportModel();
+  const [path, setPath] = useState("");
+  const [rights, setRights] = useState(false);
+  return (
+    <Card title="Import a model file">
+      <p className="text-sm text-fg-muted">
+        Already have a GGUF file? Register it here. Files outside your Models folder are copied in;
+        the original is left alone. MyAI Academy cannot check the licence of a file you supply, so
+        you confirm your rights yourself.
+      </p>
+      <div className="mt-3 flex gap-2">
+        <input
+          aria-label="Model file path"
+          className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 font-mono text-xs outline-none focus:border-accent"
+          placeholder="/path/to/model.gguf"
+          value={path}
+          onChange={(e) => {
+            setPath(e.target.value);
+          }}
+        />
+        <Button
+          variant="secondary"
+          onClick={() =>
+            void pickFile("Choose a GGUF model file", ["gguf"]).then((p) => {
+              if (p) setPath(p);
+            })
+          }
+        >
+          Browse
+        </Button>
+      </div>
+      <label className="mt-3 flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 accent-accent"
+          checked={rights}
+          onChange={(e) => {
+            setRights(e.target.checked);
+          }}
+        />
+        I have the right to use this model file under its licence.
+      </label>
+      {importModel.isError && (
+        <div className="mt-3">
+          <Alert tone="danger">{describeError(importModel.error)}</Alert>
+        </div>
+      )}
+      <Button
+        className="mt-3"
+        disabled={!path.trim() || !rights || importModel.isPending}
+        onClick={() => {
+          importModel.mutate(
+            { path: path.trim(), rights_confirmed: rights, name: null },
+            {
+              onSuccess: () => {
+                setPath("");
+                setRights(false);
+              },
+            },
+          );
+        }}
+      >
+        <FileUp className="h-4 w-4" aria-hidden />
+        {importModel.isPending ? "Importing…" : "Import"}
+      </Button>
+    </Card>
+  );
+}
+
+function ProvidersCard() {
+  const providers = useProviders();
+  return (
+    <Card title="Providers">
+      <p className="text-sm text-fg-muted">
+        Your AI can be served by different backends. Only the local one exists today; external
+        providers are optional and not built. If they ever ship, keys will live in your operating
+        system's credential store, never in this app's code.
+      </p>
+      <ul className="mt-3 space-y-2 text-sm">
+        {providers.data?.map((p) => (
+          <li key={p.id} className="flex items-start justify-between gap-3">
+            <div>
+              <div className="font-medium">{p.name}</div>
+              <div className="text-xs text-fg-muted">{p.detail}</div>
+            </div>
+            <StatusPill
+              tone={
+                p.status === "available"
+                  ? "success"
+                  : p.status === "unavailable"
+                    ? "danger"
+                    : "muted"
+              }
+            >
+              {p.status}
+            </StatusPill>
+          </li>
+        ))}
+      </ul>
     </Card>
   );
 }

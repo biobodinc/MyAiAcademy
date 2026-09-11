@@ -231,3 +231,49 @@ def test_chat_generation_defaults_come_from_preferences(client: TestClient, tmp_
     )
     assert seen[-1].max_tokens == 40  # explicit client options still win
     assert client.patch("/api/preferences", json={"chat_max_tokens": 1}).status_code == 422
+
+
+def test_import_local_gguf_and_providers(client: TestClient, tmp_path: Path) -> None:
+    providers = client.get("/api/models/providers").json()
+    assert providers[0]["id"] == "llama-cpp" and providers[0]["status"] == "available"
+    assert {p["status"] for p in providers[1:]} == {"planned"}
+
+    outside = tmp_path / "downloads" / "My Model.Q4.gguf"
+    outside.parent.mkdir()
+    outside.write_bytes(b"g" * 4096)
+    r = client.post("/api/models/import", json={"path": str(outside)})
+    assert r.status_code == 422 and "right to use" in r.json()["detail"]
+    r = client.post(
+        "/api/models/import", json={"path": str(tmp_path / "nope.gguf"), "rights_confirmed": True}
+    )
+    assert r.status_code == 422 and "No such file" in r.json()["detail"]
+    r = client.post("/api/models/import", json={"path": str(outside), "rights_confirmed": True})
+    assert r.status_code == 201, r.text
+    data = r.json()
+    entry = next(m for m in data["models"] if m["source"] == "imported")
+    assert entry["id"] == "local-my-model-q4" and entry["name"] == "My Model.Q4"
+    assert entry["catalog"] is None and entry["license"]["id"] == "user-supplied"
+    assert entry["active"] is True and data["active_model_id"] == entry["id"]
+    copied = Path(entry["file_path"])
+    assert copied.parent.name == "imported" and copied.exists() and outside.exists()
+    assert entry["verified_sha256"] is not None
+
+    # Same bytes again: refused as a duplicate, not silently re-copied.
+    r = client.post("/api/models/import", json={"path": str(outside), "rights_confirmed": True})
+    assert r.status_code == 422 and "already installed" in r.json()["detail"]
+
+    # A file already inside Models/ is registered in place.
+    inside = tmp_path / "MyAI" / "Models" / "hand-copied.gguf"
+    inside.write_bytes(b"h" * 4096)
+    plan = client.get("/api/storage/cleanup").json()
+    assert [c["kind"] for c in plan["candidates"]] == ["orphaned_model"]
+    r = client.post("/api/models/import", json={"path": str(inside), "rights_confirmed": True})
+    assert r.status_code == 201
+    entry2 = next(m for m in r.json()["models"] if m["id"] == "local-hand-copied")
+    assert entry2["file_path"] == str(inside)
+    assert client.get("/api/storage/cleanup").json()["candidates"] == []
+    assert any(e["action"] == "model_imported" for e in client.get("/api/audit").json())
+
+    # Removing an imported model deletes the registered copy, never the original.
+    client.delete(f"/api/models/{entry['id']}")
+    assert not copied.exists() and outside.exists()
