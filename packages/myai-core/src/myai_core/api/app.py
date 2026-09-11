@@ -27,6 +27,9 @@ from myai_core.api.routes import (
     status,
     storage,
 )
+from myai_core.api.routes import (
+    jobs as jobs_routes,
+)
 from myai_core.api.state import AppState
 from myai_core.config import TAURI_ORIGINS, CoreSettings
 from myai_core.db.base import make_engine, make_session_factory
@@ -38,6 +41,7 @@ from myai_core.models.runtime import InferenceRuntime
 from myai_core.paths import AppPaths, resolve_app_paths
 from myai_core.security.auth import LocalAuthPolicy, require_local_auth
 from myai_core.security.local_token import load_or_create_token
+from myai_core.skills.jobs import JobManager
 from myai_core.status.service import InternetMonitor, StatusService
 
 log = logging.getLogger(__name__)
@@ -67,6 +71,12 @@ def create_app(
         session_factory = make_session_factory(engine)
         runtime = InferenceRuntime(provider or LlamaCppProvider())
         downloads = download_manager or DownloadManager(session_factory)
+        jobs = JobManager(session_factory)
+        with session_factory() as startup_session:
+            interrupted = JobManager.recover(startup_session)
+            startup_session.commit()
+        if interrupted:
+            log.warning("%d job(s) were interrupted by a restart and marked failed", interrupted)
         app.state.core = AppState(
             paths=paths,
             engine=engine,
@@ -77,12 +87,14 @@ def create_app(
             status=StatusService(internet, started_at),
             runtime=runtime,
             downloads=downloads,
+            jobs=jobs,
         )
         app.state.auth_policy = app.state.core.auth_policy
         log.info("myai-core %s ready (data dir: %s)", __version__, paths.data_dir)
         try:
             yield
         finally:
+            jobs.shutdown()
             downloads.shutdown()
             runtime.unload()
             engine.dispose()
@@ -113,6 +125,7 @@ def create_app(
         skills,
         commands,
         guide,
+        jobs_routes,
         audit,
         privacy,
         models,

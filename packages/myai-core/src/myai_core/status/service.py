@@ -11,6 +11,7 @@ from pydantic import Field
 
 from myai_core import __version__
 from myai_core.schemas import ApiModel
+from myai_core.skills.jobs import JobSummary
 
 
 class Availability(StrEnum):
@@ -39,6 +40,9 @@ class ServiceStatus(ApiModel):
     loaded_model_id: str | None = None
     training: Availability
     training_detail: str
+    job: JobSummary | None = Field(
+        default=None, description="The background job in progress (learning, evaluating)."
+    )
     profile_exists: bool
     storage_configured: bool
     onboarding_completed: bool
@@ -113,6 +117,7 @@ class StatusService:
         onboarding_completed: bool,
         privacy_mode: str,
         ai_state: AIState | None = None,
+        job: JobSummary | None = None,
     ) -> ServiceStatus:
         internet, checked_at = self._internet.current()
         now = datetime.now(tz=UTC)
@@ -129,6 +134,7 @@ class StatusService:
             loaded_model_id=ai_state.loaded_model_id if ai_state else None,
             training=Availability.UNAVAILABLE,
             training_detail="Training jobs arrive in Phase 4.",
+            job=job,
             profile_exists=profile_exists,
             storage_configured=storage_configured,
             onboarding_completed=onboarding_completed,
@@ -148,10 +154,20 @@ class StatusService:
             Availability.NOT_CONFIGURED: "No model installed yet",
             Availability.UNAVAILABLE: "Runtime unavailable",
         }.get(status.ai, "Unknown")
+        if status.job is None:
+            job_label = "none running"
+        else:
+            verb = {"learn": "Learning", "evaluate": "Evaluating", "train": "Training"}.get(
+                status.job.kind, status.job.kind.title()
+            )
+            job_label = f"{verb} {status.job.skill_id.title()} {status.job.progress_percent}%" + (
+                " (paused)" if status.job.status == "paused" else ""
+            )
         return {
             "ai_label": ai_label,
             "internet_label": internet,
             "training_label": "Unavailable (Phase 4)",
+            "job_label": job_label,
             "privacy_mode": status.privacy_mode,
             "cloud_uploads": status.cloud_uploads,
         }

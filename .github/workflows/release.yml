@@ -126,6 +126,7 @@ jobs:
           uv run --group bundle python -m PyInstaller --noconfirm --clean --onefile \
             --name myai --paths packages/myai-core/src --paths packages/myai-cli/src \
             --add-data "packages/myai-core/src/myai_core/db/migrations$( [ "$RUNNER_OS" = Windows ] && echo ';' || echo ':' )myai_core/db/migrations" \
+            --add-data "packages/myai-core/src/myai_core/skills/packages$( [ "$RUNNER_OS" = Windows ] && echo ';' || echo ':' )myai_core/skills/packages" \
             --hidden-import myai_core.db.migrations.env \
             --collect-submodules uvicorn --collect-submodules alembic --collect-submodules sqlalchemy.dialects.sqlite \
             --collect-all llama_cpp --collect-submodules pypdf \

@@ -1,0 +1,111 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 96,
+  "tasks": [
+    {
+      "id": "only-ok",
+      "area": "instruction_following",
+      "prompt": "Reply with only the word OK.",
+      "checks": [{ "type": "exact", "expected": ["ok", "ok."] }]
+    },
+    {
+      "id": "three-colours",
+      "area": "instruction_following",
+      "prompt": "List the three primary paint colours as exactly three bullet points, one colour per bullet, nothing else.",
+      "checks": [
+        { "type": "bullets", "expected": 3 },
+        { "type": "contains_all", "terms": ["red", "blue", "yellow"], "partial": true }
+      ]
+    },
+    {
+      "id": "capital-one-word",
+      "area": "clarity",
+      "prompt": "What is the capital of France? Answer with one word.",
+      "checks": [
+        { "type": "contains_all", "terms": ["paris"] },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "greet-by-name",
+      "area": "context",
+      "prompt": "My name is Dana. Greet me in one short sentence using my name.",
+      "checks": [
+        { "type": "contains_all", "terms": ["dana"] },
+        { "type": "word_count", "max": 25 }
+      ]
+    },
+    {
+      "id": "capitals-only",
+      "area": "instruction_following",
+      "prompt": "Answer in capital letters only: what day comes after Monday?",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "^[^a-z]*$",
+          "ignore_case": false,
+          "full": true,
+          "multiline": true
+        },
+        { "type": "contains_all", "terms": ["tuesday"] }
+      ]
+    },
+    {
+      "id": "yes-no",
+      "area": "instruction_following",
+      "prompt": "Answer with yes or no only: is the sun a star?",
+      "checks": [{ "type": "regex", "pattern": "^(yes|no)[.!]?$", "full": true }]
+    },
+    {
+      "id": "count-to-five",
+      "area": "instruction_following",
+      "prompt": "Write the numbers from 1 to 5 separated by commas, and nothing else.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "^\\s*1\\s*,\\s*2\\s*,\\s*3\\s*,\\s*4\\s*,\\s*5\\s*\\.?\\s*$",
+          "full": true
+        }
+      ]
+    },
+    {
+      "id": "favourite-colour",
+      "area": "context",
+      "prompt": "Earlier I told you my favourite colour is green. What is my favourite colour? Answer with one word.",
+      "checks": [
+        { "type": "contains_all", "terms": ["green"] },
+        { "type": "word_count", "max": 2 }
+      ]
+    },
+    {
+      "id": "spanish-thanks",
+      "area": "instruction_following",
+      "prompt": "Translate 'thank you' into Spanish. Reply with the Spanish phrase only.",
+      "checks": [
+        { "type": "contains_all", "terms": ["gracias"] },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "json-person",
+      "area": "instruction_following",
+      "prompt": "Output only a JSON object with the keys \"name\" and \"age\" for a person named Sam who is 30 years old.",
+      "checks": [{ "type": "json_object", "expected": { "name": "Sam", "age": "30" } }]
+    },
+    {
+      "id": "explain-file",
+      "area": "clarity",
+      "prompt": "Explain what a computer file is in no more than 30 words.",
+      "checks": [{ "type": "word_count", "min": 5, "max": 30 }]
+    },
+    {
+      "id": "repeat-sentence",
+      "area": "context",
+      "prompt": "Repeat this sentence exactly: The quick brown fox jumps over the lazy dog.",
+      "checks": [
+        { "type": "contains_all", "terms": ["the quick brown fox jumps over the lazy dog"] },
+        { "type": "word_count", "max": 12 }
+      ]
+    }
+  ]
+}

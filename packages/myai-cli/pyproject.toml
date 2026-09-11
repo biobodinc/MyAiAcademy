@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-myai = "myai_cli.main:app"
+myai = "myai_cli.main:entrypoint"
 
 [dependency-groups]
 dev = ["pytest>=9.0", "pytest-cov>=7.0"]

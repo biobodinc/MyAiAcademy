@@ -14,10 +14,13 @@ from ulid import ULID
 
 from myai_core.chat.prompt import build_system_prompt
 from myai_core.db.models import AIProfile, Conversation, Message
+from myai_core.hardware.volumes import probe_volumes
 from myai_core.knowledge.service import KnowledgeService, RetrievedChunk
 from myai_core.memory.service import MemoryService
 from myai_core.models.provider import ChatMessage, GenerationChunk, GenerationOptions, Role
 from myai_core.schemas import ApiModel
+from myai_core.skills.learning import SkillLearningService
+from myai_core.storage import StorageManager
 
 HISTORY_CHAR_BUDGET = 12_000
 RETRIEVAL_TOP_K = 4
@@ -152,7 +155,10 @@ class ChatService:
         knowledge = KnowledgeService(self._session, self._profile.ai_id).search(
             user_text, limit=RETRIEVAL_TOP_K
         )
-        system = build_system_prompt(self._profile, memories, knowledge)
+        skills = SkillLearningService(
+            self._session, self._profile.ai_id, StorageManager(self._session, probe_volumes)
+        ).instructions_for_prompt()
+        system = build_system_prompt(self._profile, memories, knowledge, skills)
         history = self.messages(conversation_id)
         window: list[ChatMessage] = []
         budget = HISTORY_CHAR_BUDGET

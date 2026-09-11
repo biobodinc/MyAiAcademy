@@ -26,23 +26,32 @@ class PreparedModel:
     config: LoadConfig
 
 
-def prepare_active_model(
+class ModelNotReadyError(Exception):
+    """The active model cannot be used right now; ``status_code`` maps it to HTTP."""
+
+    def __init__(self, status_code: int, detail: str) -> None:
+        super().__init__(detail)
+        self.status_code = status_code
+        self.detail = detail
+
+
+def resolve_active_model(
     state: AppState, models: ModelService, preferences: Preferences
 ) -> PreparedModel:
-    """Resolve the active model or raise 503 (no runtime) / 409 (no model, RAM limit)."""
+    """Resolve the active model or raise :class:`ModelNotReadyError` (usable off the API)."""
     runtime_ok, runtime_detail = state.runtime.provider.availability()
     if not runtime_ok:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, runtime_detail)
+        raise ModelNotReadyError(status.HTTP_503_SERVICE_UNAVAILABLE, runtime_detail)
     active = models.active_model_id()
     if active is None:
-        raise HTTPException(
+        raise ModelNotReadyError(
             status.HTTP_409_CONFLICT, "No local model is set up. Download one under Models."
         )
     installed = models.get_installed(active)
     assert installed is not None
     problem = memory_budget_problem(installed.size_bytes, preferences.ram_limit_gib)
     if problem:
-        raise HTTPException(status.HTTP_409_CONFLICT, problem)
+        raise ModelNotReadyError(status.HTTP_409_CONFLICT, problem)
     catalog = get_catalog_model(active)
     context = min(catalog.context_length, DEFAULT_CONTEXT) if catalog else DEFAULT_CONTEXT
     config = load_config_for(
@@ -53,6 +62,16 @@ def prepare_active_model(
         cpu_utilization_percent=preferences.cpu_utilization_percent,
     )
     return PreparedModel(model_id=active, path=Path(installed.file_path), config=config)
+
+
+def prepare_active_model(
+    state: AppState, models: ModelService, preferences: Preferences
+) -> PreparedModel:
+    """Route helper: :func:`resolve_active_model` with HTTP status codes."""
+    try:
+        return resolve_active_model(state, models, preferences)
+    except ModelNotReadyError as exc:
+        raise HTTPException(exc.status_code, exc.detail) from exc
 
 
 def load_prepared(state: AppState, prepared: PreparedModel) -> None:
