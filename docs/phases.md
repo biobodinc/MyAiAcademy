@@ -32,3 +32,21 @@ interests, see an honest hardware assessment, choose a storage location, read th
 promise), land on a dashboard, and use the console (`/help`, `/status`, `/hardware`,
 `/skills`, `/settings`, natural-language mapping). The CLI exposes the same service.
 Every Phase 2+ feature is visibly labelled with its phase.
+
+## Product direction to carry forward (recorded 2026-09-11, not yet implemented)
+
+Decisions from the product owner that later phases must honour. Nothing below is built
+yet, and no pricing has been decided.
+
+- **An account is required to access downloads and to sign in to the desktop app.**
+  Phase 5 (accounts, OIDC with PKCE) therefore moves ahead of Phase 3/4 work that would
+  otherwise ship without a sign-in gate on the download page. The website's download page
+  will require sign-in before showing release assets.
+- **The CLI may require a subscription** if subscriptions are introduced. The business
+  model is still being decided; the best case is subscriptions. Until then the CLI stays
+  a temporary, ungated interface from a source checkout (see README "Temporary
+  interface").
+- Existing promises stay intact: the local AI keeps working offline once installed
+  (spec §92), private data never leaves the machine, and no capability is gated in a way
+  that holds the user's AI or data hostage (spec §101). Gating applies to distribution
+  and sign-in, not to the user's already-installed AI.
