@@ -1,0 +1,26 @@
+[project]
+name = "myai-cli"
+version = "0.1.0"
+description = "Command-line interface for MyAI Academy: talk to your local AI service from a terminal."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+  "myai-core",
+  "typer>=0.15",
+  "rich>=13.9",
+  "httpx>=0.27",
+]
+
+[project.scripts]
+myai = "myai_cli.main:app"
+
+[dependency-groups]
+dev = ["pytest>=9.0", "pytest-cov>=7.0"]
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/myai_cli"]

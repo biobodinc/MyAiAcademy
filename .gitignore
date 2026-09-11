@@ -1,0 +1,53 @@
+# --- OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# --- Secrets & local config (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# --- Node
+node_modules/
+dist/
+dist-ssr/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+coverage/
+.vite/
+.expo/
+expo-env.d.ts
+
+# --- Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# --- Rust / Tauri
+target/
+apps/desktop/src-tauri/gen/schemas/
+apps/desktop/src-tauri/binaries/
+
+# --- Logs / local data
+*.log
+.myai-dev/
