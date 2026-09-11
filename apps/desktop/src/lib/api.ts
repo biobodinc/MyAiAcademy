@@ -179,3 +179,256 @@ export function describeError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
 }
+
+// --- Phase 2: local AI --------------------------------------------------------------------
+
+import type {
+  ChatStreamEvents,
+  DocumentAddPathBody,
+  MemoryCategory,
+  MemoryUpdate,
+  SseEvent,
+} from "./local-ai-types";
+import { streamSse } from "@myai/api-client";
+
+export const localAiKeys = {
+  models: ["models"] as const,
+  recommendedModel: ["models", "recommended"] as const,
+  download: (id: string) => ["models", "download", id] as const,
+  conversations: ["chat", "conversations"] as const,
+  messages: (id: string) => ["chat", "messages", id] as const,
+  memory: (q: string) => ["memory", q] as const,
+  knowledge: ["knowledge"] as const,
+  knowledgeSearch: (q: string) => ["knowledge", "search", q] as const,
+};
+
+export function useModels(refetchInterval?: number | false) {
+  return useQuery({
+    queryKey: localAiKeys.models,
+    queryFn: () => unwrap(api.GET("/api/models")),
+    refetchInterval: refetchInterval ?? false,
+  });
+}
+
+export function useRecommendedModel() {
+  return useQuery({
+    queryKey: localAiKeys.recommendedModel,
+    queryFn: () => unwrap(api.GET("/api/models/recommended")),
+  });
+}
+
+function invalidateModels(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: localAiKeys.models });
+  void qc.invalidateQueries({ queryKey: keys.status });
+  void qc.invalidateQueries({ queryKey: keys.audit });
+}
+
+export function useAcceptLicense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (model_id: string) =>
+      unwrap(api.POST("/api/models/{model_id}/accept-license", { params: { path: { model_id } } })),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useStartDownload() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (model_id: string) =>
+      unwrap(api.POST("/api/models/{model_id}/download", { params: { path: { model_id } } })),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useCancelDownload() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (job_id: string) =>
+      unwrap(api.POST("/api/models/downloads/{job_id}/cancel", { params: { path: { job_id } } })),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useSetActiveModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (model_id: string) =>
+      unwrap(api.POST("/api/models/active", { body: { model_id } })),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useRemoveModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (model_id: string) =>
+      unwrap(api.DELETE("/api/models/{model_id}", { params: { path: { model_id } } })),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useLoadActiveModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/api/models/load")),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useConversations() {
+  return useQuery({
+    queryKey: localAiKeys.conversations,
+    queryFn: () => unwrap(api.GET("/api/chat/conversations")),
+  });
+}
+
+export function useMessages(conversationId: string | null) {
+  return useQuery({
+    queryKey: localAiKeys.messages(conversationId ?? ""),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/chat/conversations/{conversation_id}/messages", {
+          params: { path: { conversation_id: conversationId ?? "" } },
+        }),
+      ),
+    enabled: conversationId !== null,
+  });
+}
+
+export function useCreateConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (title?: string) =>
+      unwrap(api.POST("/api/chat/conversations", { body: { title: title ?? null } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: localAiKeys.conversations }),
+  });
+}
+
+export function useDeleteConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversation_id: string) =>
+      unwrap(
+        api.DELETE("/api/chat/conversations/{conversation_id}", {
+          params: { path: { conversation_id } },
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: localAiKeys.conversations }),
+  });
+}
+
+/** Stream one chat turn. Yields typed SSE events; the caller updates UI state. */
+export async function* streamChatTurn(
+  conversationId: string,
+  content: string,
+  signal?: AbortSignal,
+): AsyncGenerator<SseEvent<ChatStreamEvents[keyof ChatStreamEvents]>> {
+  const creds = await getServiceCredentials();
+  yield* streamSse<ChatStreamEvents[keyof ChatStreamEvents]>(
+    { baseUrl: creds.base_url, token: creds.token },
+    `/api/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    { content },
+    signal,
+  );
+}
+
+export function useMemories(query = "") {
+  return useQuery({
+    queryKey: localAiKeys.memory(query),
+    queryFn: () => unwrap(api.GET("/api/memory", { params: { query: query ? { q: query } : {} } })),
+  });
+}
+
+export function useAddMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { content: string; category: MemoryCategory }) =>
+      unwrap(api.POST("/api/memory", { body: input })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["memory"] }),
+  });
+}
+
+export function useUpdateMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { memory_id: number; body: MemoryUpdate }) =>
+      unwrap(
+        api.PATCH("/api/memory/{memory_id}", {
+          params: { path: { memory_id: input.memory_id } },
+          body: input.body,
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["memory"] }),
+  });
+}
+
+export function useDeleteMemory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (memory_id: number) =>
+      unwrap(api.DELETE("/api/memory/{memory_id}", { params: { path: { memory_id } } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["memory"] }),
+  });
+}
+
+export function useClearMemories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.DELETE("/api/memory")),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["memory"] }),
+  });
+}
+
+export function useKnowledge() {
+  return useQuery({
+    queryKey: localAiKeys.knowledge,
+    queryFn: () => unwrap(api.GET("/api/knowledge")),
+  });
+}
+
+export function useKnowledgeSearch(query: string) {
+  return useQuery({
+    queryKey: localAiKeys.knowledgeSearch(query),
+    queryFn: () => unwrap(api.GET("/api/knowledge/search", { params: { query: { q: query } } })),
+    enabled: query.trim().length > 0,
+  });
+}
+
+export function useAddKnowledgeFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DocumentAddPathBody) => unwrap(api.POST("/api/knowledge/files", { body })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["knowledge"] }),
+  });
+}
+
+export function useAddKnowledgeText() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { title: string; text: string }) =>
+      unwrap(api.POST("/api/knowledge/text", { body })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["knowledge"] }),
+  });
+}
+
+export function useDeleteDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (document_id: string) =>
+      unwrap(api.DELETE("/api/knowledge/{document_id}", { params: { path: { document_id } } })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["knowledge"] }),
+  });
+}

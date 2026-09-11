@@ -9,8 +9,8 @@ devices. Private by default. Local by design. Sharing by choice.
 
 ## Status
 
-Phase 1 (Foundation) is implemented and tested. Later phases are visible in the product as
-clearly labelled "Planned · Phase N" states; nothing is faked. See
+Phases 1 (Foundation) and 2 (Local AI) are implemented and tested. Later phases are visible
+in the product as clearly labelled "Planned · Phase N" states; nothing is faked. See
 [`docs/phases.md`](docs/phases.md) for the per-phase table.
 
 | Surface                                        | What works today                                                                                                                                                                                                                                           |
@@ -20,6 +20,52 @@ clearly labelled "Planned · Phase N" states; nothing is faked. See
 | **CLI** (`myai`)                               | Same features from a terminal.                                                                                                                                                                                                                             |
 | **Website** (Next.js, Vercel)                  | Landing, downloads from GitHub Releases, privacy and security pages, sign-in entry point (Phase 5).                                                                                                                                                        |
 | **Mobile** (Expo)                              | Store-ready skeleton with the connection state model; pairing arrives in Phase 6.                                                                                                                                                                          |
+
+## Disclosures
+
+Read this before relying on the software. These statements hold until this section is
+updated.
+
+- **Local chat has not yet been exercised end to end with a real model by the authors.**
+  The environment the code was written in could not reach Hugging Face, so model
+  downloads and generation were verified against a local test server and an injected
+  fake inference backend. The real path (download a catalog model, chat with it) is
+  expected to work and reports any failure in the UI, but treat it as unconfirmed until
+  someone runs it on real hardware and this line is removed.
+- **No signed installers are published yet.** The release workflow builds Windows, macOS
+  and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded
+  to GitHub Releases, Google Play or the App Store. The download page will say
+  "Not available yet" until that happens.
+- **The mobile app is a skeleton.** It shows its connection state truthfully ("not
+  paired") and nothing else. Pairing, chat and controls arrive in Phase 6.
+- **Knowledge retrieval is keyword-based** (BM25 over SQLite FTS5), not semantic. It finds
+  passages that share words with your question.
+- **Skills, levels and training are not implemented.** The catalog and skill tree show what
+  will be learnable; `/learn` and `/train` say so instead of doing anything.
+- **Network activity is limited to** an internet reachability check (a TCP connect with
+  no payload) and model downloads you start after accepting a licence. Nothing you write,
+  remember or add to knowledge leaves your machine.
+
+## Temporary interface: the command line
+
+Until installers are published, the supported way to use MyAI Academy is the `myai` CLI
+run from a source checkout. It exposes everything the desktop app does today.
+
+```
+git clone https://github.com/biobodinc/MyAiAcademy.git
+cd MyAiAcademy
+uv sync --all-packages --all-groups --all-extras   # needs Python 3.11+, uv, CMake and a C++ compiler
+uv run myai serve                                    # terminal 1: the local service (127.0.0.1 only)
+uv run myai status                                   # terminal 2
+uv run myai profile create --name Nova
+uv run myai storage set-root ~/MyAI
+uv run myai models list
+uv run myai models download qwen2.5-1.5b-instruct-q4km   # shows the licence, asks, then downloads
+uv run myai chat
+```
+
+`uv run myai --help` lists every command. The desktop app (`pnpm --filter @myai/desktop
+tauri dev`) and website (`pnpm --filter @myai/website dev`) run from the same checkout.
 
 ## Quick start (developers)
 

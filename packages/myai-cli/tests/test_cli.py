@@ -27,7 +27,7 @@ def test_status_when_service_missing(tmp_path: Path) -> None:
 
 def test_status_and_hardware(running_service: Path) -> None:
     code, out = _run("status", data_dir=running_service)
-    assert code == 0 and "Not configured yet" in out
+    assert code == 0 and "AI:" in out and "model" in out.lower()
     code, out = _run("hardware", "--json", data_dir=running_service)
     assert code == 0
     assert json.loads(out)["tier"]["method"] == "specification-estimate"

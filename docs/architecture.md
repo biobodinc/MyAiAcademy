@@ -70,8 +70,10 @@ committed, so the frontends build without Python and CI verifies they are curren
 | Public / downloadable (updates, skill packages, models, docs)                            | fetched on demand           | Downloads only. Licences shown first (Phase 2+).                                          |
 | Explicitly shared                                                                        | —                           | Only after a consent screen, category by category, revocable.                             |
 
-The only network activity in Phase 1 is a TCP connect (no payload) to a public resolver
-for online/offline status. There is no account, sync, telemetry or crash-reporting code.
+Network activity as of Phase 2: a TCP connect (no payload) to a public resolver for
+online/offline status, and model downloads from Hugging Face that the user starts after
+accepting the licence. Chat, memory and knowledge never leave the machine. There is no
+account, sync, telemetry or crash-reporting code.
 
 ## Security boundaries (spec §47, §73)
 

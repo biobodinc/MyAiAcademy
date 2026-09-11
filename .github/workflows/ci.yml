@@ -32,6 +32,8 @@ jobs:
           enable-cache: true
       - run: uv python install 3.11
       - run: uv sync --all-packages --all-groups --locked
+        # llama-cpp-python is an optional extra built from source; CI tests the service
+        # without it so the 'runtime unavailable' path stays honest and fast.
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy packages/myai-core/src packages/myai-cli/src

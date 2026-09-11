@@ -16,6 +16,15 @@ tested **and** honest in the UI about its limits.
 | 9 Developer integration | Local API, capability permissions, website authorization, connected apps                                                   | 🚧     | Local API exists with installation-level auth; scoped capabilities do not.                                          |
 | 10 Creative skills      | Provider abstractions for video, music, images, coding                                                                     | ⬜     | Catalog entries marked `planned`.                                                                                   |
 
+## What "functional" means for Phase 2
+
+A user picks a model from the catalog, reads its licence, accepts it, watches the download
+verify itself, and chats with their named AI locally. They add memories on purpose (the AI
+never remembers conversations on its own), add documents to knowledge, and see which
+passages were retrieved for each answer. The CLI offers the same through `myai models`,
+`myai chat`, `myai memory` and `myai knowledge`. If the inference runtime is missing the
+status says so; if no model is installed the status says that instead.
+
 ## What "functional" means for Phase 1
 
 A user can install the desktop app, be walked through first run (name the AI, pick

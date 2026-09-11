@@ -139,7 +139,7 @@ def test_dispatch_parse_error_and_chat(session) -> None:  # type: ignore[no-unty
 
 
 def test_dispatch_later_phase_commands(session) -> None:  # type: ignore[no-untyped-def]
-    for text in ("/memory", "/pause", "/projects", "/history"):
+    for text in ("/pause", "/projects", "/history"):
         res = execute(text, _ctx(session))
         assert res.outcome is CommandOutcome.UNAVAILABLE
         assert "Phase" in res.message

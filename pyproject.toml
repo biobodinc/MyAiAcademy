@@ -52,7 +52,7 @@ plugins = ["pydantic.mypy"]
 mypy_path = "packages/myai-core/src:packages/myai-cli/src"
 
 [[tool.mypy.overrides]]
-module = ["cpuinfo", "cpuinfo.*"]
+module = ["cpuinfo", "cpuinfo.*", "pypdf", "pypdf.*", "llama_cpp", "llama_cpp.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

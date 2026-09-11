@@ -28,8 +28,9 @@ def read_privacy(prefs: PreferencesDep) -> PrivacySummary:
         community_sharing=preferences.contributor_mode,
         notes=[
             "This build has no cloud account, sync or upload code paths at all.",
-            "The only outbound network activity is an internet reachability check "
-            "(a TCP connect with no payload) used to show online/offline status.",
+            "Outbound network activity: an internet reachability check (a TCP connect with "
+            "no payload) and model downloads from Hugging Face that you start yourself "
+            "after reading the licence. Chat, memory and knowledge never leave this machine.",
             "Device pairing, cloud sync and community contribution arrive in later phases "
             "and will each require explicit opt-in.",
         ],

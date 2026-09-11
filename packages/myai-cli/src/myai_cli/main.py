@@ -14,6 +14,7 @@ from rich.table import Table
 from myai_cli import __version__
 from myai_cli.client import ApiError, LocalService, ServiceNotRunningError
 from myai_cli.format import human_bytes
+from myai_cli.local_ai import chat, knowledge_app, memory_app, models_app
 
 app = typer.Typer(
     name="myai",
@@ -25,6 +26,10 @@ storage_app = typer.Typer(help="MyAI storage location and usage.", no_args_is_he
 profile_app = typer.Typer(help="Your AI's identity and personality.", no_args_is_help=True)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
+app.add_typer(models_app, name="models")
+app.add_typer(memory_app, name="memory")
+app.add_typer(knowledge_app, name="knowledge")
+app.command(name="chat")(chat)
 
 console = Console()
 err_console = Console(stderr=True)
@@ -92,9 +97,7 @@ def status(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
     internet = {"available": "🌐 Internet: Online", "unavailable": "🌐 Internet: Offline"}.get(
         data["internet"], "🌐 Internet: Unknown"
     )
-    ai = "🧠 AI: " + (
-        "Not configured yet (Phase 2)" if data["ai"] == "not_configured" else data["ai"].title()
-    )
+    ai = "🧠 AI: " + data["ai"].replace("_", " ").title() + f" — {data['ai_detail']}"
     training = f"🎓 Training: {data['training'].title()} — {data['training_detail']}"
     console.print(
         Panel(

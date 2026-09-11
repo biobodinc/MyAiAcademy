@@ -4,6 +4,8 @@ import { SITE } from "@/lib/site";
 
 const links = [
   { href: "/download", label: "Download" },
+  { href: "/cli", label: "Command line" },
+  { href: "/disclosures", label: "Disclosures" },
   { href: "/privacy", label: "Privacy" },
   { href: "/security", label: "Security" },
 ];

@@ -21,12 +21,12 @@ import {
 import { primaryGpu } from "../hardware/model";
 
 const quickActions = [
-  { to: "/console", label: "Console", hint: "Run /help, /status, /hardware", ready: true },
-  { to: "/console", label: "Chat", hint: "Local model needed", ready: false, phase: 2 },
+  { to: "/chat", label: "Chat", hint: "Talk to your AI locally", ready: true },
+  { to: "/models", label: "Models", hint: "Download and activate", ready: true },
+  { to: "/memory", label: "Memory", hint: "What it remembers", ready: true },
+  { to: "/knowledge", label: "Knowledge", hint: "Documents it can cite", ready: true },
   { to: "/skills", label: "Learn", hint: "Skill packages", ready: false, phase: 3 },
   { to: "/skills", label: "Train", hint: "Training jobs", ready: false, phase: 4 },
-  { to: "/skills", label: "Skills", hint: "Tree and levels", ready: true },
-  { to: "/storage", label: "Storage", hint: "Where MyAI lives", ready: true },
 ];
 
 export function DashboardPage() {
@@ -54,8 +54,14 @@ export function DashboardPage() {
             <p className="text-sm text-fg-muted">{p?.personality || "No personality set yet."}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <StatusPill tone="success">Ready · running locally</StatusPill>
-            <StatusPill tone="warning">Model not set up (Phase 2)</StatusPill>
+            <StatusPill tone="success">Running locally</StatusPill>
+            <StatusPill tone={status.data?.ai === "available" ? "success" : "warning"}>
+              {status.data?.ai === "available"
+                ? `Model: ${status.data.active_model_id ?? ""}`
+                : status.data?.ai === "unavailable"
+                  ? "Inference runtime missing"
+                  : "No model installed"}
+            </StatusPill>
           </div>
         </div>
       </Card>
@@ -144,6 +150,16 @@ export function DashboardPage() {
         </div>
       </Card>
 
+      {storage.data?.configured && status.data?.ai === "not_configured" && (
+        <Alert tone="info" title="Your AI cannot chat yet">
+          Download a local model to start talking.{" "}
+          <Link to="/models">
+            <Button size="sm" variant="secondary" className="ml-2">
+              Choose a model
+            </Button>
+          </Link>
+        </Alert>
+      )}
       {!storage.data?.configured && (
         <Alert tone="warning" title="Storage location not set">
           Choose where models and training data will live before learning skills.{" "}

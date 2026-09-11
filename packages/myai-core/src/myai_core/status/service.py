@@ -20,6 +20,13 @@ class Availability(StrEnum):
     UNKNOWN = "unknown"
 
 
+class AIState(ApiModel):
+    runtime_available: bool
+    runtime_detail: str
+    active_model_id: str | None
+    loaded_model_id: str | None
+
+
 class ServiceStatus(ApiModel):
     service_version: str
     started_at: datetime
@@ -28,6 +35,8 @@ class ServiceStatus(ApiModel):
     internet_checked_at: datetime | None
     ai: Availability = Field(description="Whether a local model is set up and loadable.")
     ai_detail: str
+    active_model_id: str | None = None
+    loaded_model_id: str | None = None
     training: Availability
     training_detail: str
     profile_exists: bool
@@ -103,17 +112,21 @@ class StatusService:
         storage_configured: bool,
         onboarding_completed: bool,
         privacy_mode: str,
+        ai_state: AIState | None = None,
     ) -> ServiceStatus:
         internet, checked_at = self._internet.current()
         now = datetime.now(tz=UTC)
+        ai, ai_detail = _describe_ai(ai_state)
         return ServiceStatus(
             service_version=__version__,
             started_at=self._started_at,
             uptime_seconds=(now - self._started_at).total_seconds(),
             internet=internet,
             internet_checked_at=checked_at,
-            ai=Availability.NOT_CONFIGURED,
-            ai_detail="No local model is set up yet. Local chat arrives in Phase 2.",
+            ai=ai,
+            ai_detail=ai_detail,
+            active_model_id=ai_state.active_model_id if ai_state else None,
+            loaded_model_id=ai_state.loaded_model_id if ai_state else None,
             training=Availability.UNAVAILABLE,
             training_detail="Training jobs arrive in Phase 4.",
             profile_exists=profile_exists,
@@ -130,12 +143,30 @@ class StatusService:
             Availability.AVAILABLE: "Online",
             Availability.UNAVAILABLE: "Offline",
         }.get(status.internet, "Unknown")
+        ai_label = {
+            Availability.AVAILABLE: f"Ready ({status.active_model_id})",
+            Availability.NOT_CONFIGURED: "No model installed yet",
+            Availability.UNAVAILABLE: "Runtime unavailable",
+        }.get(status.ai, "Unknown")
         return {
-            "ai_label": "Not configured (Phase 2)"
-            if status.ai is Availability.NOT_CONFIGURED
-            else status.ai.value.title(),
+            "ai_label": ai_label,
             "internet_label": internet,
             "training_label": "Unavailable (Phase 4)",
             "privacy_mode": status.privacy_mode,
             "cloud_uploads": status.cloud_uploads,
         }
+
+
+def _describe_ai(state: AIState | None) -> tuple[Availability, str]:
+    if state is None:
+        return Availability.UNKNOWN, "AI state not reported."
+    if not state.runtime_available:
+        return Availability.UNAVAILABLE, state.runtime_detail
+    if state.active_model_id is None:
+        return (
+            Availability.NOT_CONFIGURED,
+            "No local model is installed yet. Download one from the Models page.",
+        )
+    if state.loaded_model_id == state.active_model_id:
+        return Availability.AVAILABLE, f"{state.active_model_id} is loaded and ready."
+    return Availability.AVAILABLE, f"{state.active_model_id} is installed; loads on first message."
