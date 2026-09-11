@@ -60,6 +60,24 @@ def remove_discovery_file(paths: AppPaths) -> None:
     paths.discovery_file.unlink(missing_ok=True)
 
 
+READY_PREFIX = "MYAI_CORE_READY "
+"""A supervising process (the desktop shell) reads this single stdout line to learn where
+the service listens and where its data directory is, instead of re-implementing the
+platform data-dir convention in another language."""
+
+
+def ready_line(paths: AppPaths, host: str, port: int) -> str:
+    payload = {
+        "api_base": f"http://{host}:{port}/api",
+        "base_url": f"http://{host}:{port}",
+        "data_dir": str(paths.data_dir),
+        "token_file": str(paths.token_file),
+        "pid": os.getpid(),
+        "version": __version__,
+    }
+    return READY_PREFIX + json.dumps(payload)
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="myai-core", description="MyAI Academy local service")
     parser.add_argument(
@@ -88,6 +106,7 @@ def main(argv: list[str] | None = None) -> None:
     app = create_app(settings, paths)
     write_discovery_file(paths, settings.host, port)
     log.info("Listening on http://%s:%d (loopback only)", settings.host, port)
+    print(ready_line(paths, settings.host, port), flush=True)  # noqa: T201 - protocol, not logging
     try:
         uvicorn.run(
             app, host=settings.host, port=port, log_level=settings.log_level, access_log=False

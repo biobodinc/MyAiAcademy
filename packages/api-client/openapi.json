@@ -1,0 +1,2344 @@
+{
+  "components": {
+    "schemas": {
+      "AcceleratorBackend": {
+        "description": "Compute backend a GPU could be driven with. Detected, not assumed.",
+        "enum": [
+          "cuda",
+          "rocm",
+          "metal",
+          "none"
+        ],
+        "title": "AcceleratorBackend",
+        "type": "string"
+      },
+      "AuditCategory": {
+        "enum": [
+          "profile",
+          "storage",
+          "preferences",
+          "security",
+          "system"
+        ],
+        "title": "AuditCategory",
+        "type": "string"
+      },
+      "AuditEventRead": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/AuditCategory"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "occurred_at",
+          "category",
+          "action",
+          "summary",
+          "details",
+          "device_id"
+        ],
+        "title": "AuditEventRead",
+        "type": "object"
+      },
+      "Availability": {
+        "enum": [
+          "available",
+          "unavailable",
+          "not_configured",
+          "unknown"
+        ],
+        "title": "Availability",
+        "type": "string"
+      },
+      "CategoryOverrideRequest": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/StorageCategory"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "``None`` clears the override.",
+            "title": "Path"
+          }
+        },
+        "required": [
+          "category"
+        ],
+        "title": "CategoryOverrideRequest",
+        "type": "object"
+      },
+      "CategoryUsage": {
+        "properties": {
+          "bytes_used": {
+            "title": "Bytes Used",
+            "type": "integer"
+          },
+          "category": {
+            "$ref": "#/components/schemas/StorageCategory"
+          },
+          "exists": {
+            "title": "Exists",
+            "type": "boolean"
+          },
+          "file_count": {
+            "title": "File Count",
+            "type": "integer"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "protected": {
+            "description": "Warn before deleting (checkpoints, training data, memory).",
+            "title": "Protected",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "category",
+          "path",
+          "bytes_used",
+          "file_count",
+          "exists",
+          "protected"
+        ],
+        "title": "CategoryUsage",
+        "type": "object"
+      },
+      "CommandName": {
+        "enum": [
+          "learn",
+          "train",
+          "skills",
+          "status",
+          "hardware",
+          "memory",
+          "help",
+          "pause",
+          "resume",
+          "stop",
+          "history",
+          "settings",
+          "projects"
+        ],
+        "title": "CommandName",
+        "type": "string"
+      },
+      "CommandOutcome": {
+        "enum": [
+          "ok",
+          "unavailable",
+          "error"
+        ],
+        "title": "CommandOutcome",
+        "type": "string"
+      },
+      "CommandRequest": {
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "CommandRequest",
+        "type": "object"
+      },
+      "CommandResult": {
+        "properties": {
+          "command": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParsedCommand"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/CommandOutcome"
+          },
+          "suggestions": {
+            "description": "Commands to offer next.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "command",
+          "title",
+          "message",
+          "data",
+          "suggestions"
+        ],
+        "title": "CommandResult",
+        "type": "object"
+      },
+      "ComputePreset": {
+        "description": "Spec \u00a731. Percentages are the share of GPU/CPU a job may use.",
+        "enum": [
+          "low",
+          "balanced",
+          "high",
+          "maximum"
+        ],
+        "title": "ComputePreset",
+        "type": "string"
+      },
+      "CpuInfo": {
+        "properties": {
+          "architecture": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Architecture"
+          },
+          "logical_threads": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logical Threads"
+          },
+          "max_frequency_mhz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Frequency Mhz"
+          },
+          "model_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Name"
+          },
+          "physical_cores": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Physical Cores"
+          }
+        },
+        "required": [
+          "model_name",
+          "architecture",
+          "physical_cores",
+          "logical_threads",
+          "max_frequency_mhz"
+        ],
+        "title": "CpuInfo",
+        "type": "object"
+      },
+      "ExperienceMode": {
+        "enum": [
+          "beginner",
+          "advanced"
+        ],
+        "title": "ExperienceMode",
+        "type": "string"
+      },
+      "GpuInfo": {
+        "properties": {
+          "backend": {
+            "$ref": "#/components/schemas/AcceleratorBackend",
+            "default": "none"
+          },
+          "driver_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Driver Version"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "description": "Which probe produced this entry, e.g. 'nvidia-smi'.",
+            "title": "Source",
+            "type": "string"
+          },
+          "temperature_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature C"
+          },
+          "utilization_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utilization Percent"
+          },
+          "vendor": {
+            "$ref": "#/components/schemas/GpuVendor",
+            "default": "unknown"
+          },
+          "vram_total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vram Total Bytes"
+          },
+          "vram_used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vram Used Bytes"
+          }
+        },
+        "required": [
+          "index",
+          "name",
+          "vendor",
+          "vram_total_bytes",
+          "vram_used_bytes",
+          "driver_version",
+          "temperature_c",
+          "utilization_percent",
+          "backend",
+          "source"
+        ],
+        "title": "GpuInfo",
+        "type": "object"
+      },
+      "GpuVendor": {
+        "enum": [
+          "nvidia",
+          "amd",
+          "intel",
+          "apple",
+          "unknown"
+        ],
+        "title": "GpuVendor",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HardwareReport": {
+        "properties": {
+          "cpu": {
+            "$ref": "#/components/schemas/CpuInfo"
+          },
+          "detected_at": {
+            "format": "date-time",
+            "title": "Detected At",
+            "type": "string"
+          },
+          "gpus": {
+            "items": {
+              "$ref": "#/components/schemas/GpuInfo"
+            },
+            "title": "Gpus",
+            "type": "array"
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryInfo"
+          },
+          "os": {
+            "$ref": "#/components/schemas/OsInfo"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/TierEstimate"
+          },
+          "volumes": {
+            "items": {
+              "$ref": "#/components/schemas/StorageVolume"
+            },
+            "title": "Volumes",
+            "type": "array"
+          },
+          "warnings": {
+            "description": "Probes that failed or were unavailable. Shown to the user, not hidden.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "detected_at",
+          "os",
+          "cpu",
+          "memory",
+          "gpus",
+          "volumes",
+          "tier",
+          "warnings"
+        ],
+        "title": "HardwareReport",
+        "type": "object"
+      },
+      "HardwareTier": {
+        "enum": [
+          "entry",
+          "basic",
+          "capable",
+          "powerful",
+          "workstation"
+        ],
+        "title": "HardwareTier",
+        "type": "string"
+      },
+      "LevelBand": {
+        "enum": [
+          "unlearned",
+          "beginner",
+          "developing",
+          "capable",
+          "advanced",
+          "expert"
+        ],
+        "title": "LevelBand",
+        "type": "string"
+      },
+      "MemoryInfo": {
+        "properties": {
+          "available_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Bytes"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          }
+        },
+        "required": [
+          "total_bytes",
+          "available_bytes"
+        ],
+        "title": "MemoryInfo",
+        "type": "object"
+      },
+      "OnboardingStep": {
+        "enum": [
+          "welcome",
+          "name_ai",
+          "interests",
+          "hardware_scan",
+          "storage",
+          "privacy",
+          "account",
+          "local_model",
+          "done"
+        ],
+        "title": "OnboardingStep",
+        "type": "string"
+      },
+      "OsInfo": {
+        "properties": {
+          "machine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Machine"
+          },
+          "python_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Python Version"
+          },
+          "release": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release"
+          },
+          "system": {
+            "title": "System",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "system",
+          "release",
+          "version",
+          "machine",
+          "python_version"
+        ],
+        "title": "OsInfo",
+        "type": "object"
+      },
+      "ParsedCommand": {
+        "properties": {
+          "args": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Args",
+            "type": "array"
+          },
+          "name": {
+            "$ref": "#/components/schemas/CommandName"
+          },
+          "natural_language": {
+            "default": false,
+            "description": "True when mapped from a sentence rather than a slash.",
+            "title": "Natural Language",
+            "type": "boolean"
+          },
+          "raw": {
+            "title": "Raw",
+            "type": "string"
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Resolved catalog skill id, if any.",
+            "title": "Skill"
+          },
+          "skill_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the user typed for the skill.",
+            "title": "Skill Text"
+          },
+          "train": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrainTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "raw",
+          "skill",
+          "skill_text",
+          "train",
+          "args",
+          "natural_language"
+        ],
+        "title": "ParsedCommand",
+        "type": "object"
+      },
+      "Preferences": {
+        "properties": {
+          "compute_preset": {
+            "$ref": "#/components/schemas/ComputePreset",
+            "default": "balanced"
+          },
+          "contributor_mode": {
+            "default": false,
+            "description": "Explicit opt-in to community contribution (spec \u00a79). Default OFF.",
+            "title": "Contributor Mode",
+            "type": "boolean"
+          },
+          "experience_mode": {
+            "$ref": "#/components/schemas/ExperienceMode",
+            "default": "beginner"
+          },
+          "onboarding_completed": {
+            "default": false,
+            "title": "Onboarding Completed",
+            "type": "boolean"
+          },
+          "onboarding_step": {
+            "$ref": "#/components/schemas/OnboardingStep",
+            "default": "welcome"
+          },
+          "privacy_mode": {
+            "$ref": "#/components/schemas/PrivacyMode",
+            "default": "private"
+          },
+          "theme": {
+            "$ref": "#/components/schemas/Theme",
+            "default": "system"
+          }
+        },
+        "required": [
+          "experience_mode",
+          "compute_preset",
+          "theme",
+          "privacy_mode",
+          "contributor_mode",
+          "onboarding_step",
+          "onboarding_completed"
+        ],
+        "title": "Preferences",
+        "type": "object"
+      },
+      "PreferencesUpdate": {
+        "properties": {
+          "compute_preset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComputePreset"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contributor_mode": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contributor Mode"
+          },
+          "experience_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExperienceMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "onboarding_completed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onboarding Completed"
+          },
+          "onboarding_step": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OnboardingStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Theme"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "PreferencesUpdate",
+        "type": "object"
+      },
+      "PrivacyMode": {
+        "description": "Only ``private`` exists. Contributor mode (spec \u00a79) is an additional opt-in flag,\nnever a replacement for private mode.",
+        "enum": [
+          "private"
+        ],
+        "title": "PrivacyMode",
+        "type": "string"
+      },
+      "PrivacySummary": {
+        "properties": {
+          "account_linked": {
+            "default": false,
+            "title": "Account Linked",
+            "type": "boolean"
+          },
+          "cloud_ai_data_uploads": {
+            "default": 0,
+            "title": "Cloud Ai Data Uploads",
+            "type": "integer"
+          },
+          "cloud_backup": {
+            "default": false,
+            "title": "Cloud Backup",
+            "type": "boolean"
+          },
+          "community_sharing": {
+            "title": "Community Sharing",
+            "type": "boolean"
+          },
+          "connected_apps": {
+            "default": 0,
+            "title": "Connected Apps",
+            "type": "integer"
+          },
+          "connected_devices": {
+            "default": 0,
+            "title": "Connected Devices",
+            "type": "integer"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "private_data_location": {
+            "default": "Local only",
+            "title": "Private Data Location",
+            "type": "string"
+          }
+        },
+        "required": [
+          "private_data_location",
+          "cloud_ai_data_uploads",
+          "community_sharing",
+          "cloud_backup",
+          "connected_devices",
+          "connected_apps",
+          "account_linked",
+          "notes"
+        ],
+        "title": "PrivacySummary",
+        "type": "object"
+      },
+      "ProfileCreate": {
+        "properties": {
+          "communication_style": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Communication Style",
+            "type": "string"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "name": {
+            "examples": [
+              "Nova"
+            ],
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_name": {
+            "default": "",
+            "maxLength": 128,
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "personality": {
+            "default": "",
+            "examples": [
+              "Helpful, curious, concise"
+            ],
+            "maxLength": 500,
+            "title": "Personality",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProfileCreate",
+        "type": "object"
+      },
+      "ProfileRead": {
+        "properties": {
+          "ai_id": {
+            "title": "Ai Id",
+            "type": "string"
+          },
+          "communication_style": {
+            "title": "Communication Style",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Interests",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "personality": {
+            "title": "Personality",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ai_id",
+          "name",
+          "personality",
+          "communication_style",
+          "goals",
+          "interests",
+          "owner_name",
+          "created_at",
+          "updated_at",
+          "version"
+        ],
+        "title": "ProfileRead",
+        "type": "object"
+      },
+      "ProfileUpdate": {
+        "description": "All fields optional; only provided ones change. ``expected_version`` enables\noptimistic concurrency so a stale client (or, later, a stale device) cannot\nsilently overwrite newer changes (spec \u00a772).",
+        "properties": {
+          "communication_style": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Communication Style"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          },
+          "goals": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goals"
+          },
+          "interests": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interests"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "owner_name": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Name"
+          },
+          "personality": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Personality"
+          }
+        },
+        "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "ServiceStatus": {
+        "properties": {
+          "ai": {
+            "$ref": "#/components/schemas/Availability",
+            "description": "Whether a local model is set up and loadable."
+          },
+          "ai_detail": {
+            "title": "Ai Detail",
+            "type": "string"
+          },
+          "cloud_uploads": {
+            "default": 0,
+            "description": "Private AI data uploads made by this service. Always 0 in Phase 1.",
+            "title": "Cloud Uploads",
+            "type": "integer"
+          },
+          "internet": {
+            "$ref": "#/components/schemas/Availability",
+            "description": "Reachability of the public internet."
+          },
+          "internet_checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internet Checked At"
+          },
+          "onboarding_completed": {
+            "title": "Onboarding Completed",
+            "type": "boolean"
+          },
+          "privacy_mode": {
+            "title": "Privacy Mode",
+            "type": "string"
+          },
+          "profile_exists": {
+            "title": "Profile Exists",
+            "type": "boolean"
+          },
+          "service_version": {
+            "title": "Service Version",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "storage_configured": {
+            "title": "Storage Configured",
+            "type": "boolean"
+          },
+          "training": {
+            "$ref": "#/components/schemas/Availability"
+          },
+          "training_detail": {
+            "title": "Training Detail",
+            "type": "string"
+          },
+          "uptime_seconds": {
+            "title": "Uptime Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "service_version",
+          "started_at",
+          "uptime_seconds",
+          "internet",
+          "internet_checked_at",
+          "ai",
+          "ai_detail",
+          "training",
+          "training_detail",
+          "profile_exists",
+          "storage_configured",
+          "onboarding_completed",
+          "privacy_mode",
+          "cloud_uploads"
+        ],
+        "title": "ServiceStatus",
+        "type": "object"
+      },
+      "SkillAvailability": {
+        "description": "Honest availability of the skill's implementation in this build.",
+        "enum": [
+          "planned",
+          "experimental",
+          "available"
+        ],
+        "title": "SkillAvailability",
+        "type": "string"
+      },
+      "SkillDomain": {
+        "enum": [
+          "core",
+          "creative",
+          "technical",
+          "knowledge"
+        ],
+        "title": "SkillDomain",
+        "type": "string"
+      },
+      "SkillStatus": {
+        "description": "What the UI shows per skill. ``level`` 0 + ``learned=False`` means \"not yet\".",
+        "properties": {
+          "availability": {
+            "$ref": "#/components/schemas/SkillAvailability"
+          },
+          "band": {
+            "$ref": "#/components/schemas/LevelBand"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/SkillDomain"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_evaluation_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Evaluation Score"
+          },
+          "learned": {
+            "title": "Learned",
+            "type": "boolean"
+          },
+          "learned_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Learned At"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "locked": {
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "locked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked Reason"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "planned_phase": {
+            "title": "Planned Phase",
+            "type": "integer"
+          },
+          "requires": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requires",
+            "type": "array"
+          },
+          "specializations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Specializations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "domain",
+          "description",
+          "specializations",
+          "requires",
+          "availability",
+          "planned_phase",
+          "learned",
+          "level",
+          "band",
+          "last_evaluation_score",
+          "learned_at",
+          "locked",
+          "locked_reason"
+        ],
+        "title": "SkillStatus",
+        "type": "object"
+      },
+      "SkillsSummary": {
+        "properties": {
+          "overall_level": {
+            "title": "Overall Level",
+            "type": "integer"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillStatus"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "overall_level",
+          "skills"
+        ],
+        "title": "SkillsSummary",
+        "type": "object"
+      },
+      "StorageCategory": {
+        "enum": [
+          "core",
+          "models",
+          "skills",
+          "training",
+          "checkpoints",
+          "memory",
+          "knowledge",
+          "projects",
+          "generated"
+        ],
+        "title": "StorageCategory",
+        "type": "string"
+      },
+      "StorageLocationCheck": {
+        "description": "Result of validating a candidate storage root before committing to it.",
+        "properties": {
+          "free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Bytes"
+          },
+          "is_existing_myai_storage": {
+            "default": false,
+            "title": "Is Existing Myai Storage",
+            "type": "boolean"
+          },
+          "is_removable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Removable"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Problems",
+            "type": "array"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          }
+        },
+        "required": [
+          "path",
+          "ok",
+          "problems",
+          "is_existing_myai_storage",
+          "free_bytes",
+          "total_bytes",
+          "is_removable"
+        ],
+        "title": "StorageLocationCheck",
+        "type": "object"
+      },
+      "StorageOverview": {
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryUsage"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "category_overrides": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Category Overrides",
+            "type": "object"
+          },
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "configured_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Configured At"
+          },
+          "root_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Path"
+          },
+          "total_bytes_used": {
+            "title": "Total Bytes Used",
+            "type": "integer"
+          },
+          "volume_free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Free Bytes"
+          },
+          "volume_total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Total Bytes"
+          }
+        },
+        "required": [
+          "configured",
+          "root_path",
+          "categories",
+          "total_bytes_used",
+          "volume_total_bytes",
+          "volume_free_bytes",
+          "configured_at",
+          "category_overrides"
+        ],
+        "title": "StorageOverview",
+        "type": "object"
+      },
+      "StorageSetupRequest": {
+        "properties": {
+          "root_path": {
+            "minLength": 1,
+            "title": "Root Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "root_path"
+        ],
+        "title": "StorageSetupRequest",
+        "type": "object"
+      },
+      "StorageVolume": {
+        "properties": {
+          "device": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "filesystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filesystem"
+          },
+          "free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Bytes"
+          },
+          "is_removable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True/False when the OS reports it; None when unknown.",
+            "title": "Is Removable"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "mountpoint": {
+            "title": "Mountpoint",
+            "type": "string"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          }
+        },
+        "required": [
+          "mountpoint",
+          "device",
+          "filesystem",
+          "total_bytes",
+          "free_bytes",
+          "is_removable",
+          "label"
+        ],
+        "title": "StorageVolume",
+        "type": "object"
+      },
+      "Theme": {
+        "enum": [
+          "system",
+          "light",
+          "dark"
+        ],
+        "title": "Theme",
+        "type": "string"
+      },
+      "TierEstimate": {
+        "properties": {
+          "benchmark_ran": {
+            "default": false,
+            "title": "Benchmark Ran",
+            "type": "boolean"
+          },
+          "method": {
+            "description": "How the tier was derived. Phase 1: 'specification-estimate'.",
+            "title": "Method",
+            "type": "string"
+          },
+          "rationale": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rationale",
+            "type": "array"
+          },
+          "tier": {
+            "$ref": "#/components/schemas/HardwareTier"
+          }
+        },
+        "required": [
+          "tier",
+          "method",
+          "rationale",
+          "benchmark_ran"
+        ],
+        "title": "TierEstimate",
+        "type": "object"
+      },
+      "TrainTarget": {
+        "description": "Optional qualifiers for ``/train`` (spec \u00a738).",
+        "properties": {
+          "all_areas": {
+            "default": false,
+            "title": "All Areas",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From '4h', '90m'.",
+            "title": "Duration Seconds"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From a trailing word.",
+            "title": "Specialization"
+          },
+          "target_level": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From 'level 10'.",
+            "title": "Target Level"
+          }
+        },
+        "required": [
+          "duration_seconds",
+          "target_level",
+          "specialization",
+          "all_areas"
+        ],
+        "title": "TrainTarget",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "MyAI Academy local service",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/audit": {
+      "get": {
+        "operationId": "read_audit_api_audit_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AuditCategory"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEventRead"
+                  },
+                  "title": "Response Read Audit Api Audit Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Audit",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/commands": {
+      "post": {
+        "operationId": "run_command_api_commands_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Command",
+        "tags": [
+          "commands"
+        ]
+      }
+    },
+    "/api/hardware": {
+      "get": {
+        "operationId": "read_hardware_api_hardware_get",
+        "parameters": [
+          {
+            "description": "Re-run all probes instead of using the cache.",
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Re-run all probes instead of using the cache.",
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HardwareReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Hardware",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/preferences": {
+      "get": {
+        "operationId": "read_preferences_api_preferences_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Preferences",
+        "tags": [
+          "preferences"
+        ]
+      },
+      "patch": {
+        "operationId": "update_preferences_api_preferences_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Preferences"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Preferences",
+        "tags": [
+          "preferences"
+        ]
+      }
+    },
+    "/api/privacy": {
+      "get": {
+        "operationId": "read_privacy_api_privacy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivacySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Privacy",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "operationId": "read_profile_api_profile_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProfileRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Read Profile Api Profile Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Profile",
+        "tags": [
+          "profile"
+        ]
+      },
+      "patch": {
+        "operationId": "update_profile_api_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Profile",
+        "tags": [
+          "profile"
+        ]
+      },
+      "post": {
+        "operationId": "create_profile_api_profile_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Profile",
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/api/skills": {
+      "get": {
+        "operationId": "read_skills_api_skills_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillsSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Skills",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}": {
+      "get": {
+        "operationId": "read_skill_api_skills__skill_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Skill",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/status": {
+      "get": {
+        "operationId": "read_status_api_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Status",
+        "tags": [
+          "status"
+        ]
+      }
+    },
+    "/api/storage": {
+      "get": {
+        "operationId": "read_overview_api_storage_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Overview",
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/api/storage/check": {
+      "get": {
+        "operationId": "check_location_api_storage_check_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageLocationCheck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Location",
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/api/storage/external-candidates": {
+      "get": {
+        "operationId": "external_candidates_api_storage_external_candidates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StorageVolume"
+                  },
+                  "title": "Response External Candidates Api Storage External Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "External Candidates",
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/api/storage/overrides": {
+      "put": {
+        "operationId": "set_override_api_storage_overrides_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Override",
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/api/storage/root": {
+      "put": {
+        "operationId": "configure_root_api_storage_root_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageSetupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Configure Root",
+        "tags": [
+          "storage"
+        ]
+      }
+    }
+  }
+}

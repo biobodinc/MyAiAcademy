@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.9.x"
+  NODE_VERSION: "22"
+
+jobs:
+  python:
+    name: Python (core + CLI)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv python install 3.11
+      - run: uv sync --all-packages --all-groups --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy packages/myai-core/src packages/myai-cli/src
+      - run: uv run pytest -p no:warnings
+      - name: OpenAPI document is up to date
+        if: runner.os == 'Linux'
+        run: |
+          uv run python scripts/export_openapi.py
+          git diff --exit-code -- packages/api-client/openapi.json
+
+  web:
+    name: TypeScript (api-client, desktop UI, website, mobile)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generated types are up to date
+        run: |
+          pnpm api:types
+          git diff --exit-code -- packages/api-client/src/generated
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm format:check
+      - run: pnpm --filter @myai/desktop build
+      - run: pnpm --filter @myai/website build
+
+  desktop-shell:
+    name: Rust (Tauri shell)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tauri Linux prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @myai/desktop build
+      - name: Placeholder sidecar so the crate builds without PyInstaller
+        run: |
+          triple=$(rustc -vV | sed -n 's/^host: //p')
+          mkdir -p apps/desktop/src-tauri/binaries
+          printf '#!/bin/sh\nexit 1\n' > apps/desktop/src-tauri/binaries/myai-core-$triple
+          chmod +x apps/desktop/src-tauri/binaries/myai-core-$triple
+      - run: cargo fmt --check
+        working-directory: apps/desktop/src-tauri
+      - run: cargo clippy --all-targets -- -D warnings
+        working-directory: apps/desktop/src-tauri

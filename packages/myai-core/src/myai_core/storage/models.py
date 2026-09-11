@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from myai_core.schemas import ApiModel
 from myai_core.storage.layout import StorageCategory
 
 
-class CategoryUsage(BaseModel):
+class CategoryUsage(ApiModel):
     category: StorageCategory
     path: str
     bytes_used: int
@@ -18,7 +19,7 @@ class CategoryUsage(BaseModel):
     )
 
 
-class StorageOverview(BaseModel):
+class StorageOverview(ApiModel):
     configured: bool
     root_path: str | None
     categories: list[CategoryUsage]
@@ -29,7 +30,7 @@ class StorageOverview(BaseModel):
     category_overrides: dict[str, str] = Field(default_factory=dict)
 
 
-class StorageLocationCheck(BaseModel):
+class StorageLocationCheck(ApiModel):
     """Result of validating a candidate storage root before committing to it."""
 
     path: str
@@ -41,10 +42,10 @@ class StorageLocationCheck(BaseModel):
     is_removable: bool | None = None
 
 
-class StorageSetupRequest(BaseModel):
+class StorageSetupRequest(ApiModel):
     root_path: str = Field(min_length=1)
 
 
-class CategoryOverrideRequest(BaseModel):
+class CategoryOverrideRequest(ApiModel):
     category: StorageCategory
     path: str | None = Field(default=None, description="``None`` clears the override.")

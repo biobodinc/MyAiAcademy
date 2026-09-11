@@ -6,9 +6,10 @@ import time
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from myai_core import __version__
+from myai_core.schemas import ApiModel
 
 
 class Availability(StrEnum):
@@ -18,7 +19,7 @@ class Availability(StrEnum):
     UNKNOWN = "unknown"
 
 
-class ServiceStatus(BaseModel):
+class ServiceStatus(ApiModel):
     service_version: str
     started_at: datetime
     uptime_seconds: float

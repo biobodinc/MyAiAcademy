@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import Field
 from starlette.concurrency import run_in_threadpool
 
 from myai_core.api.deps import PreferencesDep, ProfileDep, SkillsDep, StateDep, StorageDep
 from myai_core.commands.dispatcher import CommandContext, execute
 from myai_core.commands.models import CommandResult
 from myai_core.hardware import HardwareReport, detect_hardware
+from myai_core.schemas import ApiModel
 
 router = APIRouter(prefix="/commands", tags=["commands"])
 
 
-class CommandRequest(BaseModel):
+class CommandRequest(ApiModel):
     text: str = Field(min_length=1, max_length=2000)
 
 

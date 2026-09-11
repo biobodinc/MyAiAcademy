@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from myai_core.db.models import SkillState
+from myai_core.schemas import ApiModel
 from myai_core.skills.catalog import SkillAvailability, SkillDefinition, SkillDomain, all_skills
 from myai_core.skills.levels import LevelBand, band_for_level, overall_level
 
 
-class SkillStatus(BaseModel):
+class SkillStatus(ApiModel):
     """What the UI shows per skill. ``level`` 0 + ``learned=False`` means "not yet"."""
 
     id: str
@@ -34,7 +34,7 @@ class SkillStatus(BaseModel):
     locked_reason: str | None
 
 
-class SkillsSummary(BaseModel):
+class SkillsSummary(ApiModel):
     overall_level: int
     skills: list[SkillStatus]
 

@@ -22,6 +22,7 @@ dev = [
   "pytest-cov>=7.0",
   "types-psutil>=6.1",
 ]
+bundle = ["pyinstaller>=6.11"]
 
 [tool.ruff]
 line-length = 100
@@ -41,6 +42,7 @@ ignore = [
 "**/tests/**" = ["S", "ANN", "T20"]
 "packages/myai-cli/**" = ["T20"]  # a CLI prints by design
 "**/migrations/**" = ["ANN", "N999"]
+"scripts/**" = ["T20", "S106"]  # build scripts print by design; the schema-export token is a placeholder
 
 [tool.mypy]
 python_version = "3.11"

@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from myai_core.db.models import AuditEvent
+from myai_core.schemas import ApiModel
 
 
 class AuditCategory(StrEnum):
@@ -18,7 +19,7 @@ class AuditCategory(StrEnum):
     SYSTEM = "system"
 
 
-class AuditEventRead(BaseModel):
+class AuditEventRead(ApiModel):
     id: int
     occurred_at: datetime
     category: AuditCategory
@@ -27,7 +28,9 @@ class AuditEventRead(BaseModel):
     details: dict[str, object]
     device_id: str | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(
+        from_attributes=True, json_schema_serialization_defaults_required=True
+    )
 
 
 class AuditService:

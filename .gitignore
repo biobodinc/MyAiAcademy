@@ -46,7 +46,8 @@ htmlcov/
 # --- Rust / Tauri
 target/
 apps/desktop/src-tauri/gen/schemas/
-apps/desktop/src-tauri/binaries/
+apps/desktop/src-tauri/binaries/*
+!apps/desktop/src-tauri/binaries/.gitkeep
 
 # --- Logs / local data
 *.log

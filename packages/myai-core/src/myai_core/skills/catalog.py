@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from myai_core.schemas import ApiModel
 
 
 class SkillDomain(StrEnum):
@@ -27,7 +29,7 @@ class SkillAvailability(StrEnum):
     AVAILABLE = "available"
 
 
-class SkillDefinition(BaseModel):
+class SkillDefinition(ApiModel):
     id: str
     name: str
     domain: SkillDomain

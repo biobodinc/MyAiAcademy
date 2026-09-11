@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
+
+from myai_core.schemas import ApiModel
 
 _MAX_LIST_ITEMS = 20
 _MAX_ITEM_LEN = 80
@@ -17,7 +19,7 @@ def _clean_list(values: list[str]) -> list[str]:
     return cleaned[:_MAX_LIST_ITEMS]
 
 
-class ProfileCreate(BaseModel):
+class ProfileCreate(ApiModel):
     name: str = Field(min_length=1, max_length=64, examples=["Nova"])
     personality: str = Field(default="", max_length=500, examples=["Helpful, curious, concise"])
     communication_style: str = Field(default="", max_length=500)
@@ -36,7 +38,7 @@ class ProfileCreate(BaseModel):
         return _clean_list(value)
 
 
-class ProfileUpdate(BaseModel):
+class ProfileUpdate(ApiModel):
     """All fields optional; only provided ones change. ``expected_version`` enables
     optimistic concurrency so a stale client (or, later, a stale device) cannot
     silently overwrite newer changes (spec §72)."""
@@ -55,7 +57,7 @@ class ProfileUpdate(BaseModel):
         return None if value is None else _clean_list(value)
 
 
-class ProfileRead(BaseModel):
+class ProfileRead(ApiModel):
     ai_id: str
     name: str
     personality: str
@@ -67,4 +69,6 @@ class ProfileRead(BaseModel):
     updated_at: datetime
     version: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(
+        from_attributes=True, json_schema_serialization_defaults_required=True
+    )

@@ -5,7 +5,9 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from myai_core.schemas import ApiModel
 
 
 class GpuVendor(StrEnum):
@@ -25,7 +27,7 @@ class AcceleratorBackend(StrEnum):
     NONE = "none"
 
 
-class CpuInfo(BaseModel):
+class CpuInfo(ApiModel):
     model_name: str | None = None
     architecture: str | None = None
     physical_cores: int | None = None
@@ -33,12 +35,12 @@ class CpuInfo(BaseModel):
     max_frequency_mhz: float | None = None
 
 
-class MemoryInfo(BaseModel):
+class MemoryInfo(ApiModel):
     total_bytes: int | None = None
     available_bytes: int | None = None
 
 
-class GpuInfo(BaseModel):
+class GpuInfo(ApiModel):
     index: int
     name: str
     vendor: GpuVendor = GpuVendor.UNKNOWN
@@ -51,7 +53,7 @@ class GpuInfo(BaseModel):
     source: str = Field(description="Which probe produced this entry, e.g. 'nvidia-smi'.")
 
 
-class StorageVolume(BaseModel):
+class StorageVolume(ApiModel):
     mountpoint: str
     device: str | None = None
     filesystem: str | None = None
@@ -63,7 +65,7 @@ class StorageVolume(BaseModel):
     label: str | None = None
 
 
-class OsInfo(BaseModel):
+class OsInfo(ApiModel):
     system: str
     release: str | None = None
     version: str | None = None
@@ -79,14 +81,14 @@ class HardwareTier(StrEnum):
     WORKSTATION = "workstation"
 
 
-class TierEstimate(BaseModel):
+class TierEstimate(ApiModel):
     tier: HardwareTier
     method: str = Field(description="How the tier was derived. Phase 1: 'specification-estimate'.")
     rationale: list[str] = Field(default_factory=list)
     benchmark_ran: bool = False
 
 
-class HardwareReport(BaseModel):
+class HardwareReport(ApiModel):
     detected_at: datetime
     os: OsInfo
     cpu: CpuInfo

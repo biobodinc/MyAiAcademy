@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from myai_core.schemas import ApiModel
 
 
 class CommandName(StrEnum):
@@ -21,7 +23,7 @@ class CommandName(StrEnum):
     PROJECTS = "projects"
 
 
-class TrainTarget(BaseModel):
+class TrainTarget(ApiModel):
     """Optional qualifiers for ``/train`` (spec §38)."""
 
     duration_seconds: int | None = Field(default=None, description="From '4h', '90m'.")
@@ -30,7 +32,7 @@ class TrainTarget(BaseModel):
     all_areas: bool = False
 
 
-class ParsedCommand(BaseModel):
+class ParsedCommand(ApiModel):
     name: CommandName
     raw: str
     skill: str | None = Field(default=None, description="Resolved catalog skill id, if any.")
@@ -48,7 +50,7 @@ class CommandOutcome(StrEnum):
     ERROR = "error"
 
 
-class CommandResult(BaseModel):
+class CommandResult(ApiModel):
     outcome: CommandOutcome
     command: ParsedCommand | None
     title: str

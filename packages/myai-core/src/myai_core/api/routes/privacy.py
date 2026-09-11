@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 from myai_core.api.deps import PreferencesDep
+from myai_core.schemas import ApiModel
 
 router = APIRouter(prefix="/privacy", tags=["privacy"])
 
 
-class PrivacySummary(BaseModel):
+class PrivacySummary(ApiModel):
     private_data_location: str = "Local only"
     cloud_ai_data_uploads: int = 0
     community_sharing: bool

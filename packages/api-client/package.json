@@ -1,0 +1,26 @@
+{
+  "name": "@myai/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed client for the MyAI Academy local service. Types are generated from the service's OpenAPI document.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi.json -o src/generated/schema.d.ts --root-types --alphabetize",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "pnpm run typecheck"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

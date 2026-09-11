@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from myai_core.schemas import ApiModel
 
 
 class ExperienceMode(StrEnum):
@@ -52,7 +54,7 @@ class OnboardingStep(StrEnum):
     DONE = "done"
 
 
-class Preferences(BaseModel):
+class Preferences(ApiModel):
     experience_mode: ExperienceMode = ExperienceMode.BEGINNER
     compute_preset: ComputePreset = ComputePreset.BALANCED
     theme: Theme = Theme.SYSTEM
@@ -65,7 +67,7 @@ class Preferences(BaseModel):
     onboarding_completed: bool = False
 
 
-class PreferencesUpdate(BaseModel):
+class PreferencesUpdate(ApiModel):
     experience_mode: ExperienceMode | None = None
     compute_preset: ComputePreset | None = None
     theme: Theme | None = None
