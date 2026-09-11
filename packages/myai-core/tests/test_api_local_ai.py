@@ -184,3 +184,50 @@ def test_commands_console_routes_chat_to_chat_page(client: TestClient) -> None:
     assert res["outcome"] == "unavailable" and res["data"]["navigate"] == "/chat"
     res = client.post("/api/commands", json={"text": "/memory"}).json()
     assert res["outcome"] == "ok" and "don't remember anything yet" in res["message"]
+
+
+def test_conversation_rename_and_model_unload(client: TestClient, tmp_path: Path) -> None:
+    conv = client.post("/api/chat/conversations", json={"title": None}).json()
+    r = client.patch(f"/api/chat/conversations/{conv['id']}", json={"title": "  Trip   plan "})
+    assert r.status_code == 200 and r.json()["title"] == "Trip plan"
+    assert (
+        client.patch(f"/api/chat/conversations/{conv['id']}", json={"title": "  "}).status_code
+        == 422
+    )
+    assert client.patch("/api/chat/conversations/nope", json={"title": "x"}).status_code == 404
+    titles = [c["title"] for c in client.get("/api/chat/conversations").json()]
+    assert "Trip plan" in titles
+
+    _install_fake_model(client, tmp_path)
+    assert (
+        client.post("/api/models/unload").json()["loaded_model_id"] is None
+    )  # nothing loaded: no-op
+    loaded = client.post("/api/models/load").json()
+    assert loaded["loaded_model_id"] is not None
+    unloaded = client.post("/api/models/unload").json()
+    assert unloaded["loaded_model_id"] is None
+    assert any(e["action"] == "model_unloaded" for e in client.get("/api/audit").json())
+
+
+def test_chat_generation_defaults_come_from_preferences(client: TestClient, tmp_path: Path) -> None:
+    from myai_core.models.provider import ChatMessage, GenerationChunk, GenerationOptions
+
+    _install_fake_model(client, tmp_path)
+    seen: list[GenerationOptions] = []
+    state = client.app.state.core  # type: ignore[attr-defined]
+
+    def recording_generate(messages: list[ChatMessage], options: GenerationOptions):
+        seen.append(options)
+        yield GenerationChunk(text="ok", done=True, finish_reason="stop")
+
+    state.runtime.generate = recording_generate
+    client.patch("/api/preferences", json={"chat_max_tokens": 64, "chat_temperature": 0.2})
+    conv = client.post("/api/chat/conversations", json={"title": None}).json()
+    client.post(f"/api/chat/conversations/{conv['id']}/messages", json={"content": "hi"})
+    assert seen[-1].max_tokens == 64 and seen[-1].temperature == 0.2
+    client.post(
+        f"/api/chat/conversations/{conv['id']}/messages",
+        json={"content": "hi", "options": {"max_tokens": 40}},
+    )
+    assert seen[-1].max_tokens == 40  # explicit client options still win
+    assert client.patch("/api/preferences", json={"chat_max_tokens": 1}).status_code == 422

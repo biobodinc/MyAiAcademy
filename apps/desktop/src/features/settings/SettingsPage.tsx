@@ -65,6 +65,7 @@ export function SettingsPage() {
           </p>
         </Card>
         {p.experience_mode === "advanced" && <AdvancedCompute prefs={p} />}
+        {p.experience_mode === "advanced" && <ChatGeneration prefs={p} />}
         <Card title="Appearance">
           <Segmented<Theme>
             name="theme"
@@ -228,6 +229,61 @@ function AdvancedCompute({ prefs }: { prefs: Preferences }) {
       <div className="mt-4 flex items-center gap-3">
         <Button onClick={save} disabled={update.isPending}>
           {update.isPending ? "Saving…" : "Save limits"}
+        </Button>
+        {update.isSuccess && <span className="text-xs text-success">Saved.</span>}
+      </div>
+    </Card>
+  );
+}
+
+function ChatGeneration({ prefs }: { prefs: Preferences }) {
+  const update = useUpdatePreferences();
+  const [maxTokens, setMaxTokens] = useState(String(prefs.chat_max_tokens));
+  const [temperature, setTemperature] = useState(String(prefs.chat_temperature));
+  return (
+    <Card title="Chat generation">
+      <p className="text-xs text-fg-muted">
+        Defaults for every reply from the local model. Longer replies take longer; higher
+        temperature is more varied and less precise.
+      </p>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Field label="Maximum reply length (tokens)" htmlFor="chat_max_tokens">
+          <Input
+            id="chat_max_tokens"
+            type="number"
+            min={32}
+            max={8192}
+            value={maxTokens}
+            onChange={(e) => {
+              setMaxTokens(e.target.value);
+            }}
+          />
+        </Field>
+        <Field label="Temperature (0 = deterministic, 2 = wild)" htmlFor="chat_temperature">
+          <Input
+            id="chat_temperature"
+            type="number"
+            min={0}
+            max={2}
+            step={0.1}
+            value={temperature}
+            onChange={(e) => {
+              setTemperature(e.target.value);
+            }}
+          />
+        </Field>
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <Button
+          onClick={() => {
+            update.mutate({
+              chat_max_tokens: Number(maxTokens),
+              chat_temperature: Number(temperature),
+            });
+          }}
+          disabled={update.isPending}
+        >
+          {update.isPending ? "Saving…" : "Save chat defaults"}
         </Button>
         {update.isSuccess && <span className="text-xs text-success">Saved.</span>}
       </div>

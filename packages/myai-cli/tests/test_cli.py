@@ -99,3 +99,8 @@ def test_storage_cleanup_and_benchmark(running_service: Path, tmp_path: Path) ->
     assert code == 0 and "Deleted 1" in out and not stale.exists()
     code, out = _run("hardware", "--benchmark", data_dir=running_service)
     assert code == 0 and "Benchmark (" in out
+
+
+def test_models_unload_is_safe_when_nothing_loaded(running_service: Path) -> None:
+    code, out = _run("models", "unload", data_dir=running_service)
+    assert code == 0 and "unloaded" in out

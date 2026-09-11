@@ -177,6 +177,17 @@ def models_use(model_id: str, data_dir: DataDirOpt = None) -> None:
     console.print(f"[green]{model_id} is now active.[/green]")
 
 
+@models_app.command("unload")
+def models_unload(data_dir: DataDirOpt = None) -> None:
+    """Release the loaded model's memory; the next chat message loads it again."""
+    data = _call(_service(data_dir).post, "/models/unload", {})
+    console.print(
+        "[green]Model unloaded.[/green]"
+        if data["loaded_model_id"] is None
+        else f"Still loaded: {data['loaded_model_id']}"
+    )
+
+
 @models_app.command("remove")
 def models_remove(model_id: str, data_dir: DataDirOpt = None) -> None:
     """Delete a downloaded model file."""

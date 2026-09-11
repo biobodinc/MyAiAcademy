@@ -72,11 +72,19 @@ class AdvancedComputeSettings(ApiModel):
     time_limit_minutes: int | None = Field(default=None, ge=1, le=60 * 24 * 30)
 
 
+class ChatSettings(ApiModel):
+    """Generation defaults for chat (spec §46). Used whenever a client sends a message
+    without explicit options; both are shown under Advanced mode."""
+
+    chat_max_tokens: int = Field(default=512, ge=32, le=8192)
+    chat_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+
+
 ADVANCED_KEYS: frozenset[str] = frozenset(AdvancedComputeSettings.model_fields)
 """Preference keys that may be *cleared* by sending ``null``."""
 
 
-class Preferences(AdvancedComputeSettings):
+class Preferences(AdvancedComputeSettings, ChatSettings):
     experience_mode: ExperienceMode = ExperienceMode.BEGINNER
     compute_preset: ComputePreset = ComputePreset.BALANCED
     theme: Theme = Theme.SYSTEM
@@ -92,6 +100,8 @@ class Preferences(AdvancedComputeSettings):
 class PreferencesUpdate(AdvancedComputeSettings):
     """All fields optional. Advanced fields accept ``null`` to clear an override."""
 
+    chat_max_tokens: int | None = Field(default=None, ge=32, le=8192)
+    chat_temperature: float | None = Field(default=None, ge=0.0, le=2.0)
     experience_mode: ExperienceMode | None = None
     compute_preset: ComputePreset | None = None
     theme: Theme | None = None

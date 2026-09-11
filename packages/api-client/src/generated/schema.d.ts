@@ -53,7 +53,8 @@ export interface paths {
         delete: operations["delete_conversation_api_chat_conversations__conversation_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename Conversation */
+        patch: operations["rename_conversation_api_chat_conversations__conversation_id__patch"];
         trace?: never;
     };
     "/api/chat/conversations/{conversation_id}/messages": {
@@ -466,6 +467,26 @@ export interface paths {
         get: operations["recommended_api_models_recommended_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/models/unload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unload Model
+         * @description Release the loaded model's memory. The next message loads it again.
+         */
+        post: operations["unload_model_api_models_unload_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -940,6 +961,11 @@ export interface components {
              */
             updated_at: string;
         };
+        /** ConversationUpdate */
+        ConversationUpdate: {
+            /** Title */
+            title: string;
+        };
         /** CpuInfo */
         CpuInfo: {
             /** Architecture */
@@ -1388,6 +1414,16 @@ export interface components {
         };
         /** Preferences */
         Preferences: {
+            /**
+             * Chat Max Tokens
+             * @default 512
+             */
+            chat_max_tokens: number;
+            /**
+             * Chat Temperature
+             * @default 0.7
+             */
+            chat_temperature: number;
             /** @default balanced */
             compute_preset: components["schemas"]["ComputePreset"];
             /**
@@ -1425,6 +1461,10 @@ export interface components {
          * @description All fields optional. Advanced fields accept ``null`` to clear an override.
          */
         PreferencesUpdate: {
+            /** Chat Max Tokens */
+            chat_max_tokens?: number | null;
+            /** Chat Temperature */
+            chat_temperature?: number | null;
             compute_preset?: components["schemas"]["ComputePreset"] | null;
             /** Contributor Mode */
             contributor_mode?: boolean | null;
@@ -1589,7 +1629,8 @@ export interface components {
         SendMessage: {
             /** Content */
             content: string;
-            options?: components["schemas"]["GenerationOptions"];
+            /** @description Omit to use the generation defaults from preferences. */
+            options?: components["schemas"]["GenerationOptions"] | null;
         };
         /** ServiceStatus */
         ServiceStatus: {
@@ -1866,6 +1907,7 @@ export type SchemaCommandResult = components['schemas']['CommandResult'];
 export type SchemaComputePreset = components['schemas']['ComputePreset'];
 export type SchemaConversationCreate = components['schemas']['ConversationCreate'];
 export type SchemaConversationRead = components['schemas']['ConversationRead'];
+export type SchemaConversationUpdate = components['schemas']['ConversationUpdate'];
 export type SchemaCpuInfo = components['schemas']['CpuInfo'];
 export type SchemaDocumentAddPath = components['schemas']['DocumentAddPath'];
 export type SchemaDocumentAddText = components['schemas']['DocumentAddText'];
@@ -2027,6 +2069,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_conversation_api_chat_conversations__conversation_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationRead"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -2836,6 +2913,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogModel"];
+                };
+            };
+        };
+    };
+    unload_model_api_models_unload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsOverview"];
                 };
             };
         };

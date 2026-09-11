@@ -139,6 +139,18 @@ def remove_model(
     return overview(state, session, storage)
 
 
+@router.post("/unload", response_model=ModelsOverview)
+def unload_model(
+    state: StateDep, session: SessionDep, storage: StorageDep, audit: AuditDep
+) -> ModelsOverview:
+    """Release the loaded model's memory. The next message loads it again."""
+    loaded = state.runtime.status().loaded_model_id
+    if loaded is not None:
+        state.runtime.unload()
+        audit.record(AuditCategory.SYSTEM, "model_unloaded", "Model unloaded", {"model_id": loaded})
+    return overview(state, session, storage)
+
+
 @router.post("/load", response_model=ModelsOverview)
 def load_active(
     state: StateDep, session: SessionDep, storage: StorageDep, prefs: PreferencesDep

@@ -356,6 +356,30 @@ export function useLoadActiveModel() {
   });
 }
 
+export function useUnloadModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/api/models/unload")),
+    onSuccess: () => {
+      invalidateModels(qc);
+    },
+  });
+}
+
+export function useRenameConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { conversation_id: string; title: string }) =>
+      unwrap(
+        api.PATCH("/api/chat/conversations/{conversation_id}", {
+          params: { path: { conversation_id: input.conversation_id } },
+          body: { title: input.title },
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: localAiKeys.conversations }),
+  });
+}
+
 export function useConversations() {
   return useQuery({
     queryKey: localAiKeys.conversations,

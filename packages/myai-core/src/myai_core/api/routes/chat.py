@@ -14,6 +14,7 @@ from myai_core.chat.service import (
     ChatError,
     ChatService,
     ConversationRead,
+    ConversationUpdate,
     MessageRead,
     SendMessage,
 )
@@ -21,7 +22,7 @@ from myai_core.commands.dispatcher import CommandContext, execute
 from myai_core.commands.parser import is_command
 from myai_core.hardware import HardwareReport, detect_hardware
 from myai_core.memory.service import MemoryService
-from myai_core.models.provider import ProviderError
+from myai_core.models.provider import GenerationOptions, ProviderError
 from myai_core.models.service import ModelService
 from myai_core.skills.service import SkillsService
 
@@ -66,6 +67,18 @@ def list_messages(
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
 
 
+@router.patch("/conversations/{conversation_id}", response_model=ConversationRead)
+def rename_conversation(
+    conversation_id: str, body: ConversationUpdate, session: SessionDep, profile: ProfileDep
+) -> ConversationRead:
+    chat = _chat(session, profile)
+    try:
+        chat.rename_conversation(conversation_id, body.title)
+    except ChatError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(exc)) from exc
+    return next(c for c in chat.list_conversations() if c.id == conversation_id)
+
+
 @router.delete("/conversations/{conversation_id}", status_code=204)
 def delete_conversation(conversation_id: str, session: SessionDep, profile: ProfileDep) -> None:
     try:
@@ -100,7 +113,11 @@ async def send_message(
         result = _run_command(body.content, state, session, profile, prefs, storage)
         return StreamingResponse(iter([_sse("command", result)]), media_type="text/event-stream")
 
-    prepared = prepare_active_model(state, ModelService(session, storage), prefs.get())
+    preferences = prefs.get()
+    prepared = prepare_active_model(state, ModelService(session, storage), preferences)
+    defaults = GenerationOptions(
+        max_tokens=preferences.chat_max_tokens, temperature=preferences.chat_temperature
+    )
 
     def events() -> Iterator[str]:
         try:
@@ -109,7 +126,11 @@ async def send_message(
             yield _sse("error", {"message": str(exc)})
             return
         for event in chat.send(
-            conversation_id, body, generate=state.runtime.generate, model_id=prepared.model_id
+            conversation_id,
+            body,
+            generate=state.runtime.generate,
+            model_id=prepared.model_id,
+            default_options=defaults,
         ):
             yield _sse(event.kind, event.payload)
 

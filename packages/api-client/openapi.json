@@ -652,6 +652,21 @@
         "title": "ConversationRead",
         "type": "object"
       },
+      "ConversationUpdate": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ConversationUpdate",
+        "type": "object"
+      },
       "CpuInfo": {
         "properties": {
           "architecture": {
@@ -2038,6 +2053,20 @@
       },
       "Preferences": {
         "properties": {
+          "chat_max_tokens": {
+            "default": 512,
+            "maximum": 8192.0,
+            "minimum": 32.0,
+            "title": "Chat Max Tokens",
+            "type": "integer"
+          },
+          "chat_temperature": {
+            "default": 0.7,
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Chat Temperature",
+            "type": "number"
+          },
           "compute_preset": {
             "$ref": "#/components/schemas/ComputePreset",
             "default": "balanced"
@@ -2136,6 +2165,8 @@
           }
         },
         "required": [
+          "chat_max_tokens",
+          "chat_temperature",
           "cpu_utilization_percent",
           "gpu_utilization_percent",
           "ram_limit_gib",
@@ -2155,6 +2186,32 @@
       "PreferencesUpdate": {
         "description": "All fields optional. Advanced fields accept ``null`` to clear an override.",
         "properties": {
+          "chat_max_tokens": {
+            "anyOf": [
+              {
+                "maximum": 8192.0,
+                "minimum": 32.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Max Tokens"
+          },
+          "chat_temperature": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Temperature"
+          },
           "compute_preset": {
             "anyOf": [
               {
@@ -2614,7 +2671,15 @@
             "type": "string"
           },
           "options": {
-            "$ref": "#/components/schemas/GenerationOptions"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GenerationOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omit to use the generation defaults from preferences."
           }
         },
         "required": [
@@ -3548,6 +3613,56 @@
         "tags": [
           "chat"
         ]
+      },
+      "patch": {
+        "operationId": "rename_conversation_api_chat_conversations__conversation_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename Conversation",
+        "tags": [
+          "chat"
+        ]
       }
     },
     "/api/chat/conversations/{conversation_id}/messages": {
@@ -4476,6 +4591,28 @@
           }
         },
         "summary": "Recommended",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/unload": {
+      "post": {
+        "description": "Release the loaded model's memory. The next message loads it again.",
+        "operationId": "unload_model_api_models_unload_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Unload Model",
         "tags": [
           "models"
         ]
