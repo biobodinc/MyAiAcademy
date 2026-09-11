@@ -9,7 +9,10 @@ MAX_KNOWLEDGE_CHARS = 6000
 
 
 def build_system_prompt(
-    profile: AIProfile, memories: list[Memory], knowledge: list[RetrievedChunk]
+    profile: AIProfile,
+    memories: list[Memory],
+    knowledge: list[RetrievedChunk],
+    skill_instructions: list[str] | None = None,
 ) -> str:
     parts: list[str] = []
     owner = f" Your owner is {profile.owner_name}." if profile.owner_name else ""
@@ -24,6 +27,11 @@ def build_system_prompt(
         "Be honest about what you do not know. You cannot browse the internet, run code, or "
         "access files unless they appear below."
     )
+    if skill_instructions:
+        parts.append(
+            "Skills you have learned (follow these instructions):\n\n"
+            + "\n\n".join(skill_instructions)
+        )
     if memories:
         lines = "\n".join(f"- {m.content}" for m in memories)
         parts.append(

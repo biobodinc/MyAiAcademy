@@ -25,9 +25,11 @@ app = typer.Typer(
 storage_app = typer.Typer(help="MyAI storage location and usage.", no_args_is_help=True)
 profile_app = typer.Typer(help="Your AI's identity and personality.", no_args_is_help=True)
 settings_app = typer.Typer(help="Experience mode, compute and appearance.", no_args_is_help=True)
+jobs_app = typer.Typer(help="Background jobs: learning and benchmark runs.", no_args_is_help=True)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
 app.add_typer(settings_app, name="settings")
+app.add_typer(jobs_app, name="jobs")
 app.add_typer(models_app, name="models")
 app.add_typer(memory_app, name="memory")
 app.add_typer(knowledge_app, name="knowledge")
@@ -384,17 +386,196 @@ def skills(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
     table.add_column("Band")
     table.add_column("Status")
     for s in data["skills"]:
-        state = (
-            "learned"
-            if s["learned"]
-            else (
-                "locked: " + s["locked_reason"]
-                if s["locked"]
-                else f"not learned (Phase {s['planned_phase']})"
-            )
-        )
+        if s["learned"]:
+            state = f"learned (package {s['package_version']})"
+        elif not s["learnable"]:
+            state = f"no benchmark yet (Phase {s['planned_phase']})"
+        elif s["locked"]:
+            state = "locked: " + s["locked_reason"]
+        else:
+            state = f"ready: myai learn {s['id']}"
         table.add_row(f"{s['icon']} {s['name']}", str(s["level"]), s["band"], state)
     console.print(table)
+    earned = [d for d in data.get("degrees", []) if d["earned"]]
+    if earned:
+        console.print("🎓 Degrees: " + ", ".join(f"{d['name']} L{d['level']}" for d in earned))
+    badges = [a for a in data.get("achievements", []) if a["earned"]]
+    if badges:
+        console.print("🏅 Achievements: " + ", ".join(f"{a['icon']} {a['name']}" for a in badges))
+
+
+@app.command()
+def learn(
+    skill: str,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Start without confirming.")] = False,
+    wait: Annotated[bool, typer.Option(help="Wait for the benchmark to finish.")] = True,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Learn a skill: install its package and run its benchmark with your local model."""
+    svc = _service(data_dir)
+    preview = _call(svc.get, f"/skills/{skill}/learn-preview")
+    if preview["already_learned"]:
+        console.print(f"{preview['icon']} {preview['name']} is already learned.")
+        console.print(f"Re-run its benchmark with: myai evaluate {skill}")
+        return
+    if preview["blockers"]:
+        err_console.print(
+            f"[yellow]{preview['icon']} {preview['name']} cannot be learned yet:[/yellow]"
+        )
+        for b in preview["blockers"]:
+            err_console.print(f"  • {b}")
+        raise typer.Exit(code=1)
+    pkg = preview["package"]
+    if preview["estimated_minutes_min"] is not None:
+        estimate = (
+            f"{preview['estimated_minutes_min']:g}-{preview['estimated_minutes_max']:g} min "
+            f"({preview['estimate_note']})"
+        )
+    else:
+        estimate = f"unknown ({preview['estimate_note']})"
+    console.print(
+        Panel(
+            "\n".join(
+                [
+                    preview["what_happens"],
+                    "",
+                    f"Resources: {human_bytes(pkg['size_bytes'])} ({pkg['resources']})",
+                    f"Benchmark: {pkg['task_count']} tasks across {', '.join(pkg['areas'])}",
+                    f"Model: {preview['model_id']}",
+                    f"Recommended compute: {preview['recommended_compute']}",
+                    f"Estimated learning preparation: {estimate}",
+                ]
+            ),
+            title=f"{preview['icon']} New skill: {preview['name']}",
+        )
+    )
+    if not yes and not typer.confirm("Start learning?", default=True):
+        raise typer.Exit(code=1)
+    job = _call(svc.post, f"/skills/{skill}/learn", {})
+    console.print(f"Started job {job['id']}. The skill counts as learned only when it finishes.")
+    if wait:
+        _follow_job(svc, job["id"])
+
+
+@app.command()
+def evaluate(
+    skill: str,
+    wait: Annotated[bool, typer.Option(help="Wait for the benchmark to finish.")] = True,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Re-run a learned skill's benchmark (levels only change this way)."""
+    svc = _service(data_dir)
+    job = _call(svc.post, f"/skills/{skill}/evaluate", {})
+    console.print(f"Started job {job['id']}.")
+    if wait:
+        _follow_job(svc, job["id"])
+
+
+@app.command()
+def history(
+    data_dir: DataDirOpt = None,
+    limit: Annotated[int, typer.Option(min=1, max=500)] = 30,
+    as_json: JsonOpt = False,
+) -> None:
+    """Benchmark history: every level change, when, with which model."""
+    data = _call(_service(data_dir).get, "/skills/history", limit=limit)
+    if as_json:
+        return _emit_json(data)
+    if not data:
+        console.print("No benchmark runs yet. Levels only ever change through them.")
+        return
+    table = Table(title="Benchmark history")
+    table.add_column("When")
+    table.add_column("Skill")
+    table.add_column("Level", justify="right")
+    table.add_column("Score", justify="right")
+    table.add_column("Model")
+    for e in data:
+        table.add_row(
+            e["evaluated_at"][:16].replace("T", " "),
+            e["skill_id"],
+            f"{e['level_before']} → {e['level_after']}",
+            f"{round(e['score'] * 100)}%",
+            e["model_id"],
+        )
+    console.print(table)
+
+
+def _follow_job(svc: LocalService, job_id: str) -> None:
+    import time
+
+    last = -1
+    while True:
+        job = _call(svc.get, f"/jobs/{job_id}")
+        total = job["progress_total"] or 0
+        pct = int(job["progress_done"] * 100 / total) if total else 0
+        if pct != last:
+            console.print(f"  {job['status']}: {job['progress_done']}/{total} tasks ({pct}%)")
+            last = pct
+        if job["status"] in {"completed", "failed", "cancelled"}:
+            break
+        time.sleep(1.0)
+    if job["status"] == "completed":
+        r = job["result"]
+        console.print(
+            f"[green]Done: {job['skill_id']} level {r['level_before']} → {r['level_after']} "
+            f"({round(r['score'] * 100)}% in {r['duration_seconds']}s)[/green]"
+        )
+        for area, score in r.get("area_scores", {}).items():
+            console.print(f"  {area}: {round(score * 100)}%")
+    elif job["status"] == "failed":
+        err_console.print(f"[red]Failed: {job['error']}[/red]")
+        raise typer.Exit(code=1)
+    else:
+        console.print("[yellow]Cancelled. Nothing was learned.[/yellow]")
+
+
+@jobs_app.command("list")
+def jobs_list(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Recent jobs."""
+    data = _call(_service(data_dir).get, "/jobs")
+    if as_json:
+        return _emit_json(data)
+    table = Table(title="Jobs")
+    table.add_column("Id")
+    table.add_column("Kind")
+    table.add_column("Skill")
+    table.add_column("Status")
+    table.add_column("Progress")
+    for j in data:
+        total = j["progress_total"] or 0
+        table.add_row(
+            j["id"], j["kind"], j["skill_id"], j["status"], f"{j['progress_done']}/{total}"
+        )
+    console.print(table)
+
+
+def _job_action(action: str, data_dir: Path | None) -> None:
+    svc = _service(data_dir)
+    current = _call(svc.get, "/jobs/current")
+    if current is None:
+        err_console.print("No job is running.")
+        raise typer.Exit(code=1)
+    job = _call(svc.post, f"/jobs/{current['id']}/{action}", {})
+    console.print(f"{job['kind']} {job['skill_id']}: {job['status']}")
+
+
+@jobs_app.command("pause")
+def jobs_pause(data_dir: DataDirOpt = None) -> None:
+    """Pause the running job."""
+    _job_action("pause", data_dir)
+
+
+@jobs_app.command("resume")
+def jobs_resume(data_dir: DataDirOpt = None) -> None:
+    """Resume a paused job."""
+    _job_action("resume", data_dir)
+
+
+@jobs_app.command("stop")
+def jobs_stop(data_dir: DataDirOpt = None) -> None:
+    """Stop the running job. A stopped learning job leaves the skill unlearned."""
+    _job_action("cancel", data_dir)
 
 
 @app.command()
@@ -499,5 +680,16 @@ def audit(
     console.print(table)
 
 
-if __name__ == "__main__":
+def entrypoint() -> None:
+    """Console-script entry. A frozen CLI binary doubles as the benchmark sandbox host."""
+    import sys
+
+    from myai_core.skills.sandbox import SANDBOX_FLAG, harness_main
+
+    if sys.argv[1:2] == [SANDBOX_FLAG]:
+        raise SystemExit(harness_main())
     app()
+
+
+if __name__ == "__main__":
+    entrypoint()

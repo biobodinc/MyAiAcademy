@@ -18,8 +18,12 @@ export const DISCLOSURES = [
     body: "It uses BM25 over SQLite full-text search and finds passages that share words with your question. Embedding-based retrieval is planned and will be labelled when it ships.",
   },
   {
-    title: "Skills, levels and training are not implemented.",
-    body: "The catalog and skill tree show what will be learnable; /learn and /train say so instead of doing anything.",
+    title: "Training is not implemented (Phase 4).",
+    body: "Skills are learned from bundled packages (instructions plus a 12-task benchmark) and a skill's level is the score its benchmark produced with your local model. /train shows its information and states that training jobs arrive in Phase 4. Creative skills (images, video, music, games) have no benchmark yet and cannot be learned.",
+  },
+  {
+    title: "The coding benchmark executes code written by your local model.",
+    body: "It runs in a separate interpreter with an import allow-list, a scratch directory, a timeout and resource limits. That contains accidents; it is not a security boundary against a hostile model, so treat imported models with the same care as any software you run.",
   },
   {
     title: "Network activity is limited.",

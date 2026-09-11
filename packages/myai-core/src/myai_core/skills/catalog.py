@@ -49,8 +49,8 @@ CATALOG: tuple[SkillDefinition, ...] = (
         icon="💬",
         description="Talk naturally, remember context, follow instructions.",
         specializations=["Clarity", "Tone", "Instruction following"],
-        availability=SkillAvailability.PLANNED,
-        planned_phase=2,
+        availability=SkillAvailability.AVAILABLE,
+        planned_phase=3,
     ),
     SkillDefinition(
         id="writing",
@@ -60,7 +60,7 @@ CATALOG: tuple[SkillDefinition, ...] = (
         description="Drafting, editing and styling prose.",
         specializations=["Editing", "Storytelling", "Technical writing"],
         requires=["conversation"],
-        availability=SkillAvailability.PLANNED,
+        availability=SkillAvailability.AVAILABLE,
         planned_phase=3,
     ),
     SkillDefinition(
@@ -71,7 +71,7 @@ CATALOG: tuple[SkillDefinition, ...] = (
         description="Write, explain and debug code.",
         specializations=["Debugging", "Reasoning", "Code quality", "Refactoring"],
         requires=["conversation"],
-        availability=SkillAvailability.PLANNED,
+        availability=SkillAvailability.AVAILABLE,
         planned_phase=3,
     ),
     SkillDefinition(
@@ -82,7 +82,7 @@ CATALOG: tuple[SkillDefinition, ...] = (
         description="Retrieve, compare and summarise information from your knowledge.",
         specializations=["Summarisation", "Source comparison", "Citation"],
         requires=["conversation"],
-        availability=SkillAvailability.PLANNED,
+        availability=SkillAvailability.AVAILABLE,
         planned_phase=3,
     ),
     SkillDefinition(
@@ -93,7 +93,7 @@ CATALOG: tuple[SkillDefinition, ...] = (
         description="Quantitative reasoning and scientific explanation.",
         specializations=["Mathematics", "Data analysis", "Explanation"],
         requires=["research"],
-        availability=SkillAvailability.PLANNED,
+        availability=SkillAvailability.AVAILABLE,
         planned_phase=3,
     ),
     SkillDefinition(

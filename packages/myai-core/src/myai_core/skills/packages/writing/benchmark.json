@@ -1,0 +1,123 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 120,
+  "tasks": [
+    {
+      "id": "two-line-poem",
+      "area": "structure",
+      "prompt": "Write a poem about rain that is exactly two lines long. Output the two lines and nothing else.",
+      "checks": [{ "type": "line_count", "expected": 2 }]
+    },
+    {
+      "id": "sunset-sentence",
+      "area": "constraints",
+      "prompt": "Write one sentence describing a sunset that includes the words 'orange' and 'horizon'.",
+      "checks": [
+        { "type": "contains_all", "terms": ["orange", "horizon"] },
+        { "type": "word_count", "max": 40 }
+      ]
+    },
+    {
+      "id": "past-tense",
+      "area": "editing",
+      "prompt": "Rewrite this sentence in the past tense and reply with the sentence only: She walks to the store and buys bread.",
+      "checks": [
+        { "type": "contains_all", "terms": ["walked", "bought"] },
+        { "type": "word_count", "max": 15 }
+      ]
+    },
+    {
+      "id": "fix-spelling",
+      "area": "editing",
+      "prompt": "Correct the spelling and reply with the corrected sentence only: Teh weather is beatiful today.",
+      "checks": [{ "type": "contains_all", "terms": ["the weather is beautiful today"] }]
+    },
+    {
+      "id": "headline",
+      "area": "constraints",
+      "prompt": "Write a news headline of at most 8 words about a city planting one thousand trees. Reply with the headline only.",
+      "checks": [
+        { "type": "word_count", "max": 10 },
+        { "type": "contains_any", "terms": ["tree", "trees"] }
+      ]
+    },
+    {
+      "id": "packing-list",
+      "area": "structure",
+      "prompt": "Write a numbered list of exactly three things to pack for a day at the beach. Output only the list.",
+      "checks": [{ "type": "bullets", "expected": 3 }]
+    },
+    {
+      "id": "shorten",
+      "area": "editing",
+      "prompt": "Shorten the following to at most 12 words, keeping the meaning, and reply with the new sentence only: Due to the fact that it was raining heavily, we made the decision to remain indoors for the entire afternoon.",
+      "checks": [
+        { "type": "word_count", "max": 12 },
+        { "type": "contains_any", "terms": ["rain", "raining", "rained"] },
+        { "type": "contains_any", "terms": ["indoors", "inside", "in"] }
+      ]
+    },
+    {
+      "id": "closing-no-thanks",
+      "area": "constraints",
+      "prompt": "Write a formal one-sentence email closing line that does not use the words 'thanks' or 'thank'. Reply with the line only.",
+      "checks": [
+        { "type": "contains_none", "terms": ["thanks", "thank"] },
+        { "type": "word_count", "min": 2, "max": 20 }
+      ]
+    },
+    {
+      "id": "combine",
+      "area": "editing",
+      "prompt": "Combine these into a single sentence and reply with it only: The dog barked. The cat ran away.",
+      "checks": [
+        { "type": "line_count", "expected": 1 },
+        { "type": "contains_all", "terms": ["dog", "cat", "barked", "ran"] }
+      ]
+    },
+    {
+      "id": "haiku",
+      "area": "structure",
+      "prompt": "Write a haiku about snow: exactly three lines. Output the three lines only.",
+      "checks": [{ "type": "line_count", "expected": 3 }]
+    },
+    {
+      "id": "stronger-word",
+      "area": "editing",
+      "prompt": "Replace the word 'big' with a stronger synonym in this sentence and reply with the sentence only: It was a big storm.",
+      "checks": [
+        { "type": "contains_none", "terms": ["big"] },
+        { "type": "contains_all", "terms": ["storm"] },
+        {
+          "type": "contains_any",
+          "terms": [
+            "huge",
+            "massive",
+            "enormous",
+            "violent",
+            "powerful",
+            "immense",
+            "gigantic",
+            "tremendous",
+            "mighty",
+            "severe",
+            "fierce",
+            "colossal",
+            "vast",
+            "ferocious",
+            "monstrous"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-description",
+      "area": "constraints",
+      "prompt": "Write a product description for a reusable water bottle in 40 to 60 words.",
+      "checks": [
+        { "type": "word_count", "min": 40, "max": 60 },
+        { "type": "contains_all", "terms": ["bottle"] }
+      ]
+    }
+  ]
+}

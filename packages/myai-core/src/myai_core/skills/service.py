@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from myai_core.db.models import SkillState
+from myai_core.db.models import SkillEvaluation, SkillState
 from myai_core.schemas import ApiModel
+from myai_core.skills.academy import AchievementStatus, DegreeStatus, achievements_for, degrees_for
 from myai_core.skills.catalog import SkillAvailability, SkillDefinition, SkillDomain, all_skills
 from myai_core.skills.levels import LevelBand, band_for_level, overall_level
+from myai_core.skills.packages import bundled_package
 
 
 class SkillStatus(ApiModel):
@@ -32,11 +35,25 @@ class SkillStatus(ApiModel):
     learned_at: datetime | None
     locked: bool
     locked_reason: str | None
+    learnable: bool = Field(description="A package with a measurable benchmark exists.")
+    package_version: str | None = None
+    package: SkillPackageInfo | None = None
+    area_scores: dict[str, float] = Field(default_factory=dict)
+
+
+class SkillPackageInfo(ApiModel):
+    version: str
+    task_count: int
+    areas: list[str]
+    size_bytes: int
+    license: str
 
 
 class SkillsSummary(ApiModel):
     overall_level: int
     skills: list[SkillStatus]
+    degrees: list[DegreeStatus] = Field(default_factory=list)
+    achievements: list[AchievementStatus] = Field(default_factory=list)
 
 
 class SkillsService:
@@ -49,17 +66,42 @@ class SkillsService:
             rows = self._session.scalars(select(SkillState).where(SkillState.ai_id == ai_id)).all()
             states = {row.skill_id: row for row in rows}
 
-        statuses = [self._status_for(definition, states) for definition in all_skills()]
+        area_scores: dict[str, dict[str, float]] = {}
+        if ai_id is not None:
+            latest: dict[str, SkillEvaluation] = {}
+            for row in self._session.scalars(
+                select(SkillEvaluation)
+                .where(SkillEvaluation.ai_id == ai_id)
+                .order_by(SkillEvaluation.evaluated_at.desc(), SkillEvaluation.id.desc())
+            ):
+                latest.setdefault(row.skill_id, row)
+            area_scores = {
+                k: {a: float(v) for a, v in r.area_scores.items()}  # type: ignore[arg-type]
+                for k, r in latest.items()
+            }
+        statuses = [
+            self._status_for(definition, states, area_scores.get(definition.id, {}))
+            for definition in all_skills()
+        ]
+        levels = {s.id: s.level for s in statuses if s.learned}
+        learnable = {s.id for s in statuses if s.learnable}
         return SkillsSummary(
             overall_level=overall_level([s.level for s in statuses]),
             skills=statuses,
+            degrees=degrees_for(levels, learnable),
+            achievements=achievements_for(levels, area_scores),
         )
 
     @staticmethod
-    def _status_for(definition: SkillDefinition, states: dict[str, SkillState]) -> SkillStatus:
+    def _status_for(
+        definition: SkillDefinition,
+        states: dict[str, SkillState],
+        area_scores: dict[str, float],
+    ) -> SkillStatus:
         state = states.get(definition.id)
         level = state.level if state else 0
         learned = bool(state and state.status == "learned")
+        package = bundled_package(definition.id)
         missing = [
             req for req in definition.requires if not (states.get(req) and states[req].level > 0)
         ]
@@ -83,4 +125,18 @@ class SkillsService:
             locked_reason=(
                 "Requires: " + ", ".join(m.title() for m in missing) if locked else None
             ),
+            learnable=package is not None,
+            package_version=state.package_version if state else None,
+            package=(
+                SkillPackageInfo(
+                    version=package.manifest.version,
+                    task_count=len(package.benchmark.tasks),
+                    areas=package.benchmark.areas,
+                    size_bytes=package.size_bytes,
+                    license=package.manifest.license,
+                )
+                if package
+                else None
+            ),
+            area_scores=area_scores,
         )

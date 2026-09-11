@@ -22,7 +22,8 @@ const STARTERS = [
   "/status",
   "/hardware",
   "/skills",
-  "teach yourself coding",
+  "/learn conversation",
+  "/history",
   "What is training?",
 ];
 

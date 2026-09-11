@@ -1,0 +1,105 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 120,
+  "tasks": [
+    {
+      "id": "founding-year",
+      "area": "extraction",
+      "prompt": "Passage: Northwind Ltd was founded in 1987 in Leeds by Amara Osei. It expanded to Bristol in 1995 and was sold in 2010.\n\nIn which year was Northwind founded? Answer with the year only.",
+      "checks": [
+        { "type": "numeric", "expected": 1987 },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "founding-city",
+      "area": "extraction",
+      "prompt": "Passage: Northwind Ltd was founded in 1987 in Leeds by Amara Osei. It expanded to Bristol in 1995 and was sold in 2010.\n\nIn which city was Northwind founded? Answer with the city only.",
+      "checks": [
+        { "type": "contains_all", "terms": ["leeds"] },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "founder",
+      "area": "extraction",
+      "prompt": "Passage: Northwind Ltd was founded in 1987 in Leeds by Amara Osei. It expanded to Bristol in 1995 and was sold in 2010.\n\nWho founded Northwind? Answer with the name only.",
+      "checks": [
+        { "type": "contains_all", "terms": ["osei"] },
+        { "type": "word_count", "max": 4 }
+      ]
+    },
+    {
+      "id": "one-sentence-summary",
+      "area": "summarisation",
+      "prompt": "Passage: Northwind Ltd was founded in 1987 in Leeds by Amara Osei. It expanded to Bristol in 1995 and was sold in 2010.\n\nSummarise the passage in one sentence of at most 25 words.",
+      "checks": [
+        { "type": "word_count", "max": 25 },
+        { "type": "contains_all", "terms": ["northwind"] }
+      ]
+    },
+    {
+      "id": "unsupported-claim",
+      "area": "extraction",
+      "prompt": "Passage: Northwind Ltd was founded in 1987 in Leeds by Amara Osei.\n\nClaim: Northwind was founded in Manchester. Is the claim supported or unsupported by the passage? Answer with one word.",
+      "checks": [
+        { "type": "contains_all", "terms": ["unsupported"] },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "cite-title",
+      "area": "citation",
+      "prompt": "Passage titled 'Harbour report': On Tuesday 42 ships docked at the eastern pier.\nPassage titled 'Weather log': Tuesday brought 12 mm of rainfall and light wind.\n\nHow many ships docked on Tuesday? Give the number and name the passage title it comes from.",
+      "checks": [
+        { "type": "numeric", "expected": 42 },
+        { "type": "contains_all", "terms": ["harbour report"] }
+      ]
+    },
+    {
+      "id": "which-passage",
+      "area": "citation",
+      "prompt": "Passage titled 'Harbour report': On Tuesday 42 ships docked at the eastern pier.\nPassage titled 'Weather log': Tuesday brought 12 mm of rainfall and light wind.\n\nWhich passage mentions rainfall? Answer with the passage title only.",
+      "checks": [
+        { "type": "contains_all", "terms": ["weather log"] },
+        { "type": "contains_none", "terms": ["harbour"] }
+      ]
+    },
+    {
+      "id": "fruits",
+      "area": "extraction",
+      "prompt": "From this list, which items are fruits: apple, carrot, banana, spinach? Answer with the fruits only, separated by commas.",
+      "checks": [
+        { "type": "contains_all", "terms": ["apple", "banana"] },
+        { "type": "contains_none", "terms": ["carrot", "spinach"] }
+      ]
+    },
+    {
+      "id": "eggs",
+      "area": "extraction",
+      "prompt": "Passage: The recipe needs 3 eggs, 200 g of flour and a pinch of salt.\n\nHow many eggs does the recipe need? Answer with the number only.",
+      "checks": [
+        { "type": "numeric", "expected": 3 },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "three-points",
+      "area": "summarisation",
+      "prompt": "Passage: Solar panels convert sunlight into electricity. Their output falls on cloudy days. Batteries can store the surplus for use at night.\n\nGive the three key points of the passage as exactly three bullet points.",
+      "checks": [{ "type": "bullets", "expected": 3 }]
+    },
+    {
+      "id": "not-stated",
+      "area": "extraction",
+      "prompt": "Passage: The museum opens at 9 am and closes at 5 pm on weekdays.\n\nWhat is the price of a ticket? If the passage does not say, answer exactly: not stated",
+      "checks": [{ "type": "contains_all", "terms": ["not stated"] }]
+    },
+    {
+      "id": "chronology",
+      "area": "summarisation",
+      "prompt": "Passage: Northwind was sold in 2010, founded in 1987, and expanded in 1995.\n\nList the three years in chronological order, earliest first, separated by commas.",
+      "checks": [{ "type": "regex", "pattern": "1987\\D+1995\\D+2010" }]
+    }
+  ]
+}

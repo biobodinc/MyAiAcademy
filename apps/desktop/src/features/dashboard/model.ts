@@ -5,6 +5,13 @@ import type { Tone } from "../../components/ui";
 /** The single headline the spec asks for ("Current status: 🟢 Ready"), derived honestly. */
 export function headline(status: ServiceStatus | undefined): { tone: Tone; text: string } {
   if (!status) return { tone: "muted", text: "Checking…" };
+  if (status.job) {
+    const verb = status.job.kind === "learn" ? "Learning" : "Evaluating";
+    return {
+      tone: status.job.status === "paused" ? "warning" : "info",
+      text: `${verb} ${status.job.skill_id} · ${status.job.progress_percent}%`,
+    };
+  }
   if (status.ai === "available") {
     return { tone: "success", text: `Ready · ${status.active_model_id ?? "model installed"}` };
   }

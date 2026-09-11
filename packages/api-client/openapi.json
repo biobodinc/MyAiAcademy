@@ -12,6 +12,44 @@
         "title": "AcceleratorBackend",
         "type": "string"
       },
+      "AchievementStatus": {
+        "properties": {
+          "earned": {
+            "title": "Earned",
+            "type": "boolean"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "string"
+          },
+          "requirement": {
+            "title": "Requirement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "requirement",
+          "earned",
+          "progress"
+        ],
+        "title": "AchievementStatus",
+        "type": "object"
+      },
       "AuditCategory": {
         "enum": [
           "profile",
@@ -735,6 +773,60 @@
         "title": "CpuInfo",
         "type": "object"
       },
+      "DegreeStatus": {
+        "properties": {
+          "earned": {
+            "title": "Earned",
+            "type": "boolean"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon",
+          "skills",
+          "level",
+          "earned",
+          "missing",
+          "note"
+        ],
+        "title": "DegreeStatus",
+        "type": "object"
+      },
       "DocumentAddPath": {
         "properties": {
           "path": {
@@ -925,6 +1017,84 @@
           "finished_at"
         ],
         "title": "DownloadStatus",
+        "type": "object"
+      },
+      "EvaluationRead": {
+        "properties": {
+          "area_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Area Scores",
+            "type": "object"
+          },
+          "evaluated_at": {
+            "format": "date-time",
+            "title": "Evaluated At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "level_after": {
+            "title": "Level After",
+            "type": "integer"
+          },
+          "level_before": {
+            "title": "Level Before",
+            "type": "integer"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "package_version": {
+            "title": "Package Version",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "task_results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Task Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "skill_id",
+          "job_id",
+          "model_id",
+          "package_version",
+          "score",
+          "level_before",
+          "level_after",
+          "area_scores",
+          "task_results",
+          "evaluated_at"
+        ],
+        "title": "EvaluationRead",
         "type": "object"
       },
       "ExperienceMode": {
@@ -1438,6 +1608,154 @@
         "title": "InferenceBenchmark",
         "type": "object"
       },
+      "JobRead": {
+        "properties": {
+          "compute_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compute Preset"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "progress_done": {
+            "title": "Progress Done",
+            "type": "integer"
+          },
+          "progress_total": {
+            "title": "Progress Total",
+            "type": "integer"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "skill_id",
+          "model_id",
+          "status",
+          "progress_done",
+          "progress_total",
+          "compute_preset",
+          "error",
+          "result",
+          "created_at",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "JobRead",
+        "type": "object"
+      },
+      "JobSummary": {
+        "description": "The compact view shown in status bars.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "progress_percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "skill_id",
+          "status",
+          "progress_percent"
+        ],
+        "title": "JobSummary",
+        "type": "object"
+      },
       "KnowledgeOverview": {
         "properties": {
           "chunk_count": {
@@ -1476,6 +1794,110 @@
           "retrieval_method"
         ],
         "title": "KnowledgeOverview",
+        "type": "object"
+      },
+      "LearnPreview": {
+        "description": "What ``/learn <skill>`` shows before anything happens (spec \u00a736).",
+        "properties": {
+          "already_learned": {
+            "title": "Already Learned",
+            "type": "boolean"
+          },
+          "blockers": {
+            "description": "Why learning cannot start; empty when it can.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "estimate_note": {
+            "title": "Estimate Note",
+            "type": "string"
+          },
+          "estimated_minutes_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Minutes Max"
+          },
+          "estimated_minutes_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Minutes Min"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "learnable": {
+            "title": "Learnable",
+            "type": "boolean"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PackageInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recommended_compute": {
+            "$ref": "#/components/schemas/ComputePreset"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "what_happens": {
+            "title": "What Happens",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill_id",
+          "name",
+          "icon",
+          "already_learned",
+          "learnable",
+          "blockers",
+          "package",
+          "model_id",
+          "recommended_compute",
+          "estimated_minutes_min",
+          "estimated_minutes_max",
+          "estimate_note",
+          "what_happens"
+        ],
+        "title": "LearnPreview",
         "type": "object"
       },
       "LevelBand": {
@@ -2049,6 +2471,47 @@
           "python_version"
         ],
         "title": "OsInfo",
+        "type": "object"
+      },
+      "PackageInfo": {
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "license": {
+            "title": "License",
+            "type": "string"
+          },
+          "resources": {
+            "title": "Resources",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "task_count": {
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "size_bytes",
+          "task_count",
+          "areas",
+          "license",
+          "resources"
+        ],
+        "title": "PackageInfo",
         "type": "object"
       },
       "ParsedCommand": {
@@ -2843,6 +3306,17 @@
             ],
             "title": "Internet Checked At"
           },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The background job in progress (learning, evaluating)."
+          },
           "loaded_model_id": {
             "anyOf": [
               {
@@ -2903,6 +3377,7 @@
           "loaded_model_id",
           "training",
           "training_detail",
+          "job",
           "profile_exists",
           "storage_configured",
           "onboarding_completed",
@@ -2932,9 +3407,52 @@
         "title": "SkillDomain",
         "type": "string"
       },
+      "SkillPackageInfo": {
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "license": {
+            "title": "License",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "task_count": {
+            "title": "Task Count",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "task_count",
+          "areas",
+          "size_bytes",
+          "license"
+        ],
+        "title": "SkillPackageInfo",
+        "type": "object"
+      },
       "SkillStatus": {
         "description": "What the UI shows per skill. ``level`` 0 + ``learned=False`` means \"not yet\".",
         "properties": {
+          "area_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Area Scores",
+            "type": "object"
+          },
           "availability": {
             "$ref": "#/components/schemas/SkillAvailability"
           },
@@ -2966,6 +3484,11 @@
               }
             ],
             "title": "Last Evaluation Score"
+          },
+          "learnable": {
+            "description": "A package with a measurable benchmark exists.",
+            "title": "Learnable",
+            "type": "boolean"
           },
           "learned": {
             "title": "Learned",
@@ -3006,6 +3529,27 @@
             "title": "Name",
             "type": "string"
           },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillPackageInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "package_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Version"
+          },
           "planned_phase": {
             "title": "Planned Phase",
             "type": "integer"
@@ -3041,13 +3585,31 @@
           "last_evaluation_score",
           "learned_at",
           "locked",
-          "locked_reason"
+          "locked_reason",
+          "learnable",
+          "package_version",
+          "package",
+          "area_scores"
         ],
         "title": "SkillStatus",
         "type": "object"
       },
       "SkillsSummary": {
         "properties": {
+          "achievements": {
+            "items": {
+              "$ref": "#/components/schemas/AchievementStatus"
+            },
+            "title": "Achievements",
+            "type": "array"
+          },
+          "degrees": {
+            "items": {
+              "$ref": "#/components/schemas/DegreeStatus"
+            },
+            "title": "Degrees",
+            "type": "array"
+          },
           "overall_level": {
             "title": "Overall Level",
             "type": "integer"
@@ -3062,7 +3624,9 @@
         },
         "required": [
           "overall_level",
-          "skills"
+          "skills",
+          "degrees",
+          "achievements"
         ],
         "title": "SkillsSummary",
         "type": "object"
@@ -4120,6 +4684,252 @@
         ]
       }
     },
+    "/api/jobs": {
+      "get": {
+        "operationId": "list_jobs_api_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobRead"
+                  },
+                  "title": "Response List Jobs Api Jobs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/jobs/current": {
+      "get": {
+        "operationId": "current_job_api_jobs_current_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/JobRead"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Current Job Api Jobs Current Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Current Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "operationId": "read_job_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancel_job_api_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}/pause": {
+      "post": {
+        "operationId": "pause_job_api_jobs__job_id__pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pause Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/api/jobs/{job_id}/resume": {
+      "post": {
+        "operationId": "resume_job_api_jobs__job_id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
     "/api/knowledge": {
       "get": {
         "operationId": "overview_api_knowledge_get",
@@ -5133,6 +5943,55 @@
         ]
       }
     },
+    "/api/skills/history": {
+      "get": {
+        "operationId": "all_history_api_skills_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EvaluationRead"
+                  },
+                  "title": "Response All History Api Skills History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "All History",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
     "/api/skills/{skill_id}": {
       "get": {
         "operationId": "read_skill_api_skills__skill_id__get",
@@ -5170,6 +6029,180 @@
           }
         },
         "summary": "Read Skill",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/evaluate": {
+      "post": {
+        "description": "Re-run a learned skill's benchmark (for example after changing model).",
+        "operationId": "evaluate_api_skills__skill_id__evaluate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/evaluations": {
+      "get": {
+        "operationId": "evaluations_api_skills__skill_id__evaluations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EvaluationRead"
+                  },
+                  "title": "Response Evaluations Api Skills  Skill Id  Evaluations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluations",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/learn": {
+      "post": {
+        "description": "Install the skill package and run its benchmark as a background job (spec \u00a736).",
+        "operationId": "learn_api_skills__skill_id__learn_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Learn",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/learn-preview": {
+      "get": {
+        "operationId": "learn_preview_api_skills__skill_id__learn_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearnPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Learn Preview",
         "tags": [
           "skills"
         ]

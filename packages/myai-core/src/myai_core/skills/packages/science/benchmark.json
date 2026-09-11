@@ -1,0 +1,92 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 96,
+  "tasks": [
+    {
+      "id": "multiply",
+      "area": "arithmetic",
+      "prompt": "What is 17 multiplied by 23? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 391 }]
+    },
+    {
+      "id": "divide",
+      "area": "arithmetic",
+      "prompt": "What is 144 divided by 12? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 12 }]
+    },
+    {
+      "id": "percent",
+      "area": "arithmetic",
+      "prompt": "What is 15 percent of 200? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 30 }]
+    },
+    {
+      "id": "km-to-m",
+      "area": "units",
+      "prompt": "How many metres are in 2.5 kilometres? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 2500 }]
+    },
+    {
+      "id": "hours-to-minutes",
+      "area": "units",
+      "prompt": "How many minutes are in 1 hour and 30 minutes? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 90 }]
+    },
+    {
+      "id": "celsius-to-f",
+      "area": "units",
+      "prompt": "What is 100 degrees Celsius in degrees Fahrenheit? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 212, "tolerance": 0.5 }]
+    },
+    {
+      "id": "train-distance",
+      "area": "reasoning",
+      "prompt": "A train travels at 60 km per hour for 2.5 hours. How far does it travel, in km? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 150 }]
+    },
+    {
+      "id": "larger-decimal",
+      "area": "reasoning",
+      "prompt": "Which number is larger, 0.5 or 0.25? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 0.5 }]
+    },
+    {
+      "id": "boiling-point",
+      "area": "explanation",
+      "prompt": "At sea level, at what temperature in degrees Celsius does water boil? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 100 }]
+    },
+    {
+      "id": "blue-sky",
+      "area": "explanation",
+      "prompt": "In at most 40 words, explain why the sky looks blue.",
+      "checks": [
+        {
+          "type": "contains_any",
+          "terms": [
+            "scatter",
+            "scatters",
+            "scattered",
+            "scattering",
+            "rayleigh",
+            "wavelength",
+            "wavelengths"
+          ]
+        },
+        { "type": "word_count", "max": 45 }
+      ]
+    },
+    {
+      "id": "hexagon",
+      "area": "reasoning",
+      "prompt": "How many sides does a hexagon have? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 6 }]
+    },
+    {
+      "id": "prime",
+      "area": "reasoning",
+      "prompt": "Is 29 a prime number? Answer yes or no only.",
+      "checks": [{ "type": "regex", "pattern": "^yes[.!]?$", "full": true }]
+    }
+  ]
+}

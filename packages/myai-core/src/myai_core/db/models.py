@@ -89,6 +89,55 @@ class SkillState(Base):
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Phase 3: which package version is installed and where (spec §36).
+    package_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    installed_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class Job(Base):
+    """A background job (spec §40 shape). Phase 3 kinds: ``learn`` and ``evaluate``;
+    Phase 4 adds ``train``. One job runs at a time."""
+
+    __tablename__ = "jobs"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(16), nullable=False)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    skill_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    model_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued")
+    progress_done: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    progress_total: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    compute_preset: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class SkillEvaluation(Base):
+    """One benchmark run (spec §43, §42 history). The only thing that ever sets a level."""
+
+    __tablename__ = "skill_evaluations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    skill_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    job_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    model_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    package_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    score: Mapped[float] = mapped_column(nullable=False)
+    level_before: Mapped[int] = mapped_column(Integer, nullable=False)
+    level_after: Mapped[int] = mapped_column(Integer, nullable=False)
+    area_scores: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    task_results: Mapped[list[object]] = mapped_column(JSON, nullable=False, default=list)
+    evaluated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
 
 
 class AuditEvent(Base):
