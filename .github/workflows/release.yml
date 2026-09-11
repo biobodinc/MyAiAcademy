@@ -1,0 +1,162 @@
+name: Release
+
+# Builds every installer on a version tag (v0.1.0) and attaches them to a GitHub Release.
+# Signing/notarisation material is supplied through repository secrets and is never
+# stored in the repository:
+#   TAURI_SIGNING_PRIVATE_KEY / TAURI_SIGNING_PRIVATE_KEY_PASSWORD  (updater artifacts, optional)
+#   APPLE_CERTIFICATE / APPLE_CERTIFICATE_PASSWORD / APPLE_SIGNING_IDENTITY / APPLE_ID /
+#   APPLE_PASSWORD / APPLE_TEAM_ID                                   (macOS signing + notarisation)
+#   WINDOWS_CERTIFICATE / WINDOWS_CERTIFICATE_PASSWORD               (Authenticode)
+#   EXPO_TOKEN                                                       (EAS builds for Android/iOS)
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  UV_VERSION: "0.9.x"
+  NODE_VERSION: "22"
+
+jobs:
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-latest
+            triple: x86_64-pc-windows-msvc
+          - name: macos-arm64
+            os: macos-latest
+            triple: aarch64-apple-darwin
+          - name: macos-x64
+            os: macos-13
+            triple: x86_64-apple-darwin
+          - name: linux-x64
+            os: ubuntu-22.04
+            triple: x86_64-unknown-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tauri Linux prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.triple }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - run: uv python install 3.11
+      - run: uv sync --all-packages --all-groups --locked
+      - run: pnpm install --frozen-lockfile
+      - name: Build myai-core sidecar
+        run: uv run python scripts/build_sidecar.py --target-triple ${{ matrix.triple }}
+      - name: Import Windows code-signing certificate
+        if: runner.os == 'Windows' && env.WINDOWS_CERTIFICATE != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $bytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\cert.pfx", $bytes)
+          Import-PfxCertificate -FilePath "$env:RUNNER_TEMP\cert.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+      - name: Build and publish desktop bundles
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: MyAI Academy ${{ github.ref_name }}
+          releaseBody: See CHANGELOG and docs/phases.md for what this release contains.
+          releaseDraft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          args: --target ${{ matrix.triple }}
+
+  cli:
+    name: CLI (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-x64, os: windows-latest }
+          - { name: macos-arm64, os: macos-latest }
+          - { name: linux-x64, os: ubuntu-22.04 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+      - run: uv python install 3.11
+      - run: uv sync --all-packages --all-groups --locked
+      - name: Build wheels (pip / pipx installable)
+        if: runner.os == 'Linux'
+        run: |
+          uv build --package myai-core --out-dir dist
+          uv build --package myai-cli --out-dir dist
+      - name: Build standalone CLI binary
+        shell: bash
+        run: |
+          uv run --group bundle python -m PyInstaller --noconfirm --clean --onefile \
+            --name myai --paths packages/myai-core/src --paths packages/myai-cli/src \
+            --add-data "packages/myai-core/src/myai_core/db/migrations$( [ "$RUNNER_OS" = Windows ] && echo ';' || echo ':' )myai_core/db/migrations" \
+            --hidden-import myai_core.db.migrations.env \
+            --collect-submodules uvicorn --collect-submodules alembic --collect-submodules sqlalchemy.dialects.sqlite \
+            --distpath dist/bin packages/myai-cli/src/myai_cli/main.py
+          cd dist/bin
+          if [ "$RUNNER_OS" = Windows ]; then 7z a ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.zip myai.exe; \
+          else tar czf ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.tar.gz myai; fi
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/*.zip
+
+  mobile:
+    name: Mobile (EAS)
+    runs-on: ubuntu-latest
+    if: ${{ vars.EAS_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: pnpm install --frozen-lockfile
+      - name: Build Android and iOS
+        working-directory: apps/mobile
+        run: eas build --platform all --profile production --non-interactive --no-wait

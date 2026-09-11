@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "MyAI Academy",
+    "slug": "myai-academy",
+    "version": "0.1.0",
+    "scheme": "myai",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0e1016"
+    },
+    "ios": {
+      "bundleIdentifier": "org.myaiacademy.mobile",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Used only to scan the pairing QR code shown by your desktop MyAI (Phase 6)."
+      }
+    },
+    "android": {
+      "package": "org.myaiacademy.mobile",
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0e1016" },
+      "permissions": [],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [],
+    "extra": { "eas": { "projectId": "" } }
+  }
+}

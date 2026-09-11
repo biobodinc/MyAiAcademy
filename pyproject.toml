@@ -1,0 +1,61 @@
+# Root uv workspace. Python packages live under packages/ and share one lockfile.
+[project]
+name = "myai-academy-workspace"
+version = "0.1.0"
+description = "MyAI Academy monorepo (workspace root; not an installable package)"
+requires-python = ">=3.11"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/myai-core", "packages/myai-cli"]
+
+[tool.uv.sources]
+myai-core = { workspace = true }
+
+[dependency-groups]
+dev = [
+  "ruff>=0.16",
+  "mypy>=1.19",
+  "pytest>=9.0",
+  "pytest-cov>=7.0",
+  "types-psutil>=6.1",
+]
+bundle = ["pyinstaller>=6.11"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["packages/myai-core/src", "packages/myai-cli/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "T20", "PTH", "ANN"]
+ignore = [
+  "ANN401",  # Any is sometimes legitimate at boundaries
+  "S101",    # assert is fine in tests
+  "S603", "S607",  # subprocess use is audited per call site (hardware probes)
+  "RUF002", "RUF003",  # en-dashes and section marks in prose are intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "ANN", "T20"]
+"packages/myai-cli/**" = ["T20"]  # a CLI prints by design
+"**/migrations/**" = ["ANN", "N999"]
+"scripts/**" = ["T20", "S106"]  # build scripts print by design; the schema-export token is a placeholder
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+mypy_path = "packages/myai-core/src:packages/myai-cli/src"
+
+[[tool.mypy.overrides]]
+module = ["cpuinfo", "cpuinfo.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["packages/myai-core/tests", "packages/myai-cli/tests"]
+addopts = "-ra -q --import-mode=importlib"
+filterwarnings = ["error::DeprecationWarning:myai_core.*"]
