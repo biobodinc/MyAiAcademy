@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 from myai_core.api.deps import AuditDep, PreferencesDep, SessionDep, StateDep, StorageDep
 from myai_core.api.model_loading import load_prepared, prepare_active_model
@@ -10,10 +11,13 @@ from myai_core.db.models import ModelDownload
 from myai_core.models.catalog import CatalogModel
 from myai_core.models.service import (
     DownloadStatus,
+    ImportRequest,
     ModelEntry,
     ModelError,
     ModelService,
     ModelsOverview,
+    ProviderInfo,
+    list_providers,
     recommended_for,
 )
 
@@ -42,6 +46,36 @@ def overview(state: StateDep, session: SessionDep, storage: StorageDep) -> Model
     )
 
 
+@router.get("/providers", response_model=list[ProviderInfo])
+def providers(state: StateDep) -> list[ProviderInfo]:
+    """The model-provider tree (spec §46) with each entry's real status."""
+    runtime = state.runtime.status()
+    return list_providers(runtime.available, runtime.detail)
+
+
+@router.post("/import", response_model=ModelsOverview, status_code=201)
+async def import_model(
+    body: ImportRequest,
+    state: StateDep,
+    session: SessionDep,
+    storage: StorageDep,
+    audit: AuditDep,
+) -> ModelsOverview:
+    """Register a GGUF file you already have. Hashing and copying run off the event loop."""
+    svc = _service(session, storage)
+    try:
+        row = await run_in_threadpool(svc.import_file, body)
+    except ModelError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(exc)) from exc
+    audit.record(
+        AuditCategory.SYSTEM,
+        "model_imported",
+        f"Imported model file {row.display_name}",
+        {"model_id": row.id, "path": row.file_path, "sha256": row.sha256},
+    )
+    return overview(state, session, storage)
+
+
 @router.get("/recommended", response_model=CatalogModel)
 def recommended(state: StateDep) -> CatalogModel:
     return recommended_for(state.hardware_cache)
@@ -62,7 +96,7 @@ def accept_license(
         f"Accepted the {model.license.name} for {model.name}",
         {"model_id": model.id, "license_id": model.license.id},
     )
-    return next(e for e in svc.entries(state.hardware_cache) if e.catalog.id == model_id)
+    return next(e for e in svc.entries(state.hardware_cache) if e.id == model_id)
 
 
 @router.post("/{model_id}/download", response_model=DownloadStatus, status_code=202)

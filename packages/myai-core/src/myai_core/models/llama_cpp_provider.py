@@ -92,6 +92,22 @@ class LlamaCppProvider:
     def backend_name(self) -> str | None:
         return self._backend
 
+    def _prompt_tokens_from_context(self, completion_tokens: int) -> int | None:
+        """``n_tokens`` is everything evaluated in the context: prompt plus reply."""
+        total = getattr(self._llama, "n_tokens", None)
+        if not isinstance(total, int) or total < completion_tokens:
+            return None
+        return total - completion_tokens
+
+    def context_train_length(self) -> int | None:
+        """The context the loaded model was trained with, when the backend exposes it."""
+        fn = getattr(self._llama, "n_ctx_train", None)
+        try:
+            value = fn() if callable(fn) else None
+        except Exception:
+            return None
+        return int(value) if isinstance(value, int) and value > 0 else None
+
     # --- generation ---------------------------------------------------------------------
 
     def generate(
@@ -108,18 +124,30 @@ class LlamaCppProvider:
                 top_p=options.top_p,
                 stop=options.stop or None,
             )
+            # llama.cpp's streamed chunks carry no usage block: one chunk is one sampled
+            # token, so count them, and read the prompt size from the context afterwards.
+            generated = 0
             for part in stream:
                 choice = (part.get("choices") or [{}])[0]
                 delta = choice.get("delta") or {}
                 text = delta.get("content") or ""
                 finish = choice.get("finish_reason")
                 usage = part.get("usage") or {}
+                if text:
+                    generated += 1
+                done = finish is not None
+                completion_tokens = usage.get("completion_tokens")
+                prompt_tokens = usage.get("prompt_tokens")
+                if done:
+                    completion_tokens = completion_tokens or generated
+                    if prompt_tokens is None:
+                        prompt_tokens = self._prompt_tokens_from_context(completion_tokens)
                 yield GenerationChunk(
                     text=text,
-                    done=finish is not None,
+                    done=done,
                     finish_reason=finish,
-                    prompt_tokens=usage.get("prompt_tokens"),
-                    completion_tokens=usage.get("completion_tokens"),
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
                 )
         except ProviderError:
             raise

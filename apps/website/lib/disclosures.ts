@@ -1,8 +1,9 @@
 /** Single source for the disclosures shown on the website. Mirror README.md. */
 export const DISCLOSURES = [
   {
-    title: "Local chat has not yet been exercised end to end with a real model by the authors.",
-    body: "The environment the code was written in could not reach Hugging Face, so model downloads and generation were verified against a local test server and an injected fake inference backend. The real path is expected to work and reports any failure in the app, but treat it as unconfirmed until this line is removed.",
+    title:
+      "Catalog models have not yet been downloaded and run by the authors on consumer hardware.",
+    body: "The real llama.cpp runtime is exercised end to end in the test suite (loading, chat templating, streaming, benchmarking and unloading) with a small synthetic model, and downloads are verified against a local server. What remains unconfirmed is the full path with a catalog model from Hugging Face on an ordinary PC: the environment the code was written in could not reach Hugging Face. Any failure is reported in the app rather than hidden.",
   },
   {
     title: "No signed installers are published yet.",

@@ -436,6 +436,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/models/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Model
+         * @description Register a GGUF file you already have. Hashing and copying run off the event loop.
+         */
+        post: operations["import_model_api_models_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/models/load": {
         parameters: {
             query?: never;
@@ -450,6 +470,26 @@ export interface paths {
          * @description Load the active model now (chat loads it lazily; this lets the UI warm it up).
          */
         post: operations["load_active_api_models_load_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/models/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Providers
+         * @description The model-provider tree (spec §46) with each entry's real status.
+         */
+        get: operations["providers_api_models_providers_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1191,6 +1231,22 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** ImportRequest */
+        ImportRequest: {
+            /** Name */
+            name?: string | null;
+            /**
+             * Path
+             * @description Absolute path to a .gguf file.
+             */
+            path: string;
+            /**
+             * Rights Confirmed
+             * @description Must be true: you confirm you may use this file under its licence.
+             * @default false
+             */
+            rights_confirmed: boolean;
+        };
         /** InferenceBenchmark */
         InferenceBenchmark: {
             /** Backend */
@@ -1307,22 +1363,36 @@ export interface components {
         };
         /**
          * ModelEntry
-         * @description A catalog model joined with local state, as the UI shows it.
+         * @description A model as the UI shows it: a catalog entry or a file the user imported, joined
+         *     with local state.
          */
         ModelEntry: {
             /** Active */
             active: boolean;
-            catalog: components["schemas"]["CatalogModel"];
+            /** @description Present for catalog models; ``None`` for imported files. */
+            catalog: components["schemas"]["CatalogModel"] | null;
+            /** Description */
+            description: string;
             download: components["schemas"]["DownloadStatus"] | null;
             /** File Path */
             file_path: string | null;
             fit: components["schemas"]["HardwareFit"];
+            /** Id */
+            id: string;
             /** Installed */
             installed: boolean;
+            license: components["schemas"]["ModelLicense"];
             /** License Accepted */
             license_accepted: boolean;
+            /** Name */
+            name: string;
             /** Size Bytes */
             size_bytes: number | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "catalog" | "imported";
             /** Verified Sha256 */
             verified_sha256: string | null;
         };
@@ -1606,6 +1676,28 @@ export interface components {
             owner_name?: string | null;
             /** Personality */
             personality?: string | null;
+        };
+        /**
+         * ProviderInfo
+         * @description One entry of the provider architecture (spec §46), reported truthfully.
+         */
+        ProviderInfo: {
+            /** Detail */
+            detail: string;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "external";
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "unavailable" | "planned";
         };
         /** RetrievedChunk */
         RetrievedChunk: {
@@ -1925,6 +2017,7 @@ export type SchemaHardwareFit = components['schemas']['HardwareFit'];
 export type SchemaHardwareReport = components['schemas']['HardwareReport'];
 export type SchemaHardwareTier = components['schemas']['HardwareTier'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaImportRequest = components['schemas']['ImportRequest'];
 export type SchemaInferenceBenchmark = components['schemas']['InferenceBenchmark'];
 export type SchemaKnowledgeOverview = components['schemas']['KnowledgeOverview'];
 export type SchemaLevelBand = components['schemas']['LevelBand'];
@@ -1948,6 +2041,7 @@ export type SchemaPrivacySummary = components['schemas']['PrivacySummary'];
 export type SchemaProfileCreate = components['schemas']['ProfileCreate'];
 export type SchemaProfileRead = components['schemas']['ProfileRead'];
 export type SchemaProfileUpdate = components['schemas']['ProfileUpdate'];
+export type SchemaProviderInfo = components['schemas']['ProviderInfo'];
 export type SchemaRetrievedChunk = components['schemas']['RetrievedChunk'];
 export type SchemaSendMessage = components['schemas']['SendMessage'];
 export type SchemaServiceStatus = components['schemas']['ServiceStatus'];
@@ -2877,6 +2971,39 @@ export interface operations {
             };
         };
     };
+    import_model_api_models_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     load_active_api_models_load_post: {
         parameters: {
             query?: never;
@@ -2893,6 +3020,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModelsOverview"];
+                };
+            };
+        };
+    };
+    providers_api_models_providers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderInfo"][];
                 };
             };
         };

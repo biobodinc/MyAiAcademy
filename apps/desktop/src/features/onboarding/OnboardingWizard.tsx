@@ -404,7 +404,7 @@ function LocalModelStep({ onNext, onBack }: { onNext: () => void; onBack: () => 
   const accept = useAcceptLicense();
   const start = useStartDownload();
   const [showLicense, setShowLicense] = useState(false);
-  const entry = models.data?.models.find((m) => m.catalog.id === recommended.data?.id) ?? null;
+  const entry = models.data?.models.find((m) => m.id === recommended.data?.id) ?? null;
   const installedAny = models.data?.models.some((m) => m.installed) ?? false;
   const download = entry?.download;
   const running = download && ["queued", "running", "verifying"].includes(download.status);
@@ -423,15 +423,14 @@ function LocalModelStep({ onNext, onBack }: { onNext: () => void; onBack: () => 
         </Alert>
       )}
       {(models.isPending || recommended.isPending) && <Spinner />}
-      {entry && (
+      {entry?.catalog && (
         <div className="rounded-xl border border-border bg-bg p-4">
-          <div className="font-semibold">{entry.catalog.name}</div>
+          <div className="font-semibold">{entry.name}</div>
           <div className="text-xs text-fg-muted">
             {entry.catalog.parameters_billion}B · about{" "}
-            {Math.round(entry.catalog.approx_size_bytes / 1024 ** 2)} MB ·{" "}
-            {entry.catalog.license.name}
+            {Math.round(entry.catalog.approx_size_bytes / 1024 ** 2)} MB · {entry.license.name}
           </div>
-          <p className="mt-2 text-sm">{entry.catalog.description}</p>
+          <p className="mt-2 text-sm">{entry.description}</p>
           {running && download && (
             <div className="mt-3">
               <div className="h-2 w-full overflow-hidden rounded-full bg-bg-muted">
@@ -471,17 +470,18 @@ function LocalModelStep({ onNext, onBack }: { onNext: () => void; onBack: () => 
           <Alert tone="danger">{describeError(accept.error ?? start.error)}</Alert>
         </div>
       )}
-      {showLicense && entry && (
+      {showLicense && entry?.catalog && (
         <LicenseDialog
           entry={entry}
+          catalog={entry.catalog}
           busy={accept.isPending || start.isPending}
           onClose={() => {
             setShowLicense(false);
           }}
           onAccept={() => {
-            accept.mutate(entry.catalog.id, {
+            accept.mutate(entry.id, {
               onSuccess: () => {
-                start.mutate(entry.catalog.id, {
+                start.mutate(entry.id, {
                   onSettled: () => {
                     setShowLicense(false);
                   },

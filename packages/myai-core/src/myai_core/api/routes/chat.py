@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Iterator
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from starlette.concurrency import iterate_in_threadpool
 
 from myai_core.api.deps import PreferencesDep, ProfileDep, SessionDep, StateDep, StorageDep
 from myai_core.api.model_loading import prepare_active_model
+from myai_core.api.streaming import stream_with_cancel
 from myai_core.chat.service import (
     ChatError,
     ChatService,
@@ -119,7 +120,7 @@ async def send_message(
         max_tokens=preferences.chat_max_tokens, temperature=preferences.chat_temperature
     )
 
-    def events() -> Iterator[str]:
+    def events(cancel: threading.Event) -> Iterator[str]:
         try:
             state.runtime.ensure_loaded(prepared.path, prepared.config)
         except ProviderError as exc:
@@ -131,11 +132,12 @@ async def send_message(
             generate=state.runtime.generate,
             model_id=prepared.model_id,
             default_options=defaults,
+            cancel=cancel,
         ):
             yield _sse(event.kind, event.payload)
 
     return StreamingResponse(
-        iterate_in_threadpool(events()),
+        stream_with_cancel(events, thread_name="myai-chat-stream"),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

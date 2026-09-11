@@ -21,6 +21,7 @@ dev = [
   "pytest>=9.0",
   "pytest-cov>=7.0",
   "types-psutil>=6.1",
+  "gguf>=0.10",
 ]
 bundle = ["pyinstaller>=6.11"]
 

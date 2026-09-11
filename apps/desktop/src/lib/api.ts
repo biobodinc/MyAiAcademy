@@ -8,6 +8,7 @@ import {
   type CleanupRequest,
   type CommandResult,
   type GuideAnswer,
+  type ImportRequest,
   type PreferencesUpdate,
   type ProfileCreate,
   type ProfileUpdate,
@@ -352,6 +353,25 @@ export function useLoadActiveModel() {
     mutationFn: () => unwrap(api.POST("/api/models/load")),
     onSuccess: () => {
       invalidateModels(qc);
+    },
+  });
+}
+
+export function useProviders() {
+  return useQuery({
+    queryKey: [...localAiKeys.models, "providers"] as const,
+    queryFn: () => unwrap(api.GET("/api/models/providers")),
+    staleTime: 60_000,
+  });
+}
+
+export function useImportModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ImportRequest) => unwrap(api.POST("/api/models/import", { body })),
+    onSuccess: () => {
+      invalidateModels(qc);
+      void qc.invalidateQueries({ queryKey: keys.cleanup });
     },
   });
 }

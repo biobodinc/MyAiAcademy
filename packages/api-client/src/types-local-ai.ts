@@ -39,3 +39,5 @@ export interface ChatStreamEvents {
   command: Schemas["CommandResult"];
 }
 export type ConversationUpdate = Schemas["ConversationUpdate"];
+export type ProviderInfo = Schemas["ProviderInfo"];
+export type ImportRequest = Schemas["ImportRequest"];

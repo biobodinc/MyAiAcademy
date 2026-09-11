@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
+import re
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Literal
 
 from pydantic import ConfigDict, Field
 from sqlalchemy import select
@@ -12,7 +16,12 @@ from ulid import ULID
 
 from myai_core.db.models import InstalledModel, ModelDownload, ModelLicenseAcceptance
 from myai_core.hardware.models import AcceleratorBackend, HardwareReport, HardwareTier
-from myai_core.models.catalog import CatalogModel, all_catalog_models, get_catalog_model
+from myai_core.models.catalog import (
+    CatalogModel,
+    ModelLicense,
+    all_catalog_models,
+    get_catalog_model,
+)
 from myai_core.schemas import ApiModel
 from myai_core.storage import StorageCategory, StorageManager
 
@@ -39,9 +48,17 @@ class DownloadStatus(ApiModel):
 
 
 class ModelEntry(ApiModel):
-    """A catalog model joined with local state, as the UI shows it."""
+    """A model as the UI shows it: a catalog entry or a file the user imported, joined
+    with local state."""
 
-    catalog: CatalogModel
+    id: str
+    name: str
+    source: Literal["catalog", "imported"]
+    license: ModelLicense
+    description: str
+    catalog: CatalogModel | None = Field(
+        default=None, description="Present for catalog models; ``None`` for imported files."
+    )
     installed: bool
     active: bool
     license_accepted: bool
@@ -63,6 +80,73 @@ class ModelsOverview(ApiModel):
 
 class ModelError(ValueError):
     pass
+
+
+class ProviderInfo(ApiModel):
+    """One entry of the provider architecture (spec §46), reported truthfully."""
+
+    id: str
+    name: str
+    kind: Literal["local", "external"]
+    status: Literal["available", "unavailable", "planned"]
+    detail: str
+
+
+USER_SUPPLIED = ModelLicense(
+    id="user-supplied",
+    name="Your own licence",
+    spdx=None,
+    url="",
+    summary=(
+        "A file you imported. You confirmed that you may use it under its own licence "
+        "terms; MyAI Academy did not verify them."
+    ),
+    requires_acceptance=False,
+    commercial_use="see-license",
+)
+
+IMPORT_FOLDER = "imported"
+GGUF_SUFFIX = ".gguf"
+
+
+class ImportRequest(ApiModel):
+    path: str = Field(min_length=1, description="Absolute path to a .gguf file.")
+    name: str | None = Field(default=None, max_length=128)
+    rights_confirmed: bool = Field(
+        default=False,
+        description="Must be true: you confirm you may use this file under its licence.",
+    )
+
+
+def fit_for_size(
+    size_bytes: int, hardware: HardwareReport | None, parameters_billion: float | None = None
+) -> HardwareFit:
+    """Conservative fit for any model file: weights plus working memory must fit in RAM."""
+    if hardware is None:
+        return HardwareFit(ok=True, recommended=False, reasons=["Hardware not scanned yet."])
+    needed = int(size_bytes * 1.25) + GiB
+    ram = hardware.memory.total_bytes or 0
+    reasons: list[str] = []
+    ok = True
+    if ram and ram < needed:
+        ok = False
+        reasons.append(
+            f"Needs about {needed / GiB:.0f} GB RAM; this machine has {ram / GiB:.0f} GB."
+        )
+    gpu = hardware.primary_gpu
+    accelerated = gpu is not None and gpu.backend is not AcceleratorBackend.NONE
+    if (
+        accelerated
+        and gpu is not None
+        and gpu.vram_total_bytes
+        and gpu.vram_total_bytes < size_bytes
+    ):
+        reasons.append("Larger than the GPU's memory; some layers will run on the CPU (slower).")
+    elif not accelerated and (parameters_billion or 0) >= 7:
+        reasons.append("No GPU acceleration detected: a 7B model will be slow on CPU alone.")
+    elif not accelerated and size_bytes >= 4 * GiB:
+        reasons.append("No GPU acceleration detected: a file this large will be slow on CPU alone.")
+    return HardwareFit(ok=ok, recommended=False, reasons=reasons)
 
 
 def hardware_fit(model: CatalogModel, hardware: HardwareReport | None) -> HardwareFit:
@@ -138,6 +222,11 @@ class ModelService:
             download = self.latest_download(model.id)
             out.append(
                 ModelEntry(
+                    id=model.id,
+                    name=model.name,
+                    source="catalog",
+                    license=model.license,
+                    description=model.description,
                     catalog=model,
                     installed=installed is not None,
                     active=model.id == active,
@@ -151,7 +240,97 @@ class ModelService:
                     else None,
                 )
             )
+        for row in self.installed():
+            if get_catalog_model(row.id) is not None:
+                continue
+            out.append(
+                ModelEntry(
+                    id=row.id,
+                    name=row.display_name,
+                    source="imported",
+                    license=USER_SUPPLIED,
+                    description=f"Imported from {row.file_path}",
+                    catalog=None,
+                    installed=True,
+                    active=row.id == active,
+                    license_accepted=True,
+                    file_path=row.file_path,
+                    size_bytes=row.size_bytes,
+                    verified_sha256=row.sha256,
+                    fit=fit_for_size(row.size_bytes, hardware),
+                    download=None,
+                )
+            )
         return out
+
+    # --- import ---------------------------------------------------------------------------
+
+    def import_file(self, request: ImportRequest) -> InstalledModel:
+        """Register a GGUF file the user already has (spec §46 LocalModelProvider).
+
+        Files outside the Models folder are *copied* in (the original is untouched);
+        files already inside it are registered in place. The SHA-256 is recorded so the
+        file can be verified later. No licence is verified: the user asserts their rights.
+        """
+        if not request.rights_confirmed:
+            raise ModelError(
+                "Confirm that you have the right to use this model file under its licence."
+            )
+        if self._storage.get_config() is None:
+            raise ModelError("Choose a MyAI storage location before importing models.")
+        source = Path(request.path).expanduser()
+        if not source.is_absolute():
+            raise ModelError("Give an absolute path to the model file.")
+        if not source.is_file() or source.is_symlink():
+            raise ModelError(f"No such file: {source}")
+        if source.suffix.lower() != GGUF_SUFFIX:
+            raise ModelError("Only GGUF files (.gguf) can be imported in this version.")
+        size = source.stat().st_size
+        if size < 1024:
+            raise ModelError("That file is too small to be a model.")
+        digest = _sha256_of(source)
+        for row in self.installed():
+            if row.sha256 == digest:
+                raise ModelError(f"That file is already installed as '{row.display_name}'.")
+
+        models_root = self._storage.category_path(StorageCategory.MODELS).resolve()
+        resolved = source.resolve()
+        if resolved.is_relative_to(models_root):
+            dest = resolved
+        else:
+            dest = models_root / IMPORT_FOLDER / source.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if dest.exists() and _sha256_of(dest) != digest:
+                raise ModelError(
+                    f"A different file named {source.name} already exists under Models/"
+                    f"{IMPORT_FOLDER}. Rename your file and try again."
+                )
+            if not dest.exists():
+                shutil.copy2(source, dest)
+
+        model_id = self._unique_id(f"local-{_slug(source.stem)}")
+        row = InstalledModel(
+            id=model_id,
+            display_name=(request.name or source.stem)[:128],
+            family=IMPORT_FOLDER,
+            file_path=str(dest),
+            size_bytes=size,
+            sha256=digest,
+            license_id=USER_SUPPLIED.id,
+        )
+        self._session.add(row)
+        self._session.flush()
+        if self.active_model_id() is None:
+            self.set_active(model_id)
+        return row
+
+    def _unique_id(self, base: str) -> str:
+        candidate = base
+        n = 2
+        while self.get_installed(candidate) is not None or get_catalog_model(candidate):
+            candidate = f"{base}-{n}"
+            n += 1
+        return candidate
 
     # --- licence ------------------------------------------------------------------------
 
@@ -249,6 +428,47 @@ class ModelService:
         if model is None:
             raise ModelError(f"Unknown model '{model_id}'.")
         return model
+
+
+def _sha256_of(path: Path) -> str:
+    with path.open("rb") as fh:
+        return hashlib.file_digest(fh, "sha256").hexdigest()
+
+
+def _slug(text: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+    return cleaned[:48] or "model"
+
+
+def list_providers(runtime_available: bool, runtime_detail: str) -> list[ProviderInfo]:
+    """The provider tree from spec §46 with honest status. Only llama.cpp exists today;
+    external providers are optional, unimplemented, and would keep API keys in the OS
+    credential store, never in the repository or the frontend."""
+    planned = (
+        "Not implemented. Would be optional and off by default; API keys would live in "
+        "the operating system's credential store."
+    )
+    return [
+        ProviderInfo(
+            id="llama-cpp",
+            name="Local (llama.cpp)",
+            kind="local",
+            status="available" if runtime_available else "unavailable",
+            detail=runtime_detail,
+        ),
+        ProviderInfo(id="openai", name="OpenAI", kind="external", status="planned", detail=planned),
+        ProviderInfo(
+            id="anthropic", name="Anthropic", kind="external", status="planned", detail=planned
+        ),
+        ProviderInfo(id="google", name="Google", kind="external", status="planned", detail=planned),
+        ProviderInfo(
+            id="custom",
+            name="Custom endpoint",
+            kind="external",
+            status="planned",
+            detail=planned,
+        ),
+    ]
 
 
 def recommended_for(hardware: HardwareReport | None) -> CatalogModel:
