@@ -39,9 +39,33 @@ def session(tmp_path: Path) -> Iterator[Session]:
         engine.dispose()
 
 
+class _NoRuntime:
+    """A provider whose runtime is absent: keeps route tests independent of llama_cpp."""
+
+    id = "test-missing"
+
+    def availability(self) -> tuple[bool, str]:
+        return False, "runtime not installed in tests"
+
+    def load(self, model_path: Path, config: object) -> None:  # pragma: no cover
+        raise RuntimeError("unavailable")
+
+    def unload(self) -> None:
+        return None
+
+    def loaded_model_id(self) -> str | None:
+        return None
+
+    def backend_name(self) -> str | None:
+        return None
+
+    def generate(self, messages: object, options: object) -> Iterator[object]:  # pragma: no cover
+        raise RuntimeError("unavailable")
+
+
 @pytest.fixture
 def client(app_paths: AppPaths) -> Iterator[TestClient]:
-    app = create_app(CoreSettings(), app_paths, token=TEST_TOKEN)
+    app = create_app(CoreSettings(), app_paths, token=TEST_TOKEN, provider=_NoRuntime())
     with TestClient(app, base_url="http://127.0.0.1") as c:
         c.headers.update({"Authorization": f"Bearer {TEST_TOKEN}"})
         yield c
@@ -49,6 +73,6 @@ def client(app_paths: AppPaths) -> Iterator[TestClient]:
 
 @pytest.fixture
 def anon_client(app_paths: AppPaths) -> Iterator[TestClient]:
-    app = create_app(CoreSettings(), app_paths, token=TEST_TOKEN)
+    app = create_app(CoreSettings(), app_paths, token=TEST_TOKEN, provider=_NoRuntime())
     with TestClient(app, base_url="http://127.0.0.1") as c:
         yield c

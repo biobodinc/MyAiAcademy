@@ -84,6 +84,94 @@
         "title": "Availability",
         "type": "string"
       },
+      "CatalogModel": {
+        "properties": {
+          "approx_size_bytes": {
+            "title": "Approx Size Bytes",
+            "type": "integer"
+          },
+          "context_length": {
+            "title": "Context Length",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "family": {
+            "title": "Family",
+            "type": "string"
+          },
+          "hf_filename": {
+            "title": "Hf Filename",
+            "type": "string"
+          },
+          "hf_repo": {
+            "title": "Hf Repo",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "license": {
+            "$ref": "#/components/schemas/ModelLicense"
+          },
+          "min_ram_bytes": {
+            "title": "Min Ram Bytes",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parameters_billion": {
+            "title": "Parameters Billion",
+            "type": "number"
+          },
+          "quantization": {
+            "title": "Quantization",
+            "type": "string"
+          },
+          "recommended_tiers": {
+            "items": {
+              "$ref": "#/components/schemas/HardwareTier"
+            },
+            "title": "Recommended Tiers",
+            "type": "array"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pinned hash when known; otherwise the host's declared hash is used.",
+            "title": "Sha256"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "family",
+          "parameters_billion",
+          "quantization",
+          "context_length",
+          "hf_repo",
+          "hf_filename",
+          "approx_size_bytes",
+          "min_ram_bytes",
+          "recommended_tiers",
+          "license",
+          "description",
+          "sha256"
+        ],
+        "title": "CatalogModel",
+        "type": "object"
+      },
       "CategoryOverrideRequest": {
         "properties": {
           "category": {
@@ -248,6 +336,60 @@
         "title": "ComputePreset",
         "type": "string"
       },
+      "ConversationCreate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ConversationCreate",
+        "type": "object"
+      },
+      "ConversationRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "message_count": {
+            "default": 0,
+            "title": "Message Count",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "created_at",
+          "updated_at",
+          "message_count"
+        ],
+        "title": "ConversationRead",
+        "type": "object"
+      },
       "CpuInfo": {
         "properties": {
           "architecture": {
@@ -316,6 +458,198 @@
         "title": "CpuInfo",
         "type": "object"
       },
+      "DocumentAddPath": {
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "DocumentAddPath",
+        "type": "object"
+      },
+      "DocumentAddText": {
+        "properties": {
+          "text": {
+            "maxLength": 4000000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "text"
+        ],
+        "title": "DocumentAddText",
+        "type": "object"
+      },
+      "DocumentRead": {
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
+          "chunk_count": {
+            "title": "Chunk Count",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "media_type": {
+            "title": "Media Type",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "source_path",
+          "media_type",
+          "size_bytes",
+          "sha256",
+          "chunk_count",
+          "status",
+          "error",
+          "added_at"
+        ],
+        "title": "DocumentRead",
+        "type": "object"
+      },
+      "DownloadStatus": {
+        "properties": {
+          "bytes_done": {
+            "title": "Bytes Done",
+            "type": "integer"
+          },
+          "bytes_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bytes Total"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "model_id",
+          "status",
+          "bytes_done",
+          "bytes_total",
+          "error",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "DownloadStatus",
+        "type": "object"
+      },
       "ExperienceMode": {
         "enum": [
           "beginner",
@@ -323,6 +657,40 @@
         ],
         "title": "ExperienceMode",
         "type": "string"
+      },
+      "GenerationOptions": {
+        "properties": {
+          "max_tokens": {
+            "default": 512,
+            "maximum": 8192.0,
+            "minimum": 1.0,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "stop": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stop",
+            "type": "array"
+          },
+          "temperature": {
+            "default": 0.7,
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Temperature",
+            "type": "number"
+          },
+          "top_p": {
+            "default": 0.9,
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Top P",
+            "type": "number"
+          }
+        },
+        "title": "GenerationOptions",
+        "type": "object"
       },
       "GpuInfo": {
         "properties": {
@@ -442,6 +810,32 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HardwareFit": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "recommended": {
+            "title": "Recommended",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "recommended",
+          "reasons"
+        ],
+        "title": "HardwareFit",
+        "type": "object"
+      },
       "HardwareReport": {
         "properties": {
           "cpu": {
@@ -508,6 +902,46 @@
         "title": "HardwareTier",
         "type": "string"
       },
+      "KnowledgeOverview": {
+        "properties": {
+          "chunk_count": {
+            "title": "Chunk Count",
+            "type": "integer"
+          },
+          "document_count": {
+            "title": "Document Count",
+            "type": "integer"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/DocumentRead"
+            },
+            "title": "Documents",
+            "type": "array"
+          },
+          "retrieval_method": {
+            "default": "lexical (BM25 over SQLite FTS5); semantic embeddings planned",
+            "title": "Retrieval Method",
+            "type": "string"
+          },
+          "supported_suffixes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Supported Suffixes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "documents",
+          "document_count",
+          "chunk_count",
+          "supported_suffixes",
+          "retrieval_method"
+        ],
+        "title": "KnowledgeOverview",
+        "type": "object"
+      },
       "LevelBand": {
         "enum": [
           "unlearned",
@@ -519,6 +953,35 @@
         ],
         "title": "LevelBand",
         "type": "string"
+      },
+      "MemoryCategory": {
+        "enum": [
+          "fact",
+          "preference",
+          "instruction",
+          "other"
+        ],
+        "title": "MemoryCategory",
+        "type": "string"
+      },
+      "MemoryCreate": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/MemoryCategory",
+            "default": "fact"
+          },
+          "content": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "title": "MemoryCreate",
+        "type": "object"
       },
       "MemoryInfo": {
         "properties": {
@@ -550,6 +1013,394 @@
           "available_bytes"
         ],
         "title": "MemoryInfo",
+        "type": "object"
+      },
+      "MemoryRead": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/MemoryCategory"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "uid": {
+            "title": "Uid",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "uid",
+          "content",
+          "category",
+          "created_at",
+          "updated_at",
+          "version"
+        ],
+        "title": "MemoryRead",
+        "type": "object"
+      },
+      "MemoryUpdate": {
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MemoryCategory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          }
+        },
+        "title": "MemoryUpdate",
+        "type": "object"
+      },
+      "MessageRead": {
+        "properties": {
+          "completion_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completion Tokens"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "finish_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finish Reason"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          },
+          "retrieved_chunk_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Retrieved Chunk Ids",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "content",
+          "created_at",
+          "model_id",
+          "prompt_tokens",
+          "completion_tokens",
+          "duration_ms",
+          "retrieved_chunk_ids",
+          "finish_reason"
+        ],
+        "title": "MessageRead",
+        "type": "object"
+      },
+      "ModelEntry": {
+        "description": "A catalog model joined with local state, as the UI shows it.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "catalog": {
+            "$ref": "#/components/schemas/CatalogModel"
+          },
+          "download": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DownloadStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Path"
+          },
+          "fit": {
+            "$ref": "#/components/schemas/HardwareFit"
+          },
+          "installed": {
+            "title": "Installed",
+            "type": "boolean"
+          },
+          "license_accepted": {
+            "title": "License Accepted",
+            "type": "boolean"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "verified_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Sha256"
+          }
+        },
+        "required": [
+          "catalog",
+          "installed",
+          "active",
+          "license_accepted",
+          "file_path",
+          "size_bytes",
+          "verified_sha256",
+          "fit",
+          "download"
+        ],
+        "title": "ModelEntry",
+        "type": "object"
+      },
+      "ModelIdBody": {
+        "properties": {
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_id"
+        ],
+        "title": "ModelIdBody",
+        "type": "object"
+      },
+      "ModelLicense": {
+        "properties": {
+          "commercial_use": {
+            "description": "'allowed', 'restricted' or 'see-license'.",
+            "title": "Commercial Use",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "requires_acceptance": {
+            "default": true,
+            "title": "Requires Acceptance",
+            "type": "boolean"
+          },
+          "spdx": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spdx"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "spdx",
+          "url",
+          "summary",
+          "requires_acceptance",
+          "commercial_use"
+        ],
+        "title": "ModelLicense",
+        "type": "object"
+      },
+      "ModelsOverview": {
+        "properties": {
+          "active_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Model Id"
+          },
+          "backend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backend"
+          },
+          "loaded_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loaded Model Id"
+          },
+          "models": {
+            "items": {
+              "$ref": "#/components/schemas/ModelEntry"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "runtime_available": {
+            "title": "Runtime Available",
+            "type": "boolean"
+          },
+          "runtime_detail": {
+            "title": "Runtime Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "runtime_available",
+          "runtime_detail",
+          "active_model_id",
+          "loaded_model_id",
+          "backend",
+          "models"
+        ],
+        "title": "ModelsOverview",
         "type": "object"
       },
       "OnboardingStep": {
@@ -1091,8 +1942,76 @@
         "title": "ProfileUpdate",
         "type": "object"
       },
+      "RetrievedChunk": {
+        "properties": {
+          "chunk_id": {
+            "title": "Chunk Id",
+            "type": "integer"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "document_title": {
+            "title": "Document Title",
+            "type": "string"
+          },
+          "ordinal": {
+            "title": "Ordinal",
+            "type": "integer"
+          },
+          "score": {
+            "description": "BM25 rank; lower is better (SQLite convention).",
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "chunk_id",
+          "document_id",
+          "document_title",
+          "ordinal",
+          "content",
+          "score"
+        ],
+        "title": "RetrievedChunk",
+        "type": "object"
+      },
+      "SendMessage": {
+        "properties": {
+          "content": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/GenerationOptions"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "title": "SendMessage",
+        "type": "object"
+      },
       "ServiceStatus": {
         "properties": {
+          "active_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Model Id"
+          },
           "ai": {
             "$ref": "#/components/schemas/Availability",
             "description": "Whether a local model is set up and loadable."
@@ -1122,6 +2041,17 @@
               }
             ],
             "title": "Internet Checked At"
+          },
+          "loaded_model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loaded Model Id"
           },
           "onboarding_completed": {
             "title": "Onboarding Completed",
@@ -1168,6 +2098,8 @@
           "internet_checked_at",
           "ai",
           "ai_detail",
+          "active_model_id",
+          "loaded_model_id",
           "training",
           "training_detail",
           "profile_exists",
@@ -1811,6 +2743,200 @@
         ]
       }
     },
+    "/api/chat/conversations": {
+      "get": {
+        "operationId": "list_conversations_api_chat_conversations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationRead"
+                  },
+                  "title": "Response List Conversations Api Chat Conversations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Conversations",
+        "tags": [
+          "chat"
+        ]
+      },
+      "post": {
+        "operationId": "create_conversation_api_chat_conversations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Conversation",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/chat/conversations/{conversation_id}": {
+      "delete": {
+        "operationId": "delete_conversation_api_chat_conversations__conversation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Conversation",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
+    "/api/chat/conversations/{conversation_id}/messages": {
+      "get": {
+        "operationId": "list_messages_api_chat_conversations__conversation_id__messages_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MessageRead"
+                  },
+                  "title": "Response List Messages Api Chat Conversations  Conversation Id  Messages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Messages",
+        "tags": [
+          "chat"
+        ]
+      },
+      "post": {
+        "description": "Stream the assistant's reply as server-sent events.\n\nEvents: ``meta`` (what was retrieved, which model), ``delta`` (text), ``done`` or\n``error``. A slash command inside a conversation is executed by the command\ninterpreter instead of the model and returned as a single ``command`` event.",
+        "operationId": "send_message_api_chat_conversations__conversation_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Message",
+        "tags": [
+          "chat"
+        ]
+      }
+    },
     "/api/commands": {
       "post": {
         "operationId": "run_command_api_commands_post",
@@ -1894,6 +3020,720 @@
         "summary": "Read Hardware",
         "tags": [
           "hardware"
+        ]
+      }
+    },
+    "/api/knowledge": {
+      "get": {
+        "operationId": "overview_api_knowledge_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/knowledge/files": {
+      "post": {
+        "operationId": "add_file_api_knowledge_files_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentAddPath"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add File",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/knowledge/search": {
+      "get": {
+        "operationId": "search_api_knowledge_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 500,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 5,
+              "maximum": 20,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetrievedChunk"
+                  },
+                  "title": "Response Search Api Knowledge Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/knowledge/text": {
+      "post": {
+        "operationId": "add_text_api_knowledge_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentAddText"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Text",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/knowledge/{document_id}": {
+      "delete": {
+        "operationId": "delete_document_api_knowledge__document_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Document",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/memory": {
+      "delete": {
+        "operationId": "clear_memories_api_memory_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Clear Memories Api Memory Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Clear Memories",
+        "tags": [
+          "memory"
+        ]
+      },
+      "get": {
+        "operationId": "list_memories_api_memory_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryRead"
+                  },
+                  "title": "Response List Memories Api Memory Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Memories",
+        "tags": [
+          "memory"
+        ]
+      },
+      "post": {
+        "operationId": "add_memory_api_memory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/memory/{memory_id}": {
+      "delete": {
+        "operationId": "delete_memory_api_memory__memory_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Memory",
+        "tags": [
+          "memory"
+        ]
+      },
+      "patch": {
+        "operationId": "update_memory_api_memory__memory_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memory_id",
+            "required": true,
+            "schema": {
+              "title": "Memory Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/api/models": {
+      "get": {
+        "operationId": "overview_api_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/active": {
+      "post": {
+        "operationId": "set_active_api_models_active_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelIdBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Active",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/downloads/{job_id}": {
+      "get": {
+        "operationId": "download_status_api_models_downloads__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Status",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/downloads/{job_id}/cancel": {
+      "post": {
+        "operationId": "cancel_download_api_models_downloads__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Download",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/load": {
+      "post": {
+        "description": "Load the active model now (chat loads it lazily; this lets the UI warm it up).",
+        "operationId": "load_active_api_models_load_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Load Active",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/recommended": {
+      "get": {
+        "operationId": "recommended_api_models_recommended_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Recommended",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/{model_id}": {
+      "delete": {
+        "operationId": "remove_model_api_models__model_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/{model_id}/accept-license": {
+      "post": {
+        "operationId": "accept_license_api_models__model_id__accept_license_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelEntry"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept License",
+        "tags": [
+          "models"
+        ]
+      }
+    },
+    "/api/models/{model_id}/download": {
+      "post": {
+        "operationId": "start_download_api_models__model_id__download_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "title": "Model Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Download",
+        "tags": [
+          "models"
         ]
       }
     },

@@ -1,8 +1,12 @@
 import { NavLink, Outlet } from "react-router";
 import {
   Activity,
+  BookOpen,
+  Boxes,
   Brain,
   Cpu,
+  MessageSquare,
+  NotebookPen,
   HardDrive,
   LayoutDashboard,
   Settings,
@@ -18,7 +22,11 @@ import { StatusPill } from "./ui";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/chat", label: "Chat", icon: MessageSquare },
   { to: "/console", label: "Console", icon: Terminal },
+  { to: "/models", label: "Models", icon: Boxes },
+  { to: "/memory", label: "Memory", icon: NotebookPen },
+  { to: "/knowledge", label: "Knowledge", icon: BookOpen },
   { to: "/skills", label: "Skills", icon: Sparkles },
   { to: "/profile", label: "My AI", icon: UserRound },
   { to: "/hardware", label: "Hardware", icon: Cpu },
@@ -77,7 +85,24 @@ export function Layout() {
                 ? "Offline"
                 : "Checking"}
           </StatusPill>
-          <StatusPill tone="warning">AI model: not set up (Phase 2)</StatusPill>
+          <StatusPill
+            tone={
+              status.data?.ai === "available"
+                ? "success"
+                : status.data?.ai === "unavailable"
+                  ? "danger"
+                  : "warning"
+            }
+          >
+            AI:{" "}
+            {status.data?.ai === "available"
+              ? status.data.loaded_model_id
+                ? "model loaded"
+                : "model ready"
+              : status.data?.ai === "unavailable"
+                ? "runtime missing"
+                : "no model yet"}
+          </StatusPill>
         </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto">

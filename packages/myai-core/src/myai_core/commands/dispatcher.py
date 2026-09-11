@@ -24,7 +24,7 @@ HELP_TEXT = """Commands you can use:
 /skills             list skills and levels
 /status             AI, internet and training status
 /hardware           what your computer can do
-/memory             what I remember (Phase 2)
+/memory             what I remember
 /projects           your projects (Phase 7)
 /history            training history (Phase 4)
 /pause /resume /stop  control a training job (Phase 4)
@@ -44,11 +44,13 @@ class CommandContext:
         skills: Callable[[], SkillsSummary],
         preferences: Callable[[], Preferences],
         status: Callable[[], dict[str, object]],
+        memories: Callable[[], list[str]] | None = None,
     ) -> None:
         self.hardware = hardware
         self.skills = skills
         self.preferences = preferences
         self.status = status
+        self.memories = memories or (lambda: [])
 
 
 def execute(text: str, ctx: CommandContext) -> CommandResult:
@@ -66,11 +68,12 @@ def execute(text: str, ctx: CommandContext) -> CommandResult:
         return CommandResult(
             outcome=CommandOutcome.UNAVAILABLE,
             command=None,
-            title="Chat is not available yet",
+            title="That is a message for your AI",
             message=(
-                "That looks like a message for your AI. Local chat arrives in Phase 2 "
-                "once a local model is set up. Slash commands work today: try /help."
+                "Plain messages go to the local model in Chat. This console only runs "
+                "slash commands: try /help."
             ),
+            data={"navigate": "/chat"},
             suggestions=["/help", "/status"],
         )
     handler = _HANDLERS.get(cmd.name, _unavailable)
@@ -155,6 +158,27 @@ def _settings(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     )
 
 
+def _memory(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
+    items = ctx.memories()
+    if not items:
+        message = (
+            "I don't remember anything yet. Add memories on the Memory page; I never "
+            "remember conversations on my own."
+        )
+    else:
+        shown = items[:20]
+        message = "\n".join(f"• {m}" for m in shown)
+        if len(items) > len(shown):
+            message += f"\n… and {len(items) - len(shown)} more."
+    return CommandResult(
+        outcome=CommandOutcome.OK,
+        command=cmd,
+        title=f"Memory ({len(items)})",
+        message=message,
+        data={"count": len(items), "navigate": "/memory"},
+    )
+
+
 def _learn(cmd: ParsedCommand, _ctx: CommandContext) -> CommandResult:
     if cmd.skill is None:
         return _unknown_skill(cmd)
@@ -208,7 +232,6 @@ def _unknown_skill(cmd: ParsedCommand) -> CommandResult:
 
 def _unavailable(cmd: ParsedCommand, _ctx: CommandContext) -> CommandResult:
     phase = {
-        CommandName.MEMORY: 2,
         CommandName.PAUSE: 4,
         CommandName.RESUME: 4,
         CommandName.STOP: 4,
@@ -234,6 +257,7 @@ _HANDLERS: dict[CommandName, Callable[[ParsedCommand, CommandContext], CommandRe
     CommandName.HARDWARE: _hardware,
     CommandName.SKILLS: _skills,
     CommandName.SETTINGS: _settings,
+    CommandName.MEMORY: _memory,
     CommandName.LEARN: _learn,
     CommandName.TRAIN: _train,
 }

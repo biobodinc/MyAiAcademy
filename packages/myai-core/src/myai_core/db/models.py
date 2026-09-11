@@ -105,3 +105,131 @@ class AuditEvent(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     details: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
     device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+# --- Phase 2: local AI --------------------------------------------------------------------
+
+
+class InstalledModel(Base):
+    """A model file present under the storage root's Models/ folder."""
+
+    __tablename__ = "installed_models"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)  # catalog id
+    display_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    family: Mapped[str] = mapped_column(String(64), nullable=False)
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    license_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    installed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ModelLicenseAcceptance(Base):
+    """Explicit, per-model acceptance recorded before any download (spec §69)."""
+
+    __tablename__ = "model_license_acceptances"
+
+    model_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    license_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ModelDownload(Base):
+    __tablename__ = "model_downloads"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    model_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="queued")
+    bytes_done: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    bytes_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(String(200), nullable=False, default="New conversation")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    origin_device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    conversation_id: Mapped[str] = mapped_column(
+        ForeignKey("conversations.id", ondelete="CASCADE"), index=True
+    )
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    model_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    prompt_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    completion_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Ids of knowledge chunks shown to the model for this reply (provenance, spec §54).
+    retrieved_chunk_ids: Mapped[list[int]] = mapped_column(JSON, nullable=False, default=list)
+    finish_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+
+class Memory(Base):
+    """An explicit, user-visible fact the AI remembers (spec §44). Never auto-created."""
+
+    __tablename__ = "memories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    uid: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True
+    )  # stable across devices
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(32), nullable=False, default="fact")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    origin_device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+
+class Document(Base):
+    """A knowledge source (spec §45): a file the user added for local retrieval."""
+
+    __tablename__ = "documents"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    media_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    chunk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="ready")
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
+class Chunk(Base):
+    __tablename__ = "chunks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    document_id: Mapped[str] = mapped_column(
+        ForeignKey("documents.id", ondelete="CASCADE"), index=True
+    )
+    ordinal: Mapped[int] = mapped_column(Integer, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)

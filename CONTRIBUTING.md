@@ -10,10 +10,14 @@
 ## Setup
 
 ```
-uv sync --all-packages --all-groups
+uv sync --all-packages --all-groups --all-extras   # --all-extras builds llama-cpp-python (local chat)
 pnpm install
 pnpm api:types          # regenerate TypeScript types from openapi.json
 ```
+
+Without `--all-extras` everything still works except local chat, and the service reports
+the missing runtime honestly. Building the extra needs CMake and a C++ compiler (see
+https://github.com/abetlen/llama-cpp-python#installation for prebuilt wheels).
 
 ## Run
 

@@ -9,8 +9,8 @@ devices. Private by default. Local by design. Sharing by choice.
 
 ## Status
 
-Phase 1 (Foundation) is implemented and tested. Later phases are visible in the product as
-clearly labelled "Planned · Phase N" states; nothing is faked. See
+Phases 1 (Foundation) and 2 (Local AI) are implemented and tested. Later phases are visible
+in the product as clearly labelled "Planned · Phase N" states; nothing is faked. See
 [`docs/phases.md`](docs/phases.md) for the per-phase table.
 
 | Surface                                        | What works today                                                                                                                                                                                                                                           |

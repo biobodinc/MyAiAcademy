@@ -13,14 +13,19 @@ import { cx } from "../../lib/cx";
 import {
   describeError,
   useCreateProfile,
+  useAcceptLicense,
   useHardware,
+  useModels,
   usePreferences,
+  useRecommendedModel,
+  useStartDownload,
   useProfile,
   useStorage,
   useUpdatePreferences,
   useUpdateProfile,
 } from "../../lib/api";
 import { HardwareSummary } from "../hardware/HardwareSummary";
+import { LicenseDialog } from "../models/LicenseDialog";
 import { INTEREST_OPTIONS, toCreatePayload } from "../profile/model";
 import { ProfileForm } from "../profile/ProfileForm";
 import { StoragePicker } from "../storage/StoragePicker";
@@ -89,7 +94,7 @@ function WizardSteps({
   };
   const finish = async () => {
     await updatePrefs.mutateAsync({ onboarding_step: "done", onboarding_completed: true });
-    await navigate("/console", { replace: true });
+    await navigate("/chat", { replace: true });
   };
 
   return (
@@ -127,15 +132,7 @@ function WizardSteps({
             body="Accounts unlock device pairing and optional encrypted sync. Your AI never needs an account to run locally. Sign-in through the MyAI Academy website arrives in Phase 5."
           />
         )}
-        {step === "local_model" && (
-          <LaterPhaseStep
-            title="Local model setup"
-            phase={2}
-            onNext={advance}
-            onBack={back}
-            body="Downloading a local chat model (with its licence shown first) arrives in Phase 2. Until then your AI has an identity and a home, but cannot chat yet. We will not pretend otherwise."
-          />
-        )}
+        {step === "local_model" && <LocalModelStep onNext={advance} onBack={back} />}
         {step === "done" && (
           <DoneStep
             onFinish={() => void finish().catch(() => undefined)}
@@ -397,6 +394,111 @@ function LaterPhaseStep({
   );
 }
 
+function LocalModelStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
+  const models = useModels(2000);
+  const recommended = useRecommendedModel();
+  const accept = useAcceptLicense();
+  const start = useStartDownload();
+  const [showLicense, setShowLicense] = useState(false);
+  const entry = models.data?.models.find((m) => m.catalog.id === recommended.data?.id) ?? null;
+  const installedAny = models.data?.models.some((m) => m.installed) ?? false;
+  const download = entry?.download;
+  const running = download && ["queued", "running", "verifying"].includes(download.status);
+
+  return (
+    <>
+      <h2 className="text-xl font-bold">A model for your AI</h2>
+      <p className="mb-4 text-sm text-fg-muted">
+        Chat runs on this computer with a small open model. This is the one we suggest for your
+        hardware; you can add others later under Models. The licence is shown before anything is
+        downloaded.
+      </p>
+      {models.data && !models.data.runtime_available && (
+        <Alert tone="danger" title="Inference runtime missing">
+          {models.data.runtime_detail}
+        </Alert>
+      )}
+      {(models.isPending || recommended.isPending) && <Spinner />}
+      {entry && (
+        <div className="rounded-xl border border-border bg-bg p-4">
+          <div className="font-semibold">{entry.catalog.name}</div>
+          <div className="text-xs text-fg-muted">
+            {entry.catalog.parameters_billion}B · about{" "}
+            {Math.round(entry.catalog.approx_size_bytes / 1024 ** 2)} MB ·{" "}
+            {entry.catalog.license.name}
+          </div>
+          <p className="mt-2 text-sm">{entry.catalog.description}</p>
+          {running && download && (
+            <div className="mt-3">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-bg-muted">
+                <div
+                  className="h-full bg-accent transition-[width]"
+                  style={{
+                    width: `${download.bytes_total ? (download.bytes_done / download.bytes_total) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <div className="mt-1 text-xs text-fg-muted">{download.status}…</div>
+            </div>
+          )}
+          {download?.status === "failed" && (
+            <div className="mt-3">
+              <Alert tone="danger">{download.error}</Alert>
+            </div>
+          )}
+          {entry.installed ? (
+            <div className="mt-3 text-sm text-success">Installed and verified.</div>
+          ) : (
+            !running && (
+              <Button
+                className="mt-3"
+                onClick={() => {
+                  setShowLicense(true);
+                }}
+              >
+                Read licence and download
+              </Button>
+            )
+          )}
+        </div>
+      )}
+      {(accept.isError || start.isError) && (
+        <div className="mt-3">
+          <Alert tone="danger">{describeError(accept.error ?? start.error)}</Alert>
+        </div>
+      )}
+      {showLicense && entry && (
+        <LicenseDialog
+          entry={entry}
+          busy={accept.isPending || start.isPending}
+          onClose={() => {
+            setShowLicense(false);
+          }}
+          onAccept={() => {
+            accept.mutate(entry.catalog.id, {
+              onSuccess: () => {
+                start.mutate(entry.catalog.id, {
+                  onSettled: () => {
+                    setShowLicense(false);
+                  },
+                });
+              },
+              onError: () => {
+                setShowLicense(false);
+              },
+            });
+          }}
+        />
+      )}
+      <StepFooter
+        onBack={onBack}
+        onNext={onNext}
+        nextLabel={installedAny ? "Continue" : "Skip for now"}
+      />
+    </>
+  );
+}
+
 function DoneStep({ onFinish, busy }: { onFinish: () => void; busy: boolean }) {
   const profile = useProfile();
   return (
@@ -406,12 +508,12 @@ function DoneStep({ onFinish, busy }: { onFinish: () => void; busy: boolean }) {
       </div>
       <h2 className="mt-3 text-2xl font-bold">{profile.data?.name ?? "Your AI"} is ready</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-fg-muted">
-        Open the console and try <code className="font-mono">/help</code>. When skill packages
+        Say hello in Chat, or try <code className="font-mono">/help</code>. When skill packages
         arrive, <code className="font-mono">/learn coding</code> will teach your AI its first skill.
       </p>
       <div className="mt-8">
         <Button size="lg" onClick={onFinish} disabled={busy}>
-          Open the console
+          Start chatting
         </Button>
       </div>
     </div>

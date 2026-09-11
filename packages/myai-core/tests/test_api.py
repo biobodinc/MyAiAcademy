@@ -9,7 +9,8 @@ from fastapi.testclient import TestClient
 
 def test_status_shape_is_honest(client: TestClient) -> None:
     data = client.get("/api/status").json()
-    assert data["ai"] == "not_configured"
+    assert data["ai"] == "unavailable"  # the test provider has no runtime; say so
+    assert "not installed" in data["ai_detail"]
     assert data["training"] == "unavailable"
     assert data["cloud_uploads"] == 0
     assert data["privacy_mode"] == "private"

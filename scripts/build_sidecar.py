@@ -73,6 +73,11 @@ def main() -> None:
         "alembic",
         "--collect-submodules",
         "sqlalchemy.dialects.sqlite",
+        # The inference runtime ships native libraries inside the package directory.
+        "--collect-all",
+        "llama_cpp",
+        "--collect-submodules",
+        "pypdf",
         "--console",
         str(CORE_SRC / "myai_core" / "__main__.py"),
     ]
