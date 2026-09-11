@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Sign in" };
 export default function SignInPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight">Sign in</h1>
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Sign in</h1>
       <PhaseNotice phase={5}>
         Accounts are not available yet, and we will not show a form that does nothing. When sign-in
         ships it will use OAuth 2.0 / OpenID Connect with PKCE: the desktop app opens this website

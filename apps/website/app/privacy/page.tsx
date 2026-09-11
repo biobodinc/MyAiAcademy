@@ -22,28 +22,32 @@ const may = [
 export default function PrivacyPage() {
   return (
     <article className="prose max-w-3xl">
-      <h1 className="text-4xl font-bold tracking-tight">Privacy promise</h1>
-      <p className="mt-4 text-lg text-fg-muted">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Privacy promise</h1>
+      <p className="mt-4 text-base text-fg-muted sm:text-lg">
         If you do not opt into sharing, MyAI Academy does not intentionally transmit your private AI
         data to MyAI Academy servers. External services you choose to connect are a separate matter
         and are always disclosed.
       </p>
 
-      <h2 className="mt-10 text-2xl font-semibold">Stays on your devices by default</h2>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">
+        Stays on your devices by default
+      </h2>
       <ul className="mt-3 list-disc space-y-1 pl-6">
         {stays.map((s) => (
           <li key={s}>{s}</li>
         ))}
       </ul>
 
-      <h2 className="mt-10 text-2xl font-semibold">What the cloud may ever handle</h2>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">
+        What the cloud may ever handle
+      </h2>
       <ul className="mt-3 list-disc space-y-1 pl-6">
         {may.map((s) => (
           <li key={s}>{s}</li>
         ))}
       </ul>
 
-      <h2 className="mt-10 text-2xl font-semibold">Today, concretely</h2>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Today, concretely</h2>
       <p className="mt-3">
         The current desktop build contains no account, sync or upload code paths. Its only outbound
         network activity is a reachability check (a TCP connection with no payload) used to display
@@ -51,7 +55,7 @@ export default function PrivacyPage() {
         security-relevant events in a local activity log.
       </p>
 
-      <h2 className="mt-10 text-2xl font-semibold">Honest limits</h2>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Honest limits</h2>
       <p className="mt-3">
         Anonymisation is never a guarantee of perfect privacy, which is why contribution is off by
         default and granular when on. If our servers disappear, your local AI keeps working; only
