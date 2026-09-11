@@ -8,7 +8,10 @@ import logging
 import os
 import socket
 import sys
+import threading
+import time
 from pathlib import Path
+from typing import Protocol
 
 import uvicorn
 
@@ -106,13 +109,47 @@ def main(argv: list[str] | None = None) -> None:
     app = create_app(settings, paths)
     write_discovery_file(paths, settings.host, port)
     log.info("Listening on http://%s:%d (loopback only)", settings.host, port)
-    print(ready_line(paths, settings.host, port), flush=True)  # noqa: T201 - protocol, not logging
-    try:
-        uvicorn.run(
+    server = uvicorn.Server(
+        uvicorn.Config(
             app, host=settings.host, port=port, log_level=settings.log_level, access_log=False
         )
+    )
+    announcer = threading.Thread(
+        target=announce_when_started,
+        args=(server, ready_line(paths, settings.host, port)),
+        name="myai-core-announce",
+        daemon=True,
+    )
+    announcer.start()
+    try:
+        server.run()
     finally:
         remove_discovery_file(paths)
+
+
+class _Startable(Protocol):
+    started: bool
+    should_exit: bool
+
+
+def announce_when_started(
+    server: _Startable, line: str, *, timeout: float = 60.0, poll: float = 0.05
+) -> bool:
+    """Print ``line`` once the socket is actually accepting connections.
+
+    uvicorn runs the ASGI lifespan (our migrations) *before* binding, so announcing
+    earlier would let a fast client connect and be refused. Returns whether the line
+    was printed.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if server.should_exit:
+            return False
+        if server.started:
+            print(line, flush=True)  # noqa: T201 - protocol, not logging
+            return True
+        time.sleep(poll)
+    return False
 
 
 if __name__ == "__main__":

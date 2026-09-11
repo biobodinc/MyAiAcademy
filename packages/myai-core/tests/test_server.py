@@ -2,10 +2,13 @@ import json
 import socket
 from pathlib import Path
 
+import pytest
+
 from myai_core.paths import AppPaths
 from myai_core.security.local_token import load_or_create_token
 from myai_core.server import (
     READY_PREFIX,
+    announce_when_started,
     choose_port,
     ready_line,
     remove_discovery_file,
@@ -42,3 +45,34 @@ def test_ready_line_is_parseable_and_secret_free(tmp_path: Path) -> None:
     assert payload["data_dir"] == str(paths.data_dir)
     assert payload["token_file"].endswith("local-api.token")
     assert token not in line  # the shell reads the token from the file, never from stdout
+
+
+class _FakeServer:
+    def __init__(self, *, started_after: int) -> None:
+        self.started = False
+        self.should_exit = False
+        self._polls = started_after
+
+    def __getattribute__(self, name: str) -> object:
+        if name == "started":
+            polls = object.__getattribute__(self, "_polls")
+            if polls <= 0:
+                return True
+            object.__setattr__(self, "_polls", polls - 1)
+            return False
+        return object.__getattribute__(self, name)
+
+
+def test_announce_waits_for_bind(capsys: pytest.CaptureFixture[str]) -> None:
+    server = _FakeServer(started_after=3)
+    assert announce_when_started(server, "READY", poll=0.001)
+    assert capsys.readouterr().out.strip() == "READY"
+
+
+def test_announce_gives_up_on_exit_or_timeout(capsys: pytest.CaptureFixture[str]) -> None:
+    exiting = _FakeServer(started_after=10**6)
+    exiting.should_exit = True
+    assert not announce_when_started(exiting, "READY", poll=0.001)
+    never = _FakeServer(started_after=10**6)
+    assert not announce_when_started(never, "READY", timeout=0.02, poll=0.001)
+    assert capsys.readouterr().out == ""

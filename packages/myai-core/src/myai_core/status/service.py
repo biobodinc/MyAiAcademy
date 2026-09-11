@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import socket
 import threading
 import time
@@ -39,11 +40,13 @@ class ServiceStatus(ApiModel):
 
 
 class InternetMonitor:
-    """Cheap, cached TCP reachability check. Never blocks a request for long.
+    """Cheap, cached TCP reachability check that never blocks a request.
 
-    Uses a TCP connect (no HTTP, no payload, no DNS-less trickery) against well-known
-    public resolvers on port 53. This sends no user data anywhere; it only answers
-    "can this machine reach the internet at all?".
+    Uses a TCP connect (no HTTP, no payload) against well-known public resolvers on
+    port 53. This sends no user data anywhere; it only answers "can this machine reach
+    the internet at all?". Probes run on a background thread: callers get the last known
+    state immediately (``unknown`` until the first probe finishes) and a stale value
+    triggers a refresh in the background.
     """
 
     _TARGETS = (("1.1.1.1", 53), ("8.8.8.8", 53), ("9.9.9.9", 53))
@@ -54,19 +57,29 @@ class InternetMonitor:
         self._lock = threading.Lock()
         self._state = Availability.UNKNOWN
         self._checked_at: datetime | None = None
-        self._checked_monotonic = 0.0
+        self._checked_monotonic = -math.inf
+        self._probe_in_flight = False
 
     def current(self) -> tuple[Availability, datetime | None]:
         with self._lock:
-            fresh = (time.monotonic() - self._checked_monotonic) < self._ttl
-            if fresh:
-                return self._state, self._checked_at
-        state = self._probe()
+            stale = (time.monotonic() - self._checked_monotonic) >= self._ttl
+            if stale and not self._probe_in_flight:
+                self._probe_in_flight = True
+                threading.Thread(
+                    target=self._refresh, name="myai-internet-probe", daemon=True
+                ).start()
+            return self._state, self._checked_at
+
+    def _refresh(self) -> None:
+        try:
+            state = self._probe()
+        finally:
+            with self._lock:
+                self._probe_in_flight = False
         with self._lock:
             self._state = state
             self._checked_at = datetime.now(tz=UTC)
             self._checked_monotonic = time.monotonic()
-            return self._state, self._checked_at
 
     def _probe(self) -> Availability:
         for host, port in self._TARGETS:

@@ -5,8 +5,8 @@
  */
 import type { OnboardingStep } from "@myai/api-client";
 import { Brain, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router";
 
 import { Alert, Button, Card, PhaseTag, Spinner } from "../../components/ui";
 import { cx } from "../../lib/cx";
@@ -51,20 +51,30 @@ const TITLES: Record<OnboardingStep, string> = {
 
 export function OnboardingWizard() {
   const prefs = usePreferences();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (prefs.data?.onboarding_completed) void navigate("/", { replace: true });
-  }, [prefs.data?.onboarding_completed, navigate]);
-
   if (!prefs.data) return <Spinner />;
-  return <WizardSteps initialStep={prefs.data.onboarding_step} />;
+  return (
+    <WizardSteps
+      initialStep={prefs.data.onboarding_step}
+      alreadyCompleted={prefs.data.onboarding_completed}
+    />
+  );
 }
 
-function WizardSteps({ initialStep }: { initialStep: OnboardingStep }) {
+function WizardSteps({
+  initialStep,
+  alreadyCompleted,
+}: {
+  initialStep: OnboardingStep;
+  alreadyCompleted: boolean;
+}) {
   const updatePrefs = useUpdatePreferences();
   const navigate = useNavigate();
   const [step, setStep] = useState<OnboardingStep>(initialStep);
+  // Captured once at mount: a user who is already onboarded and opens this screen goes
+  // home. Finishing the wizard flips the preference while this component stays mounted,
+  // so the value stays false and the wizard itself performs the final navigation.
+  const [redirectHome] = useState(alreadyCompleted);
+  if (redirectHome) return <Navigate to="/" replace />;
 
   const index = ORDER.indexOf(step);
   const go = (next: OnboardingStep) => {
@@ -77,11 +87,9 @@ function WizardSteps({ initialStep }: { initialStep: OnboardingStep }) {
   const back = () => {
     setStep(ORDER[Math.max(index - 1, 0)] ?? "welcome");
   };
-  const finish = () => {
-    updatePrefs.mutate(
-      { onboarding_step: "done", onboarding_completed: true },
-      { onSuccess: () => void navigate("/console", { replace: true }) },
-    );
+  const finish = async () => {
+    await updatePrefs.mutateAsync({ onboarding_step: "done", onboarding_completed: true });
+    await navigate("/console", { replace: true });
   };
 
   return (
@@ -128,7 +136,12 @@ function WizardSteps({ initialStep }: { initialStep: OnboardingStep }) {
             body="Downloading a local chat model (with its licence shown first) arrives in Phase 2. Until then your AI has an identity and a home, but cannot chat yet. We will not pretend otherwise."
           />
         )}
-        {step === "done" && <DoneStep onFinish={finish} busy={updatePrefs.isPending} />}
+        {step === "done" && (
+          <DoneStep
+            onFinish={() => void finish().catch(() => undefined)}
+            busy={updatePrefs.isPending}
+          />
+        )}
       </Card>
       {updatePrefs.isError && (
         <div className="mt-3">
