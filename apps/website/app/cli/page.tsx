@@ -28,6 +28,9 @@ const COMMANDS: Array<[string, string]> = [
   ["myai chat [message]", "streaming chat; interactive when no message is given"],
   ["myai memory list | add | forget | clear", "what your AI remembers (explicit only)"],
   ["myai knowledge add | list | search | remove", "documents it can retrieve from"],
+  ["myai learn <skill> | evaluate | history", "skill packages, benchmarks and levels"],
+  ["myai jobs list | pause | resume | stop", "the running learning or benchmark job"],
+  ['myai ask "what is training?"', "the built-in guide (not your AI model)"],
   ['myai run "/hardware"', "run any slash command"],
   ["myai audit", "local security activity"],
 ];
@@ -35,8 +38,8 @@ const COMMANDS: Array<[string, string]> = [
 export default function CliPage() {
   return (
     <article className="max-w-3xl">
-      <h1 className="text-4xl font-bold tracking-tight">Command line</h1>
-      <p className="mt-4 text-lg text-fg-muted">
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Command line</h1>
+      <p className="mt-4 text-base text-fg-muted sm:text-lg">
         Until installers are published, the supported way to use MyAI Academy is the{" "}
         <code className="rounded bg-bg-elevated px-1">myai</code> command line run from a source
         checkout. It exposes everything the desktop app does today, against the same local service.
@@ -51,7 +54,7 @@ export default function CliPage() {
         </PhaseNotice>
       </div>
 
-      <h2 className="mt-10 text-2xl font-semibold">Requirements</h2>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Requirements</h2>
       <ul className="mt-3 list-disc space-y-1 pl-6">
         <li>
           Python 3.11 or newer and{" "}
@@ -66,8 +69,8 @@ export default function CliPage() {
         <li>Roughly 1 to 5 GB of disk per model you download</li>
       </ul>
 
-      <h2 className="mt-10 text-2xl font-semibold">Get running</h2>
-      <pre className="mt-3 overflow-x-auto rounded-2xl border border-border bg-bg-elevated p-4 text-sm">
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Get running</h2>
+      <pre className="mt-3 overflow-x-auto rounded-2xl border border-border bg-bg-elevated p-4 text-xs sm:text-sm">
         {STEPS.join("\n")}
       </pre>
       <p className="mt-3 text-sm text-fg-muted">
@@ -75,17 +78,17 @@ export default function CliPage() {
         listens on 127.0.0.1 only and authenticates every request with a per-install token.
       </p>
 
-      <h2 className="mt-10 text-2xl font-semibold">Commands</h2>
-      <table className="mt-3 w-full text-sm">
-        <tbody>
-          {COMMANDS.map(([cmd, what]) => (
-            <tr key={cmd} className="border-t border-border">
-              <td className="py-2 pr-4 font-mono whitespace-nowrap">{cmd}</td>
-              <td className="py-2 text-fg-muted">{what}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Commands</h2>
+      {/* A definition list rather than a table: on a phone the command and what it does
+          stack, instead of the second column disappearing off the side. */}
+      <dl className="mt-3 divide-y divide-border text-sm">
+        {COMMANDS.map(([cmd, what]) => (
+          <div key={cmd} className="grid gap-0.5 py-3 sm:grid-cols-[minmax(0,19rem)_1fr] sm:gap-4">
+            <dt className="font-mono break-words">{cmd}</dt>
+            <dd className="text-fg-muted">{what}</dd>
+          </div>
+        ))}
+      </dl>
       <p className="mt-6 text-sm text-fg-muted">
         Before relying on it, read the{" "}
         <Link className="underline" href="/disclosures">

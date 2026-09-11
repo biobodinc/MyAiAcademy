@@ -37,6 +37,13 @@
   }
 }
 
+html {
+  /* Keep text at the size we chose when an iPhone is turned to landscape. */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   @apply bg-bg text-fg font-sans antialiased;
+  /* Long paths and URLs must wrap rather than widen the page on a phone. */
+  overflow-wrap: break-word;
 }

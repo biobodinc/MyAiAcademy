@@ -23,9 +23,9 @@ export default async function DownloadPage() {
   const releasesUrl = `https://github.com/${SITE.githubRepo}/releases`;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">Download</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Download</h1>
         <p className="mt-3 text-fg-muted">
           Installers are published on GitHub Releases and signed checksums accompany every build.
           The desktop app bundles the local AI service; nothing phones home.
@@ -62,13 +62,13 @@ export default async function DownloadPage() {
         </PhaseNotice>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         {ORDER.map((entry) => {
           const assets = release?.assets.filter((a) => a.platform === entry.platform) ?? [];
           return (
             <div
               key={entry.platform}
-              className="rounded-2xl border border-border bg-bg-elevated p-6"
+              className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6"
             >
               <h2 className="text-lg font-semibold">{entry.title}</h2>
               {entry.note && <p className="mt-1 text-xs text-fg-muted">{entry.note}</p>}
@@ -77,11 +77,11 @@ export default async function DownloadPage() {
               ) : (
                 <ul className="mt-4 space-y-2">
                   {assets.map((a) => (
-                    <li key={a.url}>
+                    <li key={a.url} className="min-w-0">
                       <a className="text-accent underline" href={a.url} rel="noopener noreferrer">
                         {a.label}
-                      </a>{" "}
-                      <span className="text-xs text-fg-muted">
+                      </a>
+                      <span className="block text-xs break-all text-fg-muted">
                         {a.fileName} · {formatSize(a.sizeBytes)}
                       </span>
                     </li>
@@ -93,7 +93,7 @@ export default async function DownloadPage() {
         })}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <PhaseNotice phase={6}>
           <strong>Android and iOS</strong> apps are authenticated controllers for your desktop AI.
           They arrive after accounts and device pairing exist, and will be listed on Google Play and
