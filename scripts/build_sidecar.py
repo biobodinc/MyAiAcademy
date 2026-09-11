@@ -64,6 +64,9 @@ def main() -> None:
         # Alembic loads migration scripts from disk at runtime.
         "--add-data",
         f"{migrations}{sep}myai_core/db/migrations",
+        # Bundled skill packages are plain data files read at runtime.
+        "--add-data",
+        f"{CORE_SRC / 'myai_core' / 'skills' / 'packages'}{sep}myai_core/skills/packages",
         "--hidden-import",
         "myai_core.db.migrations.env",
         # uvicorn's optional loop/protocol implementations are imported by string name.

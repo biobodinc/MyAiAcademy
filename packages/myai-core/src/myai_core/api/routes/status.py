@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from myai_core.api.deps import PreferencesDep, ProfileDep, SessionDep, StateDep, StorageDep
+from myai_core.skills.jobs import summarise
 from myai_core.status.service import ServiceStatus
 
 router = APIRouter(tags=["status"])
@@ -23,4 +24,5 @@ def read_status(
         onboarding_completed=preferences.onboarding_completed,
         privacy_mode=preferences.privacy_mode.value,
         ai_state=state.ai_state(session),
+        job=summarise(current) if (current := state.jobs.current(session)) else None,
     )

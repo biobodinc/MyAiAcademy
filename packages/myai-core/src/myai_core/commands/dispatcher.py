@@ -14,6 +14,8 @@ from myai_core.guide import ask
 from myai_core.hardware.models import HardwareReport
 from myai_core.preferences.schemas import Preferences
 from myai_core.skills.catalog import get_skill
+from myai_core.skills.jobs import JobSummary
+from myai_core.skills.learning import EvaluationRead, LearnPreview
 from myai_core.skills.service import SkillsSummary
 
 GiB = 1024**3
@@ -21,15 +23,15 @@ GUIDE_MIN_CONFIDENCE = 0.5
 
 HELP_TEXT = """Commands you can use:
 
-/learn <skill>      acquire a new skill (Phase 3)
-/train <skill>      improve a skill you already have (Phase 4)
+/learn <skill>      preview a new skill; "/learn <skill> start" installs it and runs its benchmark
+/train <skill>      improve a skill you already have (training jobs arrive in Phase 4)
 /skills             list skills and levels
-/status             AI, internet and training status
+/status             AI, internet, jobs and training status
 /hardware           what your computer can do
 /memory             what I remember
+/history            benchmark history: every level change and why
+/pause /resume /stop  control the running job
 /projects           your projects (Phase 7)
-/history            training history (Phase 4)
-/pause /resume /stop  control a training job (Phase 4)
 /settings           open settings
 /help               this list
 
@@ -37,7 +39,12 @@ Plain sentences like "teach yourself video" map to these commands and I'll show 
 
 
 class CommandContext:
-    """Lazy accessors so a ``/help`` never triggers a hardware scan."""
+    """Lazy accessors so a ``/help`` never triggers a hardware scan.
+
+    The Phase 3 callables are optional so the dispatcher stays usable in tests and in
+    contexts without a job runner; when absent the commands say the feature is
+    unavailable rather than pretending.
+    """
 
     def __init__(
         self,
@@ -47,12 +54,22 @@ class CommandContext:
         preferences: Callable[[], Preferences],
         status: Callable[[], dict[str, object]],
         memories: Callable[[], list[str]] | None = None,
+        learn_preview: Callable[[str], LearnPreview] | None = None,
+        start_learn: Callable[[str], JobSummary] | None = None,
+        current_job: Callable[[], JobSummary | None] | None = None,
+        job_action: Callable[[str, str], bool] | None = None,
+        history: Callable[[], list[EvaluationRead]] | None = None,
     ) -> None:
         self.hardware = hardware
         self.skills = skills
         self.preferences = preferences
         self.status = status
         self.memories = memories or (lambda: [])
+        self.learn_preview = learn_preview
+        self.start_learn = start_learn
+        self.current_job = current_job
+        self.job_action = job_action
+        self.history = history
 
 
 def execute(text: str, ctx: CommandContext) -> CommandResult:
@@ -101,6 +118,7 @@ def _status(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     lines = [
         f"🧠 AI: {data.get('ai_label', 'unknown')}",
         f"🌐 Internet: {data.get('internet_label', 'unknown')}",
+        f"📚 Job: {data.get('job_label', 'unknown')}",
         f"🎓 Training: {data.get('training_label', 'unknown')}",
     ]
     return CommandResult(
@@ -141,7 +159,14 @@ def _skills(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     summary = ctx.skills()
     rows = []
     for s in summary.skills:
-        state = f"Level {s.level}" if s.learned else "Not learned"
+        if s.learned:
+            state = f"Level {s.level}"
+        elif not s.learnable:
+            state = f"Not learnable yet (Phase {s.planned_phase})"
+        elif s.locked:
+            state = s.locked_reason or "Locked"
+        else:
+            state = f"Not learned: /learn {s.id}"
         rows.append(f"{s.icon} {s.name:<13} {state}")
     message = f"Overall level {summary.overall_level}\n\n" + "\n".join(rows)
     return CommandResult(
@@ -191,20 +216,86 @@ def _memory(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     )
 
 
-def _learn(cmd: ParsedCommand, _ctx: CommandContext) -> CommandResult:
+def _learn(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     if cmd.skill is None:
         return _unknown_skill(cmd)
     skill = get_skill(cmd.skill)
     assert skill is not None
+    if ctx.learn_preview is None or ctx.start_learn is None:
+        return CommandResult(
+            outcome=CommandOutcome.UNAVAILABLE,
+            command=cmd,
+            title="Learning is not available here",
+            message="This console cannot start jobs. Use the Skills page or `myai skills learn`.",
+        )
+    preview = ctx.learn_preview(skill.id)
+    if preview.already_learned:
+        return CommandResult(
+            outcome=CommandOutcome.OK,
+            command=cmd,
+            title=f"{skill.icon} {skill.name} is already learned",
+            message=(
+                f"Re-run its benchmark with the Skills page or `myai skills evaluate {skill.id}`, "
+                f"or improve it once training arrives: /train {skill.id}"
+            ),
+            suggestions=["/skills", f"/train {skill.id}"],
+        )
+    if preview.blockers:
+        return CommandResult(
+            outcome=CommandOutcome.UNAVAILABLE,
+            command=cmd,
+            title=f"{skill.icon} {skill.name} cannot be learned yet",
+            message="\n".join(preview.blockers),
+            data={"navigate": "/skills"},
+            suggestions=["/skills", "/hardware"],
+        )
+    wants_start = any(a.lower() in {"start", "confirm", "yes", "go"} for a in cmd.args[1:])
+    if not wants_start:
+        return CommandResult(
+            outcome=CommandOutcome.OK,
+            command=cmd,
+            title=f"{skill.icon} New skill: {skill.name}",
+            message=_learn_preview_text(preview),
+            data={"preview": preview.model_dump(mode="json")},
+            suggestions=[f"/learn {skill.id} start", "/skills"],
+        )
+    job = ctx.start_learn(skill.id)
     return CommandResult(
-        outcome=CommandOutcome.UNAVAILABLE,
+        outcome=CommandOutcome.OK,
         command=cmd,
-        title=f"{skill.icon} Learning {skill.name} is not available yet",
+        title=f"{skill.icon} Learning {skill.name}",
         message=(
-            f"{skill.name} is in the catalog, but skill packages and the learning pipeline "
-            f"arrive in Phase {skill.planned_phase}. Nothing has been downloaded or changed."
+            f"Package installed. Running the {skill.name} benchmark with your local model; "
+            f"the level it scores becomes {skill.name}'s level. The skill counts as learned "
+            "only when the benchmark finishes. Follow progress with /status."
         ),
-        suggestions=["/skills", "/hardware"],
+        data={"job": job.model_dump(mode="json"), "navigate": "/skills"},
+        suggestions=["/status", "/pause", "/stop"],
+    )
+
+
+def _learn_preview_text(preview: LearnPreview) -> str:
+    package = preview.package
+    assert package is not None
+    if preview.estimated_minutes_min is not None and preview.estimated_minutes_max is not None:
+        estimate = (
+            f"{preview.estimated_minutes_min:g}-{preview.estimated_minutes_max:g} minutes "
+            f"({preview.estimate_note})"
+        )
+    else:
+        estimate = f"unknown ({preview.estimate_note})"
+    return "\n".join(
+        [
+            preview.what_happens,
+            "",
+            f"Resources required: {package.size_bytes / 1024:.0f} KB ({package.resources})",
+            f"Benchmark: {package.task_count} tasks across {', '.join(package.areas)}",
+            f"Model: {preview.model_id}",
+            f"Recommended compute: {preview.recommended_compute.value}",
+            f"Estimated learning preparation: {estimate}",
+            "",
+            "Start learning? Reply with: /learn " + preview.skill_id + " start",
+        ]
     )
 
 
@@ -214,8 +305,8 @@ def _train(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
     skill = get_skill(cmd.skill)
     assert skill is not None
     summary = ctx.skills()
-    status = next(s for s in summary.skills if s.id == skill.id)
-    if not status.learned:
+    current = next(s for s in summary.skills if s.id == skill.id)
+    if not current.learned:
         return CommandResult(
             outcome=CommandOutcome.UNAVAILABLE,
             command=cmd,
@@ -223,12 +314,92 @@ def _train(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
             message=f"Learn it first with /learn {skill.id}.",
             suggestions=[f"/learn {skill.id}"],
         )
+    target = cmd.train.target_level if cmd.train and cmd.train.target_level else None
+    recommended = min(100, current.level + 4)
+    areas = [f"{k}: {round(v * 100)}%" for k, v in current.area_scores.items()]
+    if cmd.train and cmd.train.specialization:
+        focus = f"Focus: {cmd.train.specialization}"
+    elif cmd.train and cmd.train.all_areas:
+        focus = "Focus: all areas"
+    else:
+        focus = "Focus: weakest areas"
+    lines = [
+        f"Current level: {current.level}",
+        f"Target level: {target if target else recommended} (recommended {recommended})",
+        f"Training areas: {', '.join(skill.specializations)}",
+        "Last benchmark by area: " + (", ".join(areas) if areas else "none"),
+        focus,
+        "Estimated time: not available; training jobs arrive in Phase 4",
+        "Hardware usage: governed by your compute preset when training exists",
+        "",
+        "Nothing has started. Levels change only through the benchmark.",
+    ]
     return CommandResult(
         outcome=CommandOutcome.UNAVAILABLE,
         command=cmd,
-        title="Training is not available yet",
-        message="Training jobs arrive in Phase 4. Nothing has started.",
-        suggestions=["/skills"],
+        title=f"{skill.icon} Training {skill.name} is not available yet",
+        message="\n".join(lines),
+        data={"navigate": "/skills"},
+        suggestions=["/skills", "/history"],
+    )
+
+
+def _job_control(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
+    action = {
+        CommandName.PAUSE: "pause",
+        CommandName.RESUME: "resume",
+        CommandName.STOP: "cancel",
+    }[cmd.name]
+    job = ctx.current_job() if ctx.current_job else None
+    if job is None or ctx.job_action is None:
+        return CommandResult(
+            outcome=CommandOutcome.UNAVAILABLE,
+            command=cmd,
+            title="No job is running",
+            message="There is nothing to " + cmd.name.value + ". Start one with /learn <skill>.",
+            suggestions=["/skills"],
+        )
+    ok = ctx.job_action(job.id, action)
+    verb = {"pause": "paused", "resume": "resumed", "cancel": "stopping"}[action]
+    if not ok:
+        return CommandResult(
+            outcome=CommandOutcome.ERROR,
+            command=cmd,
+            title=f"Could not {cmd.name.value} that job",
+            message=f"The {job.kind} job for {job.skill_id} is {job.status}.",
+            suggestions=["/status"],
+        )
+    return CommandResult(
+        outcome=CommandOutcome.OK,
+        command=cmd,
+        title=f"Job {verb}",
+        message=f"{job.kind.title()} {job.skill_id.title()} at {job.progress_percent}% is {verb}.",
+        data={"job_id": job.id},
+        suggestions=["/status"],
+    )
+
+
+def _history(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
+    rows = ctx.history() if ctx.history else []
+    if not rows:
+        return CommandResult(
+            outcome=CommandOutcome.OK,
+            command=cmd,
+            title="History",
+            message="No benchmark runs yet. Levels only ever change through them.",
+            suggestions=["/skills"],
+        )
+    lines = [
+        f"{r.evaluated_at:%b %d %H:%M}  {r.skill_id.title():<13} {r.level_before:>3} → "
+        f"{r.level_after:<3} ({round(r.score * 100)}% with {r.model_id})"
+        for r in rows[:20]
+    ]
+    return CommandResult(
+        outcome=CommandOutcome.OK,
+        command=cmd,
+        title="Benchmark history",
+        message="\n".join(lines),
+        data={"navigate": "/skills"},
     )
 
 
@@ -243,13 +414,7 @@ def _unknown_skill(cmd: ParsedCommand) -> CommandResult:
 
 
 def _unavailable(cmd: ParsedCommand, _ctx: CommandContext) -> CommandResult:
-    phase = {
-        CommandName.PAUSE: 4,
-        CommandName.RESUME: 4,
-        CommandName.STOP: 4,
-        CommandName.HISTORY: 4,
-        CommandName.PROJECTS: 7,
-    }.get(cmd.name)
+    phase = {CommandName.PROJECTS: 7}.get(cmd.name)
     return CommandResult(
         outcome=CommandOutcome.UNAVAILABLE,
         command=cmd,
@@ -272,4 +437,8 @@ _HANDLERS: dict[CommandName, Callable[[ParsedCommand, CommandContext], CommandRe
     CommandName.MEMORY: _memory,
     CommandName.LEARN: _learn,
     CommandName.TRAIN: _train,
+    CommandName.PAUSE: _job_control,
+    CommandName.RESUME: _job_control,
+    CommandName.STOP: _job_control,
+    CommandName.HISTORY: _history,
 }

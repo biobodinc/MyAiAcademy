@@ -19,6 +19,7 @@ const base = {
   onboarding_completed: true,
   privacy_mode: "private",
   cloud_uploads: 0,
+  job: null,
 } as const;
 
 describe("dashboard headline", () => {
@@ -30,5 +31,17 @@ describe("dashboard headline", () => {
     expect(headline({ ...base, ai: "available", active_model_id: "qwen" }).text).toBe(
       "Ready · qwen",
     );
+    expect(
+      headline({
+        ...base,
+        job: {
+          id: "j",
+          kind: "learn",
+          skill_id: "coding",
+          status: "running",
+          progress_percent: 40,
+        },
+      }).text,
+    ).toBe("Learning coding · 40%");
   });
 });

@@ -225,6 +225,110 @@ export function useSkills() {
   return useQuery({ queryKey: keys.skills, queryFn: () => unwrap(api.GET("/api/skills")) });
 }
 
+// --- Phase 3: skills, jobs ----------------------------------------------------------------
+
+export const skillKeys = {
+  learnPreview: (id: string) => ["skills", "learn-preview", id] as const,
+  evaluations: (id: string) => ["skills", "evaluations", id] as const,
+  history: ["skills", "history"] as const,
+  jobs: ["jobs"] as const,
+  currentJob: ["jobs", "current"] as const,
+};
+
+function invalidateSkills(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: keys.skills });
+  void qc.invalidateQueries({ queryKey: ["skills"] });
+  void qc.invalidateQueries({ queryKey: skillKeys.jobs });
+  void qc.invalidateQueries({ queryKey: keys.status });
+  void qc.invalidateQueries({ queryKey: keys.audit });
+}
+
+export function useLearnPreview(skillId: string | null) {
+  return useQuery({
+    queryKey: skillKeys.learnPreview(skillId ?? ""),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/skills/{skill_id}/learn-preview", {
+          params: { path: { skill_id: skillId ?? "" } },
+        }),
+      ),
+    enabled: skillId !== null,
+  });
+}
+
+export function useStartLearn() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (skill_id: string) =>
+      unwrap(api.POST("/api/skills/{skill_id}/learn", { params: { path: { skill_id } } })),
+    onSuccess: () => {
+      invalidateSkills(qc);
+    },
+  });
+}
+
+export function useStartEvaluate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (skill_id: string) =>
+      unwrap(api.POST("/api/skills/{skill_id}/evaluate", { params: { path: { skill_id } } })),
+    onSuccess: () => {
+      invalidateSkills(qc);
+    },
+  });
+}
+
+export function useEvaluations(skillId: string | null) {
+  return useQuery({
+    queryKey: skillKeys.evaluations(skillId ?? ""),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/skills/{skill_id}/evaluations", {
+          params: { path: { skill_id: skillId ?? "" } },
+        }),
+      ),
+    enabled: skillId !== null,
+  });
+}
+
+export function useSkillHistory(limit = 30) {
+  return useQuery({
+    queryKey: [...skillKeys.history, limit] as const,
+    queryFn: () => unwrap(api.GET("/api/skills/history", { params: { query: { limit } } })),
+  });
+}
+
+/** The running job, polled while one exists. */
+export function useCurrentJob(refetchInterval: number | false = 1_000) {
+  return useQuery({
+    queryKey: skillKeys.currentJob,
+    queryFn: () => unwrap(api.GET("/api/jobs/current")),
+    refetchInterval: (q) => (q.state.data ? refetchInterval : 5_000),
+  });
+}
+
+export function useJobs(limit = 20) {
+  return useQuery({
+    queryKey: [...skillKeys.jobs, limit] as const,
+    queryFn: () => unwrap(api.GET("/api/jobs", { params: { query: { limit } } })),
+  });
+}
+
+export function useJobAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { job_id: string; action: "pause" | "resume" | "cancel" }) =>
+      unwrap(
+        api.POST(`/api/jobs/{job_id}/${input.action}` as "/api/jobs/{job_id}/pause", {
+          params: { path: { job_id: input.job_id } },
+        }),
+      ),
+    onSuccess: () => {
+      invalidateSkills(qc);
+    },
+  });
+}
+
 export function useAudit(limit = 100) {
   return useQuery({
     queryKey: [...keys.audit, limit],

@@ -195,6 +195,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Jobs */
+        get: operations["list_jobs_api_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Job */
+        get: operations["read_job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Job */
+        post: operations["cancel_job_api_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause Job */
+        post: operations["pause_job_api_jobs__job_id__pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Job */
+        post: operations["resume_job_api_jobs__job_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current Job */
+        get: operations["current_job_api_jobs_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/knowledge": {
         parameters: {
             query?: never;
@@ -621,6 +723,97 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/skills/{skill_id}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Evaluate
+         * @description Re-run a learned skill's benchmark (for example after changing model).
+         */
+        post: operations["evaluate_api_skills__skill_id__evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/evaluations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evaluations */
+        get: operations["evaluations_api_skills__skill_id__evaluations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/learn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Learn
+         * @description Install the skill package and run its benchmark as a background job (spec §36).
+         */
+        post: operations["learn_api_skills__skill_id__learn_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/learn-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Learn Preview */
+        get: operations["learn_preview_api_skills__skill_id__learn_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All History */
+        get: operations["all_history_api_skills_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/status": {
         parameters: {
             query?: never;
@@ -754,6 +947,21 @@ export interface components {
          * @enum {string}
          */
         AcceleratorBackend: "cuda" | "rocm" | "metal" | "none";
+        /** AchievementStatus */
+        AchievementStatus: {
+            /** Earned */
+            earned: boolean;
+            /** Icon */
+            icon: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Progress */
+            progress: string;
+            /** Requirement */
+            requirement: string;
+        };
         /**
          * AuditCategory
          * @enum {string}
@@ -1019,6 +1227,25 @@ export interface components {
             /** Physical Cores */
             physical_cores: number | null;
         };
+        /** DegreeStatus */
+        DegreeStatus: {
+            /** Earned */
+            earned: boolean;
+            /** Icon */
+            icon: string;
+            /** Id */
+            id: string;
+            /** Level */
+            level: number;
+            /** Missing */
+            missing: string[];
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Skills */
+            skills: string[];
+        };
         /** DocumentAddPath */
         DocumentAddPath: {
             /** Path */
@@ -1080,6 +1307,38 @@ export interface components {
             started_at: string;
             /** Status */
             status: string;
+        };
+        /** EvaluationRead */
+        EvaluationRead: {
+            /** Area Scores */
+            area_scores: {
+                [key: string]: number;
+            };
+            /**
+             * Evaluated At
+             * Format: date-time
+             */
+            evaluated_at: string;
+            /** Id */
+            id: number;
+            /** Job Id */
+            job_id: string | null;
+            /** Level After */
+            level_after: number;
+            /** Level Before */
+            level_before: number;
+            /** Model Id */
+            model_id: string;
+            /** Package Version */
+            package_version: string;
+            /** Score */
+            score: number;
+            /** Skill Id */
+            skill_id: string;
+            /** Task Results */
+            task_results: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * ExperienceMode
@@ -1265,6 +1524,56 @@ export interface components {
             /** Prompt Tokens */
             prompt_tokens: number | null;
         };
+        /** JobRead */
+        JobRead: {
+            /** Compute Preset */
+            compute_preset: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error */
+            error: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Model Id */
+            model_id: string | null;
+            /** Progress Done */
+            progress_done: number;
+            /** Progress Total */
+            progress_total: number;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            /** Skill Id */
+            skill_id: string;
+            /** Started At */
+            started_at: string | null;
+            /** Status */
+            status: string;
+        };
+        /**
+         * JobSummary
+         * @description The compact view shown in status bars.
+         */
+        JobSummary: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Progress Percent */
+            progress_percent: number;
+            /** Skill Id */
+            skill_id: string;
+            /** Status */
+            status: string;
+        };
         /** KnowledgeOverview */
         KnowledgeOverview: {
             /** Chunk Count */
@@ -1280,6 +1589,39 @@ export interface components {
             retrieval_method: string;
             /** Supported Suffixes */
             supported_suffixes: string[];
+        };
+        /**
+         * LearnPreview
+         * @description What ``/learn <skill>`` shows before anything happens (spec §36).
+         */
+        LearnPreview: {
+            /** Already Learned */
+            already_learned: boolean;
+            /**
+             * Blockers
+             * @description Why learning cannot start; empty when it can.
+             */
+            blockers: string[];
+            /** Estimate Note */
+            estimate_note: string;
+            /** Estimated Minutes Max */
+            estimated_minutes_max: number | null;
+            /** Estimated Minutes Min */
+            estimated_minutes_min: number | null;
+            /** Icon */
+            icon: string;
+            /** Learnable */
+            learnable: boolean;
+            /** Model Id */
+            model_id: string | null;
+            /** Name */
+            name: string;
+            package: components["schemas"]["PackageInfo"] | null;
+            recommended_compute: components["schemas"]["ComputePreset"];
+            /** Skill Id */
+            skill_id: string;
+            /** What Happens */
+            what_happens: string;
         };
         /**
          * LevelBand
@@ -1456,6 +1798,21 @@ export interface components {
             system: string;
             /** Version */
             version: string | null;
+        };
+        /** PackageInfo */
+        PackageInfo: {
+            /** Areas */
+            areas: string[];
+            /** License */
+            license: string;
+            /** Resources */
+            resources: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Task Count */
+            task_count: number;
+            /** Version */
+            version: string;
         };
         /** ParsedCommand */
         ParsedCommand: {
@@ -1742,6 +2099,8 @@ export interface components {
             internet: components["schemas"]["Availability"];
             /** Internet Checked At */
             internet_checked_at: string | null;
+            /** @description The background job in progress (learning, evaluating). */
+            job: components["schemas"]["JobSummary"] | null;
             /** Loaded Model Id */
             loaded_model_id: string | null;
             /** Onboarding Completed */
@@ -1776,8 +2135,25 @@ export interface components {
          * @enum {string}
          */
         SkillDomain: "core" | "creative" | "technical" | "knowledge";
+        /** SkillPackageInfo */
+        SkillPackageInfo: {
+            /** Areas */
+            areas: string[];
+            /** License */
+            license: string;
+            /** Size Bytes */
+            size_bytes: number;
+            /** Task Count */
+            task_count: number;
+            /** Version */
+            version: string;
+        };
         /** SkillsSummary */
         SkillsSummary: {
+            /** Achievements */
+            achievements: components["schemas"]["AchievementStatus"][];
+            /** Degrees */
+            degrees: components["schemas"]["DegreeStatus"][];
             /** Overall Level */
             overall_level: number;
             /** Skills */
@@ -1788,6 +2164,10 @@ export interface components {
          * @description What the UI shows per skill. ``level`` 0 + ``learned=False`` means "not yet".
          */
         SkillStatus: {
+            /** Area Scores */
+            area_scores: {
+                [key: string]: number;
+            };
             availability: components["schemas"]["SkillAvailability"];
             band: components["schemas"]["LevelBand"];
             /** Description */
@@ -1799,6 +2179,11 @@ export interface components {
             id: string;
             /** Last Evaluation Score */
             last_evaluation_score: number | null;
+            /**
+             * Learnable
+             * @description A package with a measurable benchmark exists.
+             */
+            learnable: boolean;
             /** Learned */
             learned: boolean;
             /** Learned At */
@@ -1811,6 +2196,9 @@ export interface components {
             locked_reason: string | null;
             /** Name */
             name: string;
+            package: components["schemas"]["SkillPackageInfo"] | null;
+            /** Package Version */
+            package_version: string | null;
             /** Planned Phase */
             planned_phase: number;
             /** Requires */
@@ -1979,6 +2367,7 @@ export interface components {
     pathItems: never;
 }
 export type SchemaAcceleratorBackend = components['schemas']['AcceleratorBackend'];
+export type SchemaAchievementStatus = components['schemas']['AchievementStatus'];
 export type SchemaAuditCategory = components['schemas']['AuditCategory'];
 export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
 export type SchemaAvailability = components['schemas']['Availability'];
@@ -2001,10 +2390,12 @@ export type SchemaConversationCreate = components['schemas']['ConversationCreate
 export type SchemaConversationRead = components['schemas']['ConversationRead'];
 export type SchemaConversationUpdate = components['schemas']['ConversationUpdate'];
 export type SchemaCpuInfo = components['schemas']['CpuInfo'];
+export type SchemaDegreeStatus = components['schemas']['DegreeStatus'];
 export type SchemaDocumentAddPath = components['schemas']['DocumentAddPath'];
 export type SchemaDocumentAddText = components['schemas']['DocumentAddText'];
 export type SchemaDocumentRead = components['schemas']['DocumentRead'];
 export type SchemaDownloadStatus = components['schemas']['DownloadStatus'];
+export type SchemaEvaluationRead = components['schemas']['EvaluationRead'];
 export type SchemaExperienceMode = components['schemas']['ExperienceMode'];
 export type SchemaGenerationOptions = components['schemas']['GenerationOptions'];
 export type SchemaGpuInfo = components['schemas']['GpuInfo'];
@@ -2019,7 +2410,10 @@ export type SchemaHardwareTier = components['schemas']['HardwareTier'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
 export type SchemaImportRequest = components['schemas']['ImportRequest'];
 export type SchemaInferenceBenchmark = components['schemas']['InferenceBenchmark'];
+export type SchemaJobRead = components['schemas']['JobRead'];
+export type SchemaJobSummary = components['schemas']['JobSummary'];
 export type SchemaKnowledgeOverview = components['schemas']['KnowledgeOverview'];
+export type SchemaLearnPreview = components['schemas']['LearnPreview'];
 export type SchemaLevelBand = components['schemas']['LevelBand'];
 export type SchemaMemoryCategory = components['schemas']['MemoryCategory'];
 export type SchemaMemoryCreate = components['schemas']['MemoryCreate'];
@@ -2033,6 +2427,7 @@ export type SchemaModelLicense = components['schemas']['ModelLicense'];
 export type SchemaModelsOverview = components['schemas']['ModelsOverview'];
 export type SchemaOnboardingStep = components['schemas']['OnboardingStep'];
 export type SchemaOsInfo = components['schemas']['OsInfo'];
+export type SchemaPackageInfo = components['schemas']['PackageInfo'];
 export type SchemaParsedCommand = components['schemas']['ParsedCommand'];
 export type SchemaPreferences = components['schemas']['Preferences'];
 export type SchemaPreferencesUpdate = components['schemas']['PreferencesUpdate'];
@@ -2047,6 +2442,7 @@ export type SchemaSendMessage = components['schemas']['SendMessage'];
 export type SchemaServiceStatus = components['schemas']['ServiceStatus'];
 export type SchemaSkillAvailability = components['schemas']['SkillAvailability'];
 export type SchemaSkillDomain = components['schemas']['SkillDomain'];
+export type SchemaSkillPackageInfo = components['schemas']['SkillPackageInfo'];
 export type SchemaSkillsSummary = components['schemas']['SkillsSummary'];
 export type SchemaSkillStatus = components['schemas']['SkillStatus'];
 export type SchemaStorageCategory = components['schemas']['StorageCategory'];
@@ -2462,6 +2858,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemMetrics"];
+                };
+            };
+        };
+    };
+    list_jobs_api_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_job_api_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pause_job_api_jobs__job_id__pause_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_job_api_jobs__job_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    current_job_api_jobs_current_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"] | null;
                 };
             };
         };
@@ -3281,6 +3852,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SkillStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluate_api_skills__skill_id__evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evaluations_api_skills__skill_id__evaluations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    learn_api_skills__skill_id__learn_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    learn_preview_api_skills__skill_id__learn_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LearnPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    all_history_api_skills_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvaluationRead"][];
                 };
             };
             /** @description Validation Error */

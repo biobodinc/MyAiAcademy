@@ -38,10 +38,12 @@ TOPICS: tuple[GuideTopic, ...] = (
         question="What does /learn do?",
         keywords=("learn", "learning", "acquire", "teach", "skill package", "/learn"),
         answer=(
-            "/learn installs a skill package: the resources, evaluation set and starting "
-            "adapter for a capability such as Coding or Video. Learning is a download and a "
-            "first evaluation, not a promise of expertise. Skill packages arrive in Phase 3; "
-            "today /learn tells you that honestly and changes nothing."
+            "/learn <skill> shows what the skill package contains and what it will cost; "
+            "'/learn <skill> start' installs the package (instructions your AI follows from "
+            "then on) and runs the skill's benchmark with your local model. The level it "
+            "scores becomes the skill's level. Conversation, Writing, Coding, Research and "
+            "Science can be learned today; creative skills have no measurable benchmark yet "
+            "and say so. Nothing is downloaded and the model is not retrained."
         ),
         related=("training", "skills", "levels"),
     ),
@@ -64,10 +66,11 @@ TOPICS: tuple[GuideTopic, ...] = (
         question="How do levels work?",
         keywords=("level", "levels", "xp", "benchmark", "benchmarks", "degree", "achievement"),
         answer=(
-            "Every skill has a level from 1 to 100 and levels only change after an evaluation "
-            "against defined benchmarks. Time spent, downloads or wishes never raise a level. "
-            "Your AI's headline level is the average of its three strongest skills. Degrees "
-            "and achievements will be backed by the same measurable criteria."
+            "Every skill has a level from 1 to 100: the score of its most recent benchmark run "
+            "with your local model. Time spent, downloads or wishes never raise a level; only a "
+            "benchmark does, and /history lists every change. Your AI's headline level is the "
+            "average of its three strongest skills. Degrees and achievements are computed from "
+            "those measured levels and area scores."
         ),
         related=("skills", "training"),
     ),

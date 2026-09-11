@@ -13,6 +13,7 @@ from myai_core.models.download_manager import DownloadManager
 from myai_core.models.runtime import InferenceRuntime
 from myai_core.paths import AppPaths
 from myai_core.security.auth import LocalAuthPolicy
+from myai_core.skills.jobs import JobManager
 from myai_core.status.service import AIState, InternetMonitor, StatusService
 
 
@@ -27,6 +28,7 @@ class AppState:
     status: StatusService
     runtime: InferenceRuntime
     downloads: DownloadManager
+    jobs: JobManager
     hardware_cache: HardwareReport | None = None
 
     def ai_state(self, session: Session) -> AIState:

@@ -1,0 +1,9 @@
+{
+  "id": "coding",
+  "version": "1.0.0",
+  "name": "Coding",
+  "license": "Apache-2.0",
+  "summary": "Write small correct Python functions, fix bugs, reason about what code does, and keep code readable.",
+  "areas": ["coding", "debugging", "reasoning", "quality"],
+  "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark whose code tasks run in an isolated interpreter. No download, no adapter."
+}

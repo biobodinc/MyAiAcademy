@@ -19,6 +19,7 @@ from myai_core import __version__
 from myai_core.api.app import create_app
 from myai_core.config import CoreSettings
 from myai_core.paths import AppPaths, resolve_app_paths
+from myai_core.skills.sandbox import SANDBOX_FLAG, harness_main
 
 log = logging.getLogger("myai_core.server")
 
@@ -82,6 +83,10 @@ def ready_line(paths: AppPaths, host: str, port: int) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
+    args_in = sys.argv[1:] if argv is None else argv
+    if args_in[:1] == [SANDBOX_FLAG]:
+        # Frozen builds re-execute themselves to grade benchmark code (skills/sandbox.py).
+        raise SystemExit(harness_main())
     parser = argparse.ArgumentParser(prog="myai-core", description="MyAI Academy local service")
     parser.add_argument(
         "--data-dir", type=Path, default=None, help="Override the app data directory."
