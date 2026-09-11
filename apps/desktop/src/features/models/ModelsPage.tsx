@@ -20,6 +20,7 @@ import {
   useRemoveModel,
   useSetActiveModel,
   useStartDownload,
+  useUnloadModel,
 } from "../../lib/api";
 import { LicenseDialog } from "./LicenseDialog";
 
@@ -32,11 +33,12 @@ export function ModelsPage() {
   const activate = useSetActiveModel();
   const remove = useRemoveModel();
   const load = useLoadActiveModel();
+  const unload = useUnloadModel();
 
   if (models.isPending) return <Spinner label="Loading models…" />;
   if (models.isError) return <Alert tone="danger">{describeError(models.error)}</Alert>;
   const data = models.data;
-  const anyError = [accept, start, cancel, activate, remove, load].find((m) => m.isError);
+  const anyError = [accept, start, cancel, activate, remove, load, unload].find((m) => m.isError);
 
   const beginDownload = (entry: ModelEntry) => {
     accept.mutate(entry.catalog.id, {
@@ -67,6 +69,19 @@ export function ModelsPage() {
               <StatusPill tone={data.loaded_model_id ? "success" : "muted"}>
                 {data.loaded_model_id ? `Loaded on ${data.backend ?? "cpu"}` : "Not loaded"}
               </StatusPill>
+            )}
+            {data.loaded_model_id && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  unload.mutate();
+                }}
+                disabled={unload.isPending}
+                title="Free the memory the model is using; the next message loads it again."
+              >
+                {unload.isPending ? "Unloading…" : "Unload"}
+              </Button>
             )}
           </div>
         }

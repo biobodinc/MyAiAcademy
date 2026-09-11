@@ -18,6 +18,7 @@ from myai_core.models.provider import (
 from myai_core.preferences.schemas import COMPUTE_PRESET_PERCENT, ComputePreset
 
 DEFAULT_CONTEXT = 4096
+GiB = 1024**3
 
 
 def load_config_for(
@@ -25,11 +26,16 @@ def load_config_for(
     hardware: HardwareReport | None,
     preset: ComputePreset,
     context_length: int = DEFAULT_CONTEXT,
+    *,
+    cpu_utilization_percent: int | None = None,
 ) -> LoadConfig:
-    """Translate the user's compute preset into backend knobs (spec §31)."""
+    """Translate the user's compute preset into backend knobs (spec §31).
+
+    An explicit advanced ``cpu_utilization_percent`` wins over the preset's share.
+    """
     cores = (hardware.cpu.physical_cores if hardware else None) or 4
-    share = COMPUTE_PRESET_PERCENT[preset] / 100
-    threads = max(1, int(cores * share))
+    percent = cpu_utilization_percent or COMPUTE_PRESET_PERCENT[preset]
+    threads = max(1, int(cores * percent / 100))
     gpu = hardware.primary_gpu if hardware else None
     accelerated = gpu is not None and gpu.backend is not AcceleratorBackend.NONE
     return LoadConfig(
@@ -37,6 +43,20 @@ def load_config_for(
         n_ctx=context_length,
         n_threads=threads,
         n_gpu_layers=-1 if accelerated else 0,
+    )
+
+
+def memory_budget_problem(model_size_bytes: int, ram_limit_gib: float | None) -> str | None:
+    """Why loading a model of this size would break the user's RAM rule, or ``None``.
+
+    The advanced RAM limit is a hard cap the user chose. Installed RAM is only a warning
+    elsewhere (weights can be offloaded to a GPU), so it is not enforced here.
+    """
+    if ram_limit_gib is None or model_size_bytes <= int(ram_limit_gib * GiB):
+        return None
+    return (
+        f"This model needs about {model_size_bytes / GiB:.1f} GB but your advanced RAM limit "
+        f"is {ram_limit_gib:g} GB. Raise the limit in Settings or pick a smaller model."
     )
 
 

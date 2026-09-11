@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ulid import ULID
@@ -47,7 +47,21 @@ class MessageRead(ApiModel):
 
 class SendMessage(ApiModel):
     content: str = Field(min_length=1, max_length=20_000)
-    options: GenerationOptions = Field(default_factory=GenerationOptions)
+    options: GenerationOptions | None = Field(
+        default=None, description="Omit to use the generation defaults from preferences."
+    )
+
+
+class ConversationUpdate(ApiModel):
+    title: str = Field(min_length=1, max_length=200)
+
+    @field_validator("title")
+    @classmethod
+    def _strip(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if not cleaned:
+            raise ValueError("Title cannot be blank.")
+        return cleaned
 
 
 class ChatError(ValueError):
@@ -107,6 +121,13 @@ class ChatService:
             raise ChatError("No such conversation.")
         return row
 
+    def rename_conversation(self, conversation_id: str, title: str) -> Conversation:
+        row = self.get_conversation(conversation_id)
+        row.title = title
+        row.version += 1
+        self._session.flush()
+        return row
+
     def delete_conversation(self, conversation_id: str) -> None:
         self._session.delete(self.get_conversation(conversation_id))
         self._session.flush()
@@ -161,6 +182,7 @@ class ChatService:
         *,
         generate: Generator,
         model_id: str,
+        default_options: GenerationOptions | None = None,
     ) -> Iterator[StreamEvent]:
         """Persist the user turn, stream the reply, persist the assistant turn.
 
@@ -195,7 +217,7 @@ class ChatService:
         completion_tokens: int | None = None
         error: str | None = None
         try:
-            for chunk in generate(messages, data.options):
+            for chunk in generate(messages, data.options or default_options or GenerationOptions()):
                 if chunk.text:
                     buffer.append(chunk.text)
                     yield StreamEvent("delta", {"text": chunk.text})

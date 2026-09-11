@@ -3,9 +3,17 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query, status
 from starlette.concurrency import run_in_threadpool
 
-from myai_core.api.deps import AuditDep, StorageDep
+from myai_core.api.deps import AuditDep, SessionDep, StorageDep
 from myai_core.audit.service import AuditCategory
 from myai_core.hardware.models import StorageVolume
+from myai_core.storage.cleanup import (
+    CleanupPlan,
+    CleanupRequest,
+    CleanupResult,
+    ProtectedDeletionError,
+    delete_candidates,
+    find_candidates,
+)
 from myai_core.storage.manager import StorageError
 from myai_core.storage.models import (
     CategoryOverrideRequest,
@@ -64,3 +72,41 @@ def set_override(
         {"category": body.category.value, "path": body.path},
     )
     return storage.overview()
+
+
+def _plan(storage: StorageDep, session: SessionDep) -> CleanupPlan:
+    from myai_core.models.service import ModelService
+
+    if storage.get_config() is None:
+        return CleanupPlan(candidates=[], reclaimable_bytes=0, protected_bytes=0)
+    tracked = [m.file_path for m in ModelService(session, storage).installed()]
+    return find_candidates(storage.category_paths(), tracked)
+
+
+@router.get("/cleanup", response_model=CleanupPlan)
+async def cleanup_plan(storage: StorageDep, session: SessionDep) -> CleanupPlan:
+    """What could be deleted safely, with protected items flagged (spec §63)."""
+    return await run_in_threadpool(_plan, storage, session)
+
+
+@router.post("/cleanup", response_model=CleanupResult)
+async def cleanup(
+    body: CleanupRequest, storage: StorageDep, session: SessionDep, audit: AuditDep
+) -> CleanupResult:
+    plan = await run_in_threadpool(_plan, storage, session)
+    try:
+        result = await run_in_threadpool(delete_candidates, plan, body)
+    except ProtectedDeletionError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    if result.deleted:
+        audit.record(
+            AuditCategory.STORAGE,
+            "cleanup",
+            f"Deleted {len(result.deleted)} file(s) during storage cleanup",
+            {
+                "paths": result.deleted,
+                "freed_bytes": result.freed_bytes,
+                "protected_acknowledged": body.acknowledge_protected,
+            },
+        )
+    return result

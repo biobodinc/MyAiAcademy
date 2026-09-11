@@ -84,6 +84,143 @@
         "title": "Availability",
         "type": "string"
       },
+      "BatteryMetrics": {
+        "properties": {
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "plugged_in": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plugged In"
+          },
+          "seconds_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds Left"
+          }
+        },
+        "required": [
+          "percent",
+          "plugged_in",
+          "seconds_left"
+        ],
+        "title": "BatteryMetrics",
+        "type": "object"
+      },
+      "BenchmarkResult": {
+        "properties": {
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "inference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InferenceBenchmark"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "inference_note": {
+            "title": "Inference Note",
+            "type": "string"
+          },
+          "memory_available_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Available Bytes"
+          },
+          "memory_copy_gbps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Single-thread memcpy bandwidth in GB/s (decimal gigabytes).",
+            "title": "Memory Copy Gbps"
+          },
+          "memory_pressure_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share of RAM in use at benchmark time (whole machine).",
+            "title": "Memory Pressure Percent"
+          },
+          "memory_total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Total Bytes"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "ran_at": {
+            "format": "date-time",
+            "title": "Ran At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ran_at",
+          "duration_seconds",
+          "memory_copy_gbps",
+          "memory_total_bytes",
+          "memory_available_bytes",
+          "memory_pressure_percent",
+          "inference",
+          "inference_note",
+          "notes"
+        ],
+        "title": "BenchmarkResult",
+        "type": "object"
+      },
       "CatalogModel": {
         "properties": {
           "approx_size_bytes": {
@@ -232,6 +369,131 @@
           "protected"
         ],
         "title": "CategoryUsage",
+        "type": "object"
+      },
+      "CleanupCandidate": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/StorageCategory"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CleanupKind"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "protected": {
+            "description": "Under a category that warns before deletion.",
+            "title": "Protected",
+            "type": "boolean"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "category",
+          "kind",
+          "size_bytes",
+          "protected",
+          "reason"
+        ],
+        "title": "CleanupCandidate",
+        "type": "object"
+      },
+      "CleanupKind": {
+        "enum": [
+          "partial_download",
+          "orphaned_model"
+        ],
+        "title": "CleanupKind",
+        "type": "string"
+      },
+      "CleanupPlan": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CleanupCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "protected_bytes": {
+            "title": "Protected Bytes",
+            "type": "integer"
+          },
+          "reclaimable_bytes": {
+            "title": "Reclaimable Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidates",
+          "reclaimable_bytes",
+          "protected_bytes"
+        ],
+        "title": "CleanupPlan",
+        "type": "object"
+      },
+      "CleanupRequest": {
+        "properties": {
+          "acknowledge_protected": {
+            "default": false,
+            "description": "Must be true to delete anything under a protected category.",
+            "title": "Acknowledge Protected",
+            "type": "boolean"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "title": "CleanupRequest",
+        "type": "object"
+      },
+      "CleanupResult": {
+        "properties": {
+          "deleted": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Deleted",
+            "type": "array"
+          },
+          "freed_bytes": {
+            "title": "Freed Bytes",
+            "type": "integer"
+          },
+          "refused": {
+            "description": "Paths that were not deleted and why.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Refused",
+            "type": "array"
+          }
+        },
+        "required": [
+          "deleted",
+          "freed_bytes",
+          "refused"
+        ],
+        "title": "CleanupResult",
         "type": "object"
       },
       "CommandName": {
@@ -388,6 +650,21 @@
           "message_count"
         ],
         "title": "ConversationRead",
+        "type": "object"
+      },
+      "ConversationUpdate": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ConversationUpdate",
         "type": "object"
       },
       "CpuInfo": {
@@ -786,6 +1063,72 @@
         "title": "GpuInfo",
         "type": "object"
       },
+      "GpuMetrics": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "temperature_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature C"
+          },
+          "utilization_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Utilization Percent"
+          },
+          "vram_total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vram Total Bytes"
+          },
+          "vram_used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vram Used Bytes"
+          }
+        },
+        "required": [
+          "name",
+          "utilization_percent",
+          "temperature_c",
+          "vram_used_bytes",
+          "vram_total_bytes",
+          "source"
+        ],
+        "title": "GpuMetrics",
+        "type": "object"
+      },
       "GpuVendor": {
         "enum": [
           "nvidia",
@@ -796,6 +1139,101 @@
         ],
         "title": "GpuVendor",
         "type": "string"
+      },
+      "GuideAnswer": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "matched": {
+            "description": "False when no topic fit; ``answer`` then says so.",
+            "title": "Matched",
+            "type": "boolean"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/GuideTopicRead"
+            },
+            "title": "Related",
+            "type": "array"
+          },
+          "source": {
+            "default": "Built-in guide (not your AI model)",
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "topic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Id"
+          }
+        },
+        "required": [
+          "matched",
+          "topic_id",
+          "title",
+          "answer",
+          "confidence",
+          "source",
+          "related"
+        ],
+        "title": "GuideAnswer",
+        "type": "object"
+      },
+      "GuideQuestion": {
+        "properties": {
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "GuideQuestion",
+        "type": "object"
+      },
+      "GuideTopicRead": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "question"
+        ],
+        "title": "GuideTopicRead",
+        "type": "object"
       },
       "HTTPValidationError": {
         "properties": {
@@ -838,6 +1276,17 @@
       },
       "HardwareReport": {
         "properties": {
+          "benchmark": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BenchmarkResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The most recent measured benchmark, if one was run."
+          },
           "cpu": {
             "$ref": "#/components/schemas/CpuInfo"
           },
@@ -886,6 +1335,7 @@
           "gpus",
           "volumes",
           "tier",
+          "benchmark",
           "warnings"
         ],
         "title": "HardwareReport",
@@ -901,6 +1351,59 @@
         ],
         "title": "HardwareTier",
         "type": "string"
+      },
+      "InferenceBenchmark": {
+        "properties": {
+          "backend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backend"
+          },
+          "completion_tokens": {
+            "title": "Completion Tokens",
+            "type": "integer"
+          },
+          "generation_tokens_per_second": {
+            "title": "Generation Tokens Per Second",
+            "type": "number"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "prompt_seconds": {
+            "description": "Time to the first generated token.",
+            "title": "Prompt Seconds",
+            "type": "number"
+          },
+          "prompt_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt Tokens"
+          }
+        },
+        "required": [
+          "model_id",
+          "prompt_tokens",
+          "completion_tokens",
+          "prompt_seconds",
+          "generation_tokens_per_second",
+          "backend"
+        ],
+        "title": "InferenceBenchmark",
+        "type": "object"
       },
       "KnowledgeOverview": {
         "properties": {
@@ -1550,6 +2053,20 @@
       },
       "Preferences": {
         "properties": {
+          "chat_max_tokens": {
+            "default": 512,
+            "maximum": 8192.0,
+            "minimum": 32.0,
+            "title": "Chat Max Tokens",
+            "type": "integer"
+          },
+          "chat_temperature": {
+            "default": 0.7,
+            "maximum": 2.0,
+            "minimum": 0.0,
+            "title": "Chat Temperature",
+            "type": "number"
+          },
           "compute_preset": {
             "$ref": "#/components/schemas/ComputePreset",
             "default": "balanced"
@@ -1560,9 +2077,35 @@
             "title": "Contributor Mode",
             "type": "boolean"
           },
+          "cpu_utilization_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 10.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Utilization Percent"
+          },
           "experience_mode": {
             "$ref": "#/components/schemas/ExperienceMode",
             "default": "beginner"
+          },
+          "gpu_utilization_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 10.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Utilization Percent"
           },
           "onboarding_completed": {
             "default": false,
@@ -1577,12 +2120,58 @@
             "$ref": "#/components/schemas/PrivacyMode",
             "default": "private"
           },
+          "ram_limit_gib": {
+            "anyOf": [
+              {
+                "maximum": 4096.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ram Limit Gib"
+          },
+          "temperature_limit_c": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 50.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Limit C"
+          },
           "theme": {
             "$ref": "#/components/schemas/Theme",
             "default": "system"
+          },
+          "time_limit_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Limit Minutes"
           }
         },
         "required": [
+          "chat_max_tokens",
+          "chat_temperature",
+          "cpu_utilization_percent",
+          "gpu_utilization_percent",
+          "ram_limit_gib",
+          "temperature_limit_c",
+          "time_limit_minutes",
           "experience_mode",
           "compute_preset",
           "theme",
@@ -1595,7 +2184,34 @@
         "type": "object"
       },
       "PreferencesUpdate": {
+        "description": "All fields optional. Advanced fields accept ``null`` to clear an override.",
         "properties": {
+          "chat_max_tokens": {
+            "anyOf": [
+              {
+                "maximum": 8192.0,
+                "minimum": 32.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Max Tokens"
+          },
+          "chat_temperature": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chat Temperature"
+          },
           "compute_preset": {
             "anyOf": [
               {
@@ -1617,6 +2233,19 @@
             ],
             "title": "Contributor Mode"
           },
+          "cpu_utilization_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 10.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Utilization Percent"
+          },
           "experience_mode": {
             "anyOf": [
               {
@@ -1626,6 +2255,19 @@
                 "type": "null"
               }
             ]
+          },
+          "gpu_utilization_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 10.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Utilization Percent"
           },
           "onboarding_completed": {
             "anyOf": [
@@ -1648,6 +2290,32 @@
               }
             ]
           },
+          "ram_limit_gib": {
+            "anyOf": [
+              {
+                "maximum": 4096.0,
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ram Limit Gib"
+          },
+          "temperature_limit_c": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 50.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Limit C"
+          },
           "theme": {
             "anyOf": [
               {
@@ -1657,6 +2325,19 @@
                 "type": "null"
               }
             ]
+          },
+          "time_limit_minutes": {
+            "anyOf": [
+              {
+                "maximum": 43200.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Limit Minutes"
           }
         },
         "title": "PreferencesUpdate",
@@ -1990,7 +2671,15 @@
             "type": "string"
           },
           "options": {
-            "$ref": "#/components/schemas/GenerationOptions"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GenerationOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omit to use the generation defaults from preferences."
           }
         },
         "required": [
@@ -2533,6 +3222,90 @@
         "title": "StorageVolume",
         "type": "object"
       },
+      "SystemMetrics": {
+        "properties": {
+          "battery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatteryMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cpu_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpu Percent"
+          },
+          "gpu": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GpuMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "memory": {
+            "$ref": "#/components/schemas/MemoryInfo"
+          },
+          "memory_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Percent"
+          },
+          "memory_used_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Memory Used Bytes"
+          },
+          "sampled_at": {
+            "format": "date-time",
+            "title": "Sampled At",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sampled_at",
+          "cpu_percent",
+          "memory",
+          "memory_used_bytes",
+          "memory_percent",
+          "gpu",
+          "battery",
+          "warnings"
+        ],
+        "title": "SystemMetrics",
+        "type": "object"
+      },
       "Theme": {
         "enum": [
           "system",
@@ -2840,6 +3613,56 @@
         "tags": [
           "chat"
         ]
+      },
+      "patch": {
+        "operationId": "rename_conversation_api_chat_conversations__conversation_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename Conversation",
+        "tags": [
+          "chat"
+        ]
       }
     },
     "/api/chat/conversations/{conversation_id}/messages": {
@@ -2978,6 +3801,73 @@
         ]
       }
     },
+    "/api/guide/ask": {
+      "post": {
+        "description": "Answer a question about MyAI Academy from the curated guide. Questions are not\nlogged anywhere.",
+        "operationId": "ask_guide_api_guide_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuideQuestion"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuideAnswer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask Guide",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
+    "/api/guide/topics": {
+      "get": {
+        "operationId": "list_topics_api_guide_topics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GuideTopicRead"
+                  },
+                  "title": "Response List Topics Api Guide Topics Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Topics",
+        "tags": [
+          "guide"
+        ]
+      }
+    },
     "/api/hardware": {
       "get": {
         "operationId": "read_hardware_api_hardware_get",
@@ -3018,6 +3908,101 @@
           }
         },
         "summary": "Read Hardware",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/hardware/benchmark": {
+      "get": {
+        "operationId": "read_benchmark_api_hardware_benchmark_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BenchmarkResult"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Read Benchmark Api Hardware Benchmark Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Benchmark",
+        "tags": [
+          "hardware"
+        ]
+      },
+      "post": {
+        "description": "Run the short benchmark (spec \u00a730) and record the result.",
+        "operationId": "run_hardware_benchmark_api_hardware_benchmark_post",
+        "parameters": [
+          {
+            "description": "Also time the active local model, if one is installed.",
+            "in": "query",
+            "name": "include_inference",
+            "required": false,
+            "schema": {
+              "default": true,
+              "description": "Also time the active local model, if one is installed.",
+              "title": "Include Inference",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Hardware Benchmark",
+        "tags": [
+          "hardware"
+        ]
+      }
+    },
+    "/api/hardware/metrics": {
+      "get": {
+        "description": "Live whole-machine utilisation for the dashboard. Cheap; safe to poll.",
+        "operationId": "read_metrics_api_hardware_metrics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemMetrics"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Metrics",
         "tags": [
           "hardware"
         ]
@@ -3611,6 +4596,28 @@
         ]
       }
     },
+    "/api/models/unload": {
+      "post": {
+        "description": "Release the loaded model's memory. The next message loads it again.",
+        "operationId": "unload_model_api_models_unload_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Unload Model",
+        "tags": [
+          "models"
+        ]
+      }
+    },
     "/api/models/{model_id}": {
       "delete": {
         "operationId": "remove_model_api_models__model_id__delete",
@@ -4068,6 +5075,67 @@
           }
         },
         "summary": "Check Location",
+        "tags": [
+          "storage"
+        ]
+      }
+    },
+    "/api/storage/cleanup": {
+      "get": {
+        "description": "What could be deleted safely, with protected items flagged (spec \u00a763).",
+        "operationId": "cleanup_plan_api_storage_cleanup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Cleanup Plan",
+        "tags": [
+          "storage"
+        ]
+      },
+      "post": {
+        "operationId": "cleanup_api_storage_cleanup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CleanupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanupResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cleanup",
         "tags": [
           "storage"
         ]

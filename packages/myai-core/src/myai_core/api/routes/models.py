@@ -4,10 +4,10 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from myai_core.api.deps import AuditDep, PreferencesDep, SessionDep, StateDep, StorageDep
+from myai_core.api.model_loading import load_prepared, prepare_active_model
 from myai_core.audit.service import AuditCategory
 from myai_core.db.models import ModelDownload
 from myai_core.models.catalog import CatalogModel
-from myai_core.models.runtime import load_config_for
 from myai_core.models.service import (
     DownloadStatus,
     ModelEntry,
@@ -139,24 +139,23 @@ def remove_model(
     return overview(state, session, storage)
 
 
+@router.post("/unload", response_model=ModelsOverview)
+def unload_model(
+    state: StateDep, session: SessionDep, storage: StorageDep, audit: AuditDep
+) -> ModelsOverview:
+    """Release the loaded model's memory. The next message loads it again."""
+    loaded = state.runtime.status().loaded_model_id
+    if loaded is not None:
+        state.runtime.unload()
+        audit.record(AuditCategory.SYSTEM, "model_unloaded", "Model unloaded", {"model_id": loaded})
+    return overview(state, session, storage)
+
+
 @router.post("/load", response_model=ModelsOverview)
 def load_active(
     state: StateDep, session: SessionDep, storage: StorageDep, prefs: PreferencesDep
 ) -> ModelsOverview:
     """Load the active model now (chat loads it lazily; this lets the UI warm it up)."""
-    from pathlib import Path
-
-    from myai_core.models.provider import ProviderError
-
-    svc = _service(session, storage)
-    active = svc.active_model_id()
-    if active is None:
-        raise HTTPException(status.HTTP_409_CONFLICT, "No active model.")
-    installed = svc.get_installed(active)
-    assert installed is not None
-    config = load_config_for(active, state.hardware_cache, prefs.get().compute_preset)
-    try:
-        state.runtime.ensure_loaded(Path(installed.file_path), config)
-    except ProviderError as exc:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc
+    prepared = prepare_active_model(state, _service(session, storage), prefs.get())
+    load_prepared(state, prepared)
     return overview(state, session, storage)

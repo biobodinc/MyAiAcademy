@@ -3,7 +3,7 @@
  * retrieved and which model answered; failures are shown inline, never swallowed.
  */
 import type { ConversationRead, MessageRead, RetrievedChunk } from "@myai/api-client";
-import { MessageSquarePlus, SendHorizontal, Square, Trash2 } from "lucide-react";
+import { MessageSquarePlus, Pencil, SendHorizontal, Square, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 
@@ -16,6 +16,7 @@ import {
   useCreateConversation,
   useDeleteConversation,
   useMessages,
+  useRenameConversation,
   useStatus,
 } from "../../lib/api";
 import { cx } from "../../lib/cx";
@@ -35,6 +36,7 @@ export function ChatPage() {
   const conversations = useConversations();
   const create = useCreateConversation();
   const remove = useDeleteConversation();
+  const rename = useRenameConversation();
   const [selected, setSelected] = useState<string | null>(null);
   const [live, setLive] = useState<LiveTurn | null>(null);
   const [transient, setTransient] = useState<LiveTurn | null>(null);
@@ -128,6 +130,9 @@ export function ChatPage() {
               onDelete={() => {
                 remove.mutate(c.id);
                 if (selected === c.id) select(null);
+              }}
+              onRename={(title) => {
+                rename.mutate({ conversation_id: c.id, title });
               }}
             />
           ))}
@@ -240,12 +245,22 @@ function ConversationItem({
   active,
   onSelect,
   onDelete,
+  onRename,
 }: {
   conversation: ConversationRead;
   active: boolean;
   onSelect: () => void;
   onDelete: () => void;
+  onRename: (title: string) => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(conversation.title);
+  const commit = () => {
+    const title = draft.trim();
+    setEditing(false);
+    if (title && title !== conversation.title) onRename(title);
+    else setDraft(conversation.title);
+  };
   return (
     <li
       className={cx(
@@ -253,12 +268,47 @@ function ConversationItem({
         active ? "bg-accent-soft" : "hover:bg-bg-muted",
       )}
     >
+      {editing ? (
+        <input
+          aria-label="Conversation title"
+          className="min-w-0 flex-1 rounded-lg border border-accent bg-bg px-2 py-1 text-sm outline-none"
+          value={draft}
+          maxLength={200}
+          autoFocus
+          onChange={(e) => {
+            setDraft(e.target.value);
+          }}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit();
+            if (e.key === "Escape") {
+              setDraft(conversation.title);
+              setEditing(false);
+            }
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onSelect}
+          onDoubleClick={() => {
+            setEditing(true);
+          }}
+          className="min-w-0 flex-1 truncate px-3 py-2 text-left text-sm"
+        >
+          {conversation.title}
+        </button>
+      )}
       <button
         type="button"
-        onClick={onSelect}
-        className="min-w-0 flex-1 truncate px-3 py-2 text-left text-sm"
+        aria-label={`Rename ${conversation.title}`}
+        onClick={() => {
+          setDraft(conversation.title);
+          setEditing(true);
+        }}
+        className="rounded-md p-1 text-fg-muted opacity-0 group-hover:opacity-100 hover:text-fg"
       >
-        {conversation.title}
+        <Pencil className="h-3.5 w-3.5" aria-hidden />
       </button>
       <button
         type="button"

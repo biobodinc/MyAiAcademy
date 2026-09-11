@@ -71,3 +71,36 @@ def test_storage_flow(running_service: Path, tmp_path: Path) -> None:
     assert code == 0 and "Checkpoints" in out
     code, out = _run("audit", data_dir=running_service)
     assert code == 0 and "storage location set" in out
+
+
+def test_ask_and_settings(running_service: Path) -> None:
+    code, out = _run("ask", "what is training?", data_dir=running_service)
+    assert code == 0 and "Training" in out and "Built-in guide" in out
+    code, out = _run(
+        "settings", "set", "--mode", "advanced", "--cpu", "50", data_dir=running_service
+    )
+    assert code == 0 and "Mode advanced" in out
+    code, out = _run("settings", "show", data_dir=running_service)
+    assert code == 0 and "50" in out
+    code, out = _run("settings", "set", "--cpu", "0", data_dir=running_service)
+    assert code == 0
+    code, out = _run("settings", "show", "--json", data_dir=running_service)
+    assert json.loads(out)["cpu_utilization_percent"] is None
+
+
+def test_storage_cleanup_and_benchmark(running_service: Path, tmp_path: Path) -> None:
+    root = tmp_path / "MyAI-cleanup"
+    _run("storage", "set-root", str(root), data_dir=running_service)
+    stale = root / "Models" / "half.gguf.part"
+    stale.write_bytes(b"x" * 10)
+    code, out = _run("storage", "cleanup", data_dir=running_service)
+    assert code == 0 and "partial download" in out and stale.exists()
+    code, out = _run("storage", "cleanup", "--delete", data_dir=running_service)
+    assert code == 0 and "Deleted 1" in out and not stale.exists()
+    code, out = _run("hardware", "--benchmark", data_dir=running_service)
+    assert code == 0 and "Benchmark (" in out
+
+
+def test_models_unload_is_safe_when_nothing_loaded(running_service: Path) -> None:
+    code, out = _run("models", "unload", data_dir=running_service)
+    assert code == 0 and "unloaded" in out

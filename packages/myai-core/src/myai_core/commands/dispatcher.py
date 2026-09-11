@@ -10,12 +10,14 @@ from collections.abc import Callable
 
 from myai_core.commands.models import CommandName, CommandOutcome, CommandResult, ParsedCommand
 from myai_core.commands.parser import CommandParseError, parse
+from myai_core.guide import ask
 from myai_core.hardware.models import HardwareReport
 from myai_core.preferences.schemas import Preferences
 from myai_core.skills.catalog import get_skill
 from myai_core.skills.service import SkillsSummary
 
 GiB = 1024**3
+GUIDE_MIN_CONFIDENCE = 0.5
 
 HELP_TEXT = """Commands you can use:
 
@@ -65,16 +67,26 @@ def execute(text: str, ctx: CommandContext) -> CommandResult:
             suggestions=["/help"],
         )
     if cmd is None:
+        guide = ask(text)
+        if guide.matched and guide.confidence >= GUIDE_MIN_CONFIDENCE:
+            return CommandResult(
+                outcome=CommandOutcome.OK,
+                command=None,
+                title=f"Guide: {guide.title}",
+                message=guide.answer,
+                data={"source": "guide", "topic_id": guide.topic_id},
+                suggestions=[r.question for r in guide.related][:3],
+            )
         return CommandResult(
             outcome=CommandOutcome.UNAVAILABLE,
             command=None,
             title="That is a message for your AI",
             message=(
-                "Plain messages go to the local model in Chat. This console only runs "
-                "slash commands: try /help."
+                "Plain messages go to the local model in Chat. This console runs slash "
+                "commands and answers questions about MyAI Academy itself: try /help."
             ),
             data={"navigate": "/chat"},
-            suggestions=["/help", "/status"],
+            suggestions=["/help", "/status", "What is training?"],
         )
     handler = _HANDLERS.get(cmd.name, _unavailable)
     return handler(cmd, ctx)

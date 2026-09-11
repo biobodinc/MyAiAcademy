@@ -38,3 +38,4 @@ export interface ChatStreamEvents {
   error: { message: string; assistant_message_id?: number };
   command: Schemas["CommandResult"];
 }
+export type ConversationUpdate = Schemas["ConversationUpdate"];
