@@ -106,15 +106,19 @@ def run_python_tests(code: str, tests: list[str], *, timeout: float = 10.0) -> S
 
 
 def _limit_resources() -> None:  # pragma: no cover - runs in the child process
-    import resource
+    # Only ever used as a POSIX ``preexec_fn``. The platform guard is what lets a type
+    # check run on Windows, where none of these limits exist, instead of failing on a
+    # branch that platform can never reach.
+    if sys.platform != "win32":
+        import resource
 
-    for kind, limit in (
-        (resource.RLIMIT_AS, MEMORY_LIMIT_BYTES),
-        (resource.RLIMIT_CPU, 10),
-        (resource.RLIMIT_FSIZE, OUTPUT_LIMIT_BYTES),
-    ):
-        with contextlib.suppress(ValueError, OSError):
-            resource.setrlimit(kind, (limit, limit))
+        for kind, limit in (
+            (resource.RLIMIT_AS, MEMORY_LIMIT_BYTES),
+            (resource.RLIMIT_CPU, 10),
+            (resource.RLIMIT_FSIZE, OUTPUT_LIMIT_BYTES),
+        ):
+            with contextlib.suppress(ValueError, OSError):
+                resource.setrlimit(kind, (limit, limit))
 
 
 def harness_main() -> int:

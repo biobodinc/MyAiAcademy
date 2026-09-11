@@ -57,10 +57,14 @@ def _is_removable(mountpoint: str, device: str) -> bool | None:
 
 
 def _is_removable_windows(mountpoint: str) -> bool | None:
+    # ``ctypes.windll`` exists only on Windows, so it is read dynamically: a static
+    # reference is an error when type-checking on Windows and needs an ignore that is
+    # itself an error when type-checking anywhere else.
+    windll = getattr(ctypes, "windll", None)
+    if windll is None:
+        return None
     try:
-        drive_type = ctypes.windll.kernel32.GetDriveTypeW(  # type: ignore[attr-defined]
-            ctypes.c_wchar_p(mountpoint)
-        )
+        drive_type = windll.kernel32.GetDriveTypeW(ctypes.c_wchar_p(mountpoint))
     except (AttributeError, OSError):
         return None
     return bool(drive_type == _WIN_DRIVE_REMOVABLE)

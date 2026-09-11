@@ -37,6 +37,15 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy packages/myai-core/src packages/myai-cli/src
+      - name: Type-check the other platforms' branches
+        # Platform-guarded code (Windows drive types, POSIX rlimits) is only checked on
+        # the platform it targets, so a contributor on one OS can break another. These
+        # run in the fastest job so the breakage is visible without waiting for the
+        # matrix.
+        if: runner.os == 'Linux'
+        run: |
+          uv run mypy --platform win32 packages/myai-core/src packages/myai-cli/src
+          uv run mypy --platform darwin packages/myai-core/src packages/myai-cli/src
       - run: uv run pytest -p no:warnings
       - name: OpenAPI document is up to date
         if: runner.os == 'Linux'
