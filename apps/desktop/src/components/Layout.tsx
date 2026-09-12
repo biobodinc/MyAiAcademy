@@ -10,6 +10,7 @@ import {
   HardDrive,
   LayoutDashboard,
   Settings,
+  KeyRound,
   ShieldCheck,
   Sparkles,
   Terminal,
@@ -33,6 +34,7 @@ const nav = [
   { to: "/hardware", label: "Hardware", icon: Cpu },
   { to: "/storage", label: "Storage", icon: HardDrive },
   { to: "/privacy", label: "Privacy Center", icon: ShieldCheck },
+  { to: "/security", label: "Security", icon: KeyRound },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ];

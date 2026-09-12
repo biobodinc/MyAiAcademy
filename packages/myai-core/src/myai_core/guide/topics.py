@@ -80,6 +80,31 @@ TOPICS: tuple[GuideTopic, ...] = (
         related=("skills", "training"),
     ),
     GuideTopic(
+        id="erase",
+        title="Taking your data out, or deleting it",
+        question="How do I export or delete everything?",
+        keywords=(
+            "export",
+            "backup",
+            "delete",
+            "erase",
+            "remove",
+            "wipe",
+            "take out",
+            "gdpr",
+        ),
+        answer=(
+            "Security (or 'myai security export') writes an archive of everything this "
+            "installation holds about you, with a manifest saying what is inside. Credentials "
+            "are deliberately left out, and model files are listed rather than copied because "
+            "they are large and downloadable again. 'Erase everything' shows the counts first, "
+            "asks you to type a phrase, and then deletes the rows rather than marking them "
+            "deleted. It cannot reach copies you made elsewhere, and deleted files are not "
+            "overwritten, so use your system's secure-erase tool if that matters to you."
+        ),
+        related=("privacy", "account", "storage"),
+    ),
+    GuideTopic(
         id="privacy",
         title="Privacy",
         question="Where does my data go?",
@@ -228,12 +253,14 @@ TOPICS: tuple[GuideTopic, ...] = (
             "sync",
         ),
         answer=(
-            "Not to use your AI on this computer. Accounts (sign-in through the MyAI Academy "
-            "website) will be required to download installers and to pair phones and other "
-            "computers with your AI; they never receive your private data. Pairing and sync "
-            "arrive in later phases."
+            "There is no account in this build: no account server, nothing to sign in to, and "
+            "no code path that would send anything to one. An account is planned as the way to "
+            "download installers and to pair phones and other computers; it will never receive "
+            "your private data. What exists today is local: each program you pair gets its own "
+            "credential you can revoke on its own, and the service only listens on 127.0.0.1, "
+            "so nothing on your network can reach it."
         ),
-        related=("privacy", "offline"),
+        related=("privacy", "offline", "erase"),
     ),
     GuideTopic(
         id="commands",

@@ -12,6 +12,45 @@
         "title": "AcceleratorBackend",
         "type": "string"
       },
+      "AccountState": {
+        "description": "The account picture, stated as it is rather than as it is planned to be.",
+        "properties": {
+          "available": {
+            "default": false,
+            "title": "Available",
+            "type": "boolean"
+          },
+          "detail": {
+            "default": "This build has no accounts. There is no sign-in, no account server and no code path that would send your data anywhere. An account is planned as the way to get installers and to sign in on more than one device; until it exists, everything here is local to this machine.",
+            "title": "Detail",
+            "type": "string"
+          },
+          "linked": {
+            "default": false,
+            "title": "Linked",
+            "type": "boolean"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          }
+        },
+        "required": [
+          "linked",
+          "available",
+          "provider",
+          "detail"
+        ],
+        "title": "AccountState",
+        "type": "object"
+      },
       "AchievementStatus": {
         "properties": {
           "earned": {
@@ -56,6 +95,7 @@
           "storage",
           "preferences",
           "security",
+          "privacy",
           "system"
         ],
         "title": "AuditCategory",
@@ -827,6 +867,85 @@
         "title": "DegreeStatus",
         "type": "object"
       },
+      "DeviceRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Platform"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "revoked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked Reason"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "platform",
+          "created_at",
+          "last_seen_at",
+          "revoked_at",
+          "revoked_reason"
+        ],
+        "title": "DeviceRead",
+        "type": "object"
+      },
       "DocumentAddPath": {
         "properties": {
           "path": {
@@ -1019,6 +1138,118 @@
         "title": "DownloadStatus",
         "type": "object"
       },
+      "ErasePlan": {
+        "description": "What erasing would remove, before anything is removed.",
+        "properties": {
+          "confirmation_phrase": {
+            "default": "ERASE MY DATA",
+            "title": "Confirmation Phrase",
+            "type": "string"
+          },
+          "row_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Row Counts",
+            "type": "object"
+          },
+          "storage_bytes": {
+            "title": "Storage Bytes",
+            "type": "integer"
+          },
+          "storage_file_count": {
+            "title": "Storage File Count",
+            "type": "integer"
+          },
+          "storage_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Storage Root"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "row_counts",
+          "storage_root",
+          "storage_file_count",
+          "storage_bytes",
+          "confirmation_phrase",
+          "warnings"
+        ],
+        "title": "ErasePlan",
+        "type": "object"
+      },
+      "EraseRequest": {
+        "properties": {
+          "confirm": {
+            "description": "Must be exactly 'ERASE MY DATA'.",
+            "title": "Confirm",
+            "type": "string"
+          },
+          "remove_files": {
+            "default": false,
+            "description": "Also delete the files under your storage root.",
+            "title": "Remove Files",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirm"
+        ],
+        "title": "EraseRequest",
+        "type": "object"
+      },
+      "EraseResult": {
+        "properties": {
+          "bytes_freed": {
+            "title": "Bytes Freed",
+            "type": "integer"
+          },
+          "files_deleted": {
+            "title": "Files Deleted",
+            "type": "integer"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "rows_deleted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Rows Deleted",
+            "type": "object"
+          },
+          "storage_removed": {
+            "title": "Storage Removed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rows_deleted",
+          "files_deleted",
+          "bytes_freed",
+          "storage_removed",
+          "notes"
+        ],
+        "title": "EraseResult",
+        "type": "object"
+      },
       "EvaluationRead": {
         "properties": {
           "area_scores": {
@@ -1104,6 +1335,118 @@
         ],
         "title": "ExperienceMode",
         "type": "string"
+      },
+      "ExportManifest": {
+        "description": "The archive's self-description, written inside the archive.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "excludes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excludes",
+            "type": "array"
+          },
+          "file_bytes": {
+            "title": "File Bytes",
+            "type": "integer"
+          },
+          "file_count": {
+            "title": "File Count",
+            "type": "integer"
+          },
+          "format": {
+            "default": "myai-export",
+            "title": "Format",
+            "type": "string"
+          },
+          "format_version": {
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "includes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Includes",
+            "type": "array"
+          },
+          "row_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Row Counts",
+            "type": "object"
+          },
+          "service_version": {
+            "title": "Service Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "format",
+          "format_version",
+          "service_version",
+          "created_at",
+          "includes",
+          "excludes",
+          "row_counts",
+          "file_count",
+          "file_bytes"
+        ],
+        "title": "ExportManifest",
+        "type": "object"
+      },
+      "ExportRequest": {
+        "properties": {
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where to write it. Defaults to Exports in your storage root.",
+            "title": "Destination"
+          },
+          "include_model_files": {
+            "default": false,
+            "description": "Copy the files in your storage root as well. Large; off by default.",
+            "title": "Include Model Files",
+            "type": "boolean"
+          }
+        },
+        "title": "ExportRequest",
+        "type": "object"
+      },
+      "ExportResult": {
+        "properties": {
+          "manifest": {
+            "$ref": "#/components/schemas/ExportManifest"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "size_bytes",
+          "manifest"
+        ],
+        "title": "ExportResult",
+        "type": "object"
       },
       "GenerationOptions": {
         "properties": {
@@ -1606,6 +1949,31 @@
           "backend"
         ],
         "title": "InferenceBenchmark",
+        "type": "object"
+      },
+      "IssuedCredential": {
+        "description": "A credential, returned once. It is not stored and cannot be shown again.",
+        "properties": {
+          "device": {
+            "$ref": "#/components/schemas/DeviceRead"
+          },
+          "note": {
+            "default": "This credential is shown once. If it is lost, revoke the client and pair again.",
+            "title": "Note",
+            "type": "string"
+          },
+          "token": {
+            "description": "Shown once. Store it; it cannot be recovered.",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "device",
+          "token",
+          "note"
+        ],
+        "title": "IssuedCredential",
         "type": "object"
       },
       "JobRead": {
@@ -2631,6 +2999,81 @@
         "title": "PackageInfo",
         "type": "object"
       },
+      "PairRequest": {
+        "properties": {
+          "code": {
+            "maxLength": 32,
+            "minLength": 4,
+            "title": "Code",
+            "type": "string"
+          },
+          "kind": {
+            "default": "cli",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "PairRequest",
+        "type": "object"
+      },
+      "PairingCodeRead": {
+        "description": "A pairing code, returned once, with the moment it stops working.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "expires_in_seconds": {
+            "title": "Expires In Seconds",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "default": "Single use, and only until it expires. Type it into the client you are pairing; anyone who has it can obtain a credential, so treat it like a password.",
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "label",
+          "expires_at",
+          "expires_in_seconds",
+          "note"
+        ],
+        "title": "PairingCodeRead",
+        "type": "object"
+      },
+      "PairingCodeRequest": {
+        "properties": {
+          "label": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "title": "PairingCodeRequest",
+        "type": "object"
+      },
       "ParsedCommand": {
         "properties": {
           "args": {
@@ -3315,6 +3758,27 @@
         "title": "ProviderInfo",
         "type": "object"
       },
+      "RegisterClient": {
+        "properties": {
+          "kind": {
+            "default": "integration",
+            "description": "One of: desktop, cli, mobile, integration, unknown",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "RegisterClient",
+        "type": "object"
+      },
       "RetrievedChunk": {
         "properties": {
           "chunk_id": {
@@ -3352,6 +3816,143 @@
           "score"
         ],
         "title": "RetrievedChunk",
+        "type": "object"
+      },
+      "RevokeRequest": {
+        "properties": {
+          "reason": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "title": "RevokeRequest",
+        "type": "object"
+      },
+      "SecretStorageReport": {
+        "description": "What was checked, what it found, and what could not be determined.",
+        "properties": {
+          "checked": {
+            "default": true,
+            "description": "False on platforms where permissions cannot be read this way.",
+            "title": "Checked",
+            "type": "boolean"
+          },
+          "data_dir_owner_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Dir Owner Only"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Octal permissions, POSIX only.",
+            "title": "Mode"
+          },
+          "owner_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "True when only the owner can read the secrets; None when unverifiable.",
+            "title": "Owner Only"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Problems",
+            "type": "array"
+          },
+          "token_file_exists": {
+            "title": "Token File Exists",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "token_file_exists",
+          "owner_only",
+          "data_dir_owner_only",
+          "mode",
+          "checked",
+          "problems",
+          "detail"
+        ],
+        "title": "SecretStorageReport",
+        "type": "object"
+      },
+      "SecurityOverview": {
+        "description": "What protects this installation right now.",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountState"
+          },
+          "active_clients": {
+            "title": "Active Clients",
+            "type": "integer"
+          },
+          "bound_to_loopback": {
+            "default": true,
+            "description": "The service listens on 127.0.0.1 only; nothing on the LAN.",
+            "title": "Bound To Loopback",
+            "type": "boolean"
+          },
+          "caller_is_owner": {
+            "title": "Caller Is Owner",
+            "type": "boolean"
+          },
+          "caller_name": {
+            "title": "Caller Name",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "revoked_clients": {
+            "title": "Revoked Clients",
+            "type": "integer"
+          },
+          "secret_storage": {
+            "$ref": "#/components/schemas/SecretStorageReport"
+          }
+        },
+        "required": [
+          "bound_to_loopback",
+          "caller_name",
+          "caller_is_owner",
+          "active_clients",
+          "revoked_clients",
+          "secret_storage",
+          "account",
+          "notes"
+        ],
+        "title": "SecurityOverview",
         "type": "object"
       },
       "SendMessage": {
@@ -3779,7 +4380,8 @@
           "memory",
           "knowledge",
           "projects",
-          "generated"
+          "generated",
+          "exports"
         ],
         "title": "StorageCategory",
         "type": "string"
@@ -4731,6 +5333,7 @@
   "paths": {
     "/api/audit": {
       "get": {
+        "description": "The local activity log. Summaries only: it never holds message or document text.",
         "operationId": "read_audit_api_audit_get",
         "parameters": [
           {
@@ -4759,6 +5362,43 @@
                 }
               ],
               "title": "Category"
+            }
+          },
+          {
+            "description": "Only what this client did.",
+            "in": "query",
+            "name": "device_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only what this client did.",
+              "title": "Device Id"
+            }
+          },
+          {
+            "description": "Only events at or after this.",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only events at or after this.",
+              "title": "Since"
             }
           }
         ],
@@ -6460,6 +7100,112 @@
         ]
       }
     },
+    "/api/privacy/erase": {
+      "post": {
+        "description": "Delete everything. Requires the confirmation phrase, and cannot be undone.",
+        "operationId": "erase_everything_api_privacy_erase_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EraseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EraseResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Erase Everything",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/erase-preview": {
+      "get": {
+        "description": "What erasing would delete. Deletes nothing.",
+        "operationId": "erase_preview_api_privacy_erase_preview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasePlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Erase Preview",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/api/privacy/export": {
+      "post": {
+        "description": "Write an archive of everything this installation holds about you.\n\nCredentials are deliberately left out: they are access grants, not your data.",
+        "operationId": "export_everything_api_privacy_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Everything",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
     "/api/profile": {
       "get": {
         "operationId": "read_profile_api_profile_get",
@@ -6564,6 +7310,250 @@
         "summary": "Create Profile",
         "tags": [
           "profile"
+        ]
+      }
+    },
+    "/api/security": {
+      "get": {
+        "operationId": "read_overview_api_security_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Overview",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/account": {
+      "get": {
+        "operationId": "read_account_api_security_account_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Account",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/devices": {
+      "get": {
+        "operationId": "list_devices_api_security_devices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceRead"
+                  },
+                  "title": "Response List Devices Api Security Devices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Devices",
+        "tags": [
+          "security"
+        ]
+      },
+      "post": {
+        "description": "Issue a credential directly. Owner only; the secret is returned once.",
+        "operationId": "register_device_api_security_devices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterClient"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCredential"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Device",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/devices/{device_id}/revoke": {
+      "post": {
+        "description": "Stop a client from acting as your AI. Takes effect on its next request.",
+        "operationId": "revoke_device_api_security_devices__device_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Device",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/pair": {
+      "post": {
+        "description": "Exchange a pairing code for a credential of your own.\n\nThis is the only route that cannot require a credential \u2014 a client has none yet \u2014 so\nthe code itself is the authentication. It is still behind the loopback bind and the\nHost and Origin checks, it is single use, it expires in minutes, and a wrong code is\ncounted against every live code so guessing is bounded and visible in the audit log.",
+        "operationId": "pair_api_security_pair_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCredential"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pair",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/pairing-codes": {
+      "post": {
+        "description": "Create a single-use code a client can exchange for its own credential. Owner only.",
+        "operationId": "create_pairing_code_api_security_pairing_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairingCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingCodeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Pairing Code",
+        "tags": [
+          "security"
         ]
       }
     },

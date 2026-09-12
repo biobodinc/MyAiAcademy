@@ -13,6 +13,8 @@ import {
   type ProfileCreate,
   type ProfileUpdate,
   type StorageCategory,
+  type EraseRequest,
+  type ExportRequest,
   type TrainRequest,
 } from "@myai/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -228,6 +230,19 @@ export function useSkills() {
 
 // --- Phase 3: skills, jobs ----------------------------------------------------------------
 
+export const securityKeys = {
+  overview: ["security"] as const,
+  devices: ["security", "devices"] as const,
+  erasePreview: ["privacy", "erase-preview"] as const,
+};
+
+function invalidateSecurity(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: securityKeys.overview });
+  void qc.invalidateQueries({ queryKey: securityKeys.devices });
+  void qc.invalidateQueries({ queryKey: keys.audit });
+  void qc.invalidateQueries({ queryKey: keys.privacy });
+}
+
 export const skillKeys = {
   learnPreview: (id: string) => ["skills", "learn-preview", id] as const,
   evaluations: (id: string) => ["skills", "evaluations", id] as const,
@@ -349,6 +364,76 @@ export function useRevertTraining() {
       ),
     onSuccess: () => {
       invalidateSkills(qc);
+    },
+  });
+}
+
+/** Who may act as this AI, and how this installation's secrets are stored. */
+export function useSecurityOverview() {
+  return useQuery({
+    queryKey: securityKeys.overview,
+    queryFn: () => unwrap(api.GET("/api/security")),
+  });
+}
+
+export function useDevices() {
+  return useQuery({
+    queryKey: securityKeys.devices,
+    queryFn: () => unwrap(api.GET("/api/security/devices")),
+  });
+}
+
+export function useCreatePairingCode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (label: string) =>
+      unwrap(api.POST("/api/security/pairing-codes", { body: { label } })),
+    onSuccess: () => {
+      invalidateSecurity(qc);
+    },
+  });
+}
+
+export function useRevokeDevice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ device_id, reason }: { device_id: string; reason: string }) =>
+      unwrap(
+        api.POST("/api/security/devices/{device_id}/revoke", {
+          params: { path: { device_id } },
+          body: { reason },
+        }),
+      ),
+    onSuccess: () => {
+      invalidateSecurity(qc);
+    },
+  });
+}
+
+export function useErasePreview() {
+  return useQuery({
+    queryKey: securityKeys.erasePreview,
+    queryFn: () => unwrap(api.GET("/api/privacy/erase-preview")),
+  });
+}
+
+export function useExportData() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ExportRequest) => unwrap(api.POST("/api/privacy/export", { body })),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.audit });
+    },
+  });
+}
+
+/** Deletes everything, irreversibly. The caller must have collected the confirmation. */
+export function useEraseData() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: EraseRequest) => unwrap(api.POST("/api/privacy/erase", { body })),
+    onSuccess: () => {
+      void qc.invalidateQueries();
     },
   });
 }

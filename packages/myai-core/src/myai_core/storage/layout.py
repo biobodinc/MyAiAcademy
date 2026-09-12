@@ -9,7 +9,8 @@ MyAI/
 ├── Memory/        local memory store exports/indexes
 ├── Knowledge/     user documents and their retrieval indexes
 ├── Projects/      first-class project folders
-└── Generated/     generated media and artefacts
+├── Generated/     generated media and artefacts
+└── Exports/       archives you asked for in the Privacy Center
 
 Each category may be redirected to another location (e.g. an external SSD) via
 ``StorageConfig.category_overrides``. The app never repartitions disks.
@@ -30,6 +31,7 @@ class StorageCategory(StrEnum):
     KNOWLEDGE = "knowledge"
     PROJECTS = "projects"
     GENERATED = "generated"
+    EXPORTS = "exports"
 
 
 STORAGE_CATEGORIES: dict[StorageCategory, str] = {
@@ -42,6 +44,7 @@ STORAGE_CATEGORIES: dict[StorageCategory, str] = {
     StorageCategory.KNOWLEDGE: "Knowledge",
     StorageCategory.PROJECTS: "Projects",
     StorageCategory.GENERATED: "Generated",
+    StorageCategory.EXPORTS: "Exports",
 }
 
 ROOT_MARKER_FILE = ".myai-storage"

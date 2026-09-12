@@ -8,7 +8,10 @@ Layers (defence in depth, spec §47/§73):
 3. **Origin allow-list** – browsers always send ``Origin`` on cross-origin requests;
    only the packaged Tauri origins and the Vite dev server are accepted. Requests with
    no ``Origin`` header come from native clients (CLI, tests) and pass to step 4.
-4. **Bearer token** – the per-installation token compared in constant time.
+4. **Bearer token** – either the per-installation token, compared in constant time, or a
+   credential issued to a paired client (:mod:`myai_core.security.devices`). Both
+   identify a *caller*, which is recorded with what it did; a paired client's credential
+   can be revoked on its own, and revocation takes effect on its next request.
 
 Scoped capability permissions for third-party apps (spec §48–§50) are Phase 9 and will
 layer on top of this rather than replace it.
@@ -22,6 +25,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 
+from myai_core.security.devices import OWNER_CALLER, Caller, DeviceService
 from myai_core.security.local_token import tokens_match
 
 _ALLOWED_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
@@ -58,25 +62,84 @@ def get_auth_policy(request: Request) -> LocalAuthPolicy:
     return policy
 
 
-def require_local_auth(
+def bearer_token(request: Request) -> str | None:
+    authorization = request.headers.get("authorization")
+    if authorization and authorization.lower().startswith("bearer "):
+        return authorization[7:].strip() or None
+    return None
+
+
+def require_local_origin(
     request: Request,
     policy: Annotated[LocalAuthPolicy, Depends(get_auth_policy)],
 ) -> None:
+    """Steps 2 and 3 without the credential, for the one route that cannot have one.
+
+    Pairing has to be reachable by a client that holds nothing yet, but it must not become
+    a hole in the browser protections: a web page must not be able to walk a user through
+    pairing itself.
+    """
     if not policy.check_host(request.headers.get("host")):
         raise HTTPException(status.HTTP_421_MISDIRECTED_REQUEST, "Unexpected Host header.")
     if not policy.check_origin(request.headers.get("origin")):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Origin not allowed.")
 
-    authorization = request.headers.get("authorization")
-    presented: str | None = None
-    if authorization and authorization.lower().startswith("bearer "):
-        presented = authorization[7:].strip()
-    if not tokens_match(presented, policy.token):
+
+def require_local_auth(
+    request: Request,
+    policy: Annotated[LocalAuthPolicy, Depends(get_auth_policy)],
+) -> Caller:
+    """Authenticate the request and return who made it.
+
+    The installation token is the owner's own processes. Anything else is checked against
+    the paired clients, so a revoked client stops working from its next request without
+    the owner having to rotate their own token.
+    """
+    require_local_origin(request, policy)
+    presented = bearer_token(request)
+    if tokens_match(presented, policy.token):
+        request.state.caller = OWNER_CALLER
+        return OWNER_CALLER
+    caller = _paired_caller(request, presented)
+    if caller is None:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,
-            "Missing or invalid local API token.",
+            "Missing or invalid local API credential.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    request.state.caller = caller
+    return caller
 
 
+def _paired_caller(request: Request, presented: str | None) -> Caller | None:
+    """Look the credential up among the paired clients.
+
+    This opens its own short session rather than taking the request's, so that this module
+    stays independent of the API's dependency graph. The owner's token never reaches here,
+    so the common path costs no query at all.
+    """
+    if presented is None:
+        return None
+    state = getattr(request.app.state, "core", None)
+    if state is None:  # pragma: no cover - programming error, not a runtime path
+        raise RuntimeError("app state not configured")
+    with state.session_factory() as session:
+        device = DeviceService(session).resolve(presented)
+        if device is None:
+            return None
+        caller = Caller(device_id=device.id, name=device.name, is_owner=False)
+        session.commit()  # resolve() records that the client was seen
+        return caller
+
+
+def get_caller(request: Request) -> Caller:
+    """The authenticated caller. Requires ``LocalAuth`` on the route or router."""
+    caller: Caller | None = getattr(request.state, "caller", None)
+    if caller is None:  # pragma: no cover - a route without LocalAuth is a wiring error
+        raise RuntimeError("no authenticated caller on request.state")
+    return caller
+
+
+CallerDep = Annotated[Caller, Depends(get_caller)]
 LocalAuth = Depends(require_local_auth)
+LocalOrigin = Depends(require_local_origin)

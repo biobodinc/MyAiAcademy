@@ -16,6 +16,7 @@ class AuditCategory(StrEnum):
     STORAGE = "storage"
     PREFERENCES = "preferences"
     SECURITY = "security"
+    PRIVACY = "privacy"
     SYSTEM = "system"
 
 
@@ -41,8 +42,10 @@ class AuditService:
     such as a storage path or a version number.
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, actor_device_id: str | None = None) -> None:
         self._session = session
+        self._actor_device_id = actor_device_id
+        """Who is acting, when the caller is known. Recorded on every event it writes."""
 
     def record(
         self,
@@ -57,14 +60,25 @@ class AuditService:
             action=action,
             summary=summary,
             details=details or {},
-            device_id=device_id,
+            device_id=device_id or self._actor_device_id,
         )
         self._session.add(event)
         self._session.flush()
         return event
 
-    def recent(self, limit: int = 100, category: AuditCategory | None = None) -> list[AuditEvent]:
+    def recent(
+        self,
+        limit: int = 100,
+        category: AuditCategory | None = None,
+        device_id: str | None = None,
+        since: datetime | None = None,
+    ) -> list[AuditEvent]:
+        """Most recent first, narrowed by category, by which client acted, or by date."""
         stmt = select(AuditEvent).order_by(AuditEvent.occurred_at.desc(), AuditEvent.id.desc())
         if category is not None:
             stmt = stmt.where(AuditEvent.category == category.value)
+        if device_id is not None:
+            stmt = stmt.where(AuditEvent.device_id == device_id)
+        if since is not None:
+            stmt = stmt.where(AuditEvent.occurred_at >= since)
         return list(self._session.scalars(stmt.limit(max(1, min(limit, 1000)))).all())

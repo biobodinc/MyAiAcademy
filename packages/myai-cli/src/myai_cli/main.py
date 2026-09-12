@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import platform
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -26,6 +27,9 @@ storage_app = typer.Typer(help="MyAI storage location and usage.", no_args_is_he
 profile_app = typer.Typer(help="Your AI's identity and personality.", no_args_is_help=True)
 settings_app = typer.Typer(help="Experience mode, compute and appearance.", no_args_is_help=True)
 jobs_app = typer.Typer(help="Background jobs: learning and benchmark runs.", no_args_is_help=True)
+security_app = typer.Typer(
+    help="Who may act as your AI, and taking your data out.", no_args_is_help=True
+)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
 app.add_typer(settings_app, name="settings")
@@ -33,6 +37,7 @@ app.add_typer(jobs_app, name="jobs")
 app.add_typer(models_app, name="models")
 app.add_typer(memory_app, name="memory")
 app.add_typer(knowledge_app, name="knowledge")
+app.add_typer(security_app, name="security")
 app.command(name="chat")(chat)
 
 console = Console()
@@ -835,6 +840,165 @@ def audit(
     for e in data:
         table.add_row(e["occurred_at"][:19].replace("T", " "), e["category"], e["summary"])
     console.print(table)
+
+
+@security_app.command("show")
+def security_show(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """What protects this installation right now."""
+    data = _call(_service(data_dir).get, "/security")
+    if as_json:
+        return _emit_json(data)
+    storage = data["secret_storage"]
+    if storage["checked"]:
+        secrets_line = "owner only" if storage["owner_only"] is not False else "READABLE BY OTHERS"
+    else:
+        secrets_line = "not checkable on this platform"
+    lines = [
+        f"You are: {data['caller_name']}"
+        + (" (this installation)" if data["caller_is_owner"] else ""),
+        "Listening on: 127.0.0.1 only"
+        if data["bound_to_loopback"]
+        else "Listening beyond loopback",
+        f"Paired clients: {data['active_clients']} active, {data['revoked_clients']} revoked",
+        f"Secret storage: {secrets_line}",
+        f"Account: {'linked' if data['account']['linked'] else 'none'}",
+        "",
+        data["account"]["detail"],
+    ]
+    for problem in storage["problems"]:
+        lines.append(f"[yellow]{problem}[/yellow]")
+    console.print(Panel("\n".join(lines), title="Security"))
+    for note in data["notes"]:
+        console.print(f"  • {note}")
+
+
+@security_app.command("clients")
+def security_clients(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Clients that hold a credential for this AI."""
+    data = _call(_service(data_dir).get, "/security/devices")
+    if as_json:
+        return _emit_json(data)
+    if not data:
+        console.print("No paired clients. Only this installation's own token can be used.")
+        return
+    table = Table(title="Paired clients")
+    table.add_column("Id")
+    table.add_column("Name")
+    table.add_column("Kind")
+    table.add_column("Last seen")
+    table.add_column("State")
+    for d in data:
+        table.add_row(
+            d["id"],
+            d["name"],
+            d["kind"],
+            (d["last_seen_at"] or "never")[:19].replace("T", " "),
+            "revoked" if d["revoked_at"] else "active",
+        )
+    console.print(table)
+
+
+@security_app.command("pairing-code")
+def security_pairing_code(
+    label: Annotated[str, typer.Option(help="What you are pairing, for the log.")] = "",
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Create a single-use code so a client can get its own credential."""
+    data = _call(_service(data_dir).post, "/security/pairing-codes", {"label": label})
+    console.print(Panel(f"[bold]{data['code']}[/bold]", title="Pairing code"))
+    console.print(f"Expires in {data['expires_in_seconds'] // 60} minutes. {data['note']}")
+
+
+@security_app.command("pair")
+def security_pair(
+    code: str,
+    name: Annotated[str, typer.Option(help="How this client should appear in your log.")] = "",
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Redeem a pairing code and print the credential. It is shown once."""
+    body = {"code": code, "name": name or f"CLI on {platform.node()}", "kind": "cli"}
+    data = _call(_service(data_dir).post, "/security/pair", body)
+    console.print(Panel(data["token"], title=f"Credential for {data['device']['name']}"))
+    console.print(data["note"])
+
+
+@security_app.command("revoke")
+def security_revoke(
+    device_id: str,
+    reason: Annotated[str, typer.Option(help="Why, for the log.")] = "",
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Stop a client from acting as your AI, from its next request."""
+    data = _call(
+        _service(data_dir).post, f"/security/devices/{device_id}/revoke", {"reason": reason}
+    )
+    console.print(f"{data['name']} can no longer act as your AI. {data['revoked_reason']}")
+
+
+@security_app.command("export")
+def security_export(
+    destination: Annotated[str | None, typer.Option(help="Where to write the archive.")] = None,
+    include_files: Annotated[
+        bool, typer.Option("--include-files", help="Copy your storage files too (large).")
+    ] = False,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Write an archive of everything this installation holds about you."""
+    body: dict[str, Any] = {"include_model_files": include_files}
+    if destination:
+        body["destination"] = destination
+    data = _call(_service(data_dir).post, "/privacy/export", body)
+    console.print(f"Exported to {data['path']} ({human_bytes(data['size_bytes'])}).")
+    manifest = data["manifest"]
+    console.print(f"  Rows: {sum(manifest['row_counts'].values())} across your tables")
+    console.print(
+        f"  Files listed: {manifest['file_count']} ({human_bytes(manifest['file_bytes'])})"
+    )
+    for line in manifest["excludes"]:
+        console.print(f"  Not included: {line}")
+
+
+@security_app.command("erase")
+def security_erase(
+    remove_files: Annotated[
+        bool, typer.Option("--remove-files", help="Also delete files under your storage root.")
+    ] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Skip the confirmation prompt.")] = False,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Delete everything this installation holds about you. This cannot be undone."""
+    svc = _service(data_dir)
+    plan = _call(svc.get, "/privacy/erase-preview")
+    rows = sum(plan["row_counts"].values())
+    console.print(
+        Panel(
+            "\n".join(
+                [
+                    f"{rows} rows of your data would be deleted.",
+                    f"Storage root: {plan['storage_root'] or 'not configured'} "
+                    f"({plan['storage_file_count']} files, {human_bytes(plan['storage_bytes'])})",
+                    "Files will also be deleted." if remove_files else "Files will be left alone.",
+                    *plan["warnings"],
+                ]
+            ),
+            title="[red]Erase everything[/red]",
+        )
+    )
+    if not yes:
+        typed = typer.prompt(f"Type '{plan['confirmation_phrase']}' to confirm", default="")
+        if typed != plan["confirmation_phrase"]:
+            console.print("Nothing was deleted.")
+            raise typer.Exit(code=1)
+    data = _call(
+        svc.post,
+        "/privacy/erase",
+        {"confirm": plan["confirmation_phrase"], "remove_files": remove_files},
+    )
+    console.print(
+        f"Deleted {sum(data['rows_deleted'].values())} rows and {data['files_deleted']} files."
+    )
+    for note in data["notes"]:
+        console.print(f"  • {note}")
 
 
 def entrypoint() -> None:

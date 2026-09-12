@@ -210,6 +210,51 @@ class AuditEvent(Base):
     device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
+class Device(Base):
+    """A client allowed to act as this AI (spec §47, §51-§53).
+
+    "Device" is the spec's word; on one machine these are really *clients*: the desktop
+    app, the CLI, a third-party tool. Each holds its own credential so a grant can be
+    revoked on its own, and every action can say which client performed it.
+
+    Only the SHA-256 of a credential is stored. The secret itself is shown once, when the
+    credential is issued, and cannot be recovered afterwards — which is the point.
+    """
+
+    __tablename__ = "devices"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    kind: Mapped[str] = mapped_column(String(24), nullable=False, default="unknown")
+    platform: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
+class PairingCode(Base):
+    """A short-lived, single-use code that lets a new client ask for its own credential.
+
+    The code is stored hashed for the same reason a password is: the database should not
+    hand an attacker a working credential. Codes expire, are used once, and every attempt
+    is counted so guessing is visible and bounded.
+    """
+
+    __tablename__ = "pairing_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    label: Mapped[str] = mapped_column(String(120), nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+
 class HardwareBenchmark(Base):
     """A recorded benchmark run (spec §30). The JSON is a ``BenchmarkResult``."""
 
