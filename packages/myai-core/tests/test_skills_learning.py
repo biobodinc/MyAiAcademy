@@ -296,6 +296,11 @@ def test_jobs_endpoints(client: TestClient, tmp_path: Path) -> None:
     assert client.get("/api/jobs").json() == []
     assert client.get("/api/jobs/nope").status_code == 404
     _install_model(client, tmp_path)
+    # The one-at-a-time rule is about a job that is actually running, so the first job is
+    # slowed enough to still be in flight when the second request arrives. Without this the
+    # scripted model can finish all 12 tasks before the next line runs, and the assertion
+    # becomes a race that fails on whichever machine is quickest.
+    ScriptedLlama.delay = 0.05
     job = client.post("/api/skills/conversation/learn").json()
     assert client.post("/api/skills/writing/learn").status_code == 409  # one at a time
     _wait_job(client, job["id"])
