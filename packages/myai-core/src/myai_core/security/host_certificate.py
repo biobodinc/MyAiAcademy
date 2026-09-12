@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import datetime as dt
 import ipaddress
+import re
 import socket
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +36,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
 
 from myai_core.security.storage_checks import restrict_new_file
+
+CN_MAX_CHARS = 64
+"""X.509 caps a CommonName at 64 characters; some machines have longer hostnames."""
+_DNS_NAME = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9-]{1,63})*$")
 
 CERT_FILE = "host-cert.pem"
 KEY_FILE = "host-key.pem"
@@ -102,16 +107,22 @@ def regenerate(data_dir: Path, *, addresses: list[str] | None = None) -> HostCer
     key = ec.generate_private_key(ec.SECP256R1())
     subject = x509.Name(
         [
-            x509.NameAttribute(NameOID.COMMON_NAME, hostname),
+            # The common name is cosmetic here — a device pins the fingerprint, not a name —
+            # but it still has to be a legal one, and a machine's hostname can exceed the
+            # 64-character limit. A CI runner's did, which is how this was found.
+            x509.NameAttribute(NameOID.COMMON_NAME, hostname[:CN_MAX_CHARS]),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME, "MyAI Academy"),
         ]
     )
-    alt_names: list[x509.GeneralName] = [x509.DNSName(hostname), x509.DNSName("localhost")]
+    alt_names: list[x509.GeneralName] = [x509.DNSName("localhost")]
+    if _DNS_NAME.match(hostname) and len(hostname) <= 253:
+        alt_names.append(x509.DNSName(hostname))
     for address in names:
         try:
             alt_names.append(x509.IPAddress(ipaddress.ip_address(address)))
         except ValueError:
-            alt_names.append(x509.DNSName(address))
+            if _DNS_NAME.match(address):
+                alt_names.append(x509.DNSName(address))
 
     now = _now()
     certificate = (
