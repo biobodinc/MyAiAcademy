@@ -72,6 +72,8 @@ class ScriptedLlama:
         prompt = messages[-1]["content"]
         system = messages[0]["content"]
         reply = self._reply(system, prompt)
+        if ScriptedLlama.delay:
+            time.sleep(ScriptedLlama.delay)
         yield {"choices": [{"delta": {"content": reply}, "finish_reason": None}]}
         yield {"choices": [{"delta": {}, "finish_reason": "stop"}]}
 
@@ -94,6 +96,7 @@ class ScriptedLlama:
 def client(app_paths: AppPaths, tmp_path: Path) -> Iterator[TestClient]:
     ScriptedLlama.follows_rule = True
     ScriptedLlama.writes_rule = True
+    ScriptedLlama.delay = 0.0
     provider = LlamaCppProvider(llama_factory=ScriptedLlama)
     app = create_app(CoreSettings(), app_paths, token=TOKEN, provider=provider)
     with TestClient(app, base_url="http://127.0.0.1") as c:
@@ -293,8 +296,12 @@ def test_only_one_job_runs_at_a_time(client: TestClient) -> None:
 
 def test_stopping_a_training_job_leaves_the_skill_as_it_was(client: TestClient) -> None:
     before = _learn(client)["result"]["level_after"]
+    # Stopping can only be tested against a job that is still running. With an instant
+    # model a whole run finishes before the cancel request lands, so the model is slowed
+    # for this test; without that the assertion is a race that fails on a fast machine.
+    ScriptedLlama.delay = 0.02
     started = client.post("/api/skills/science/train", json={"duration_seconds": 60}).json()
-    for _ in range(200):
+    for _ in range(400):
         if client.get(f"/api/jobs/{started['id']}").json()["progress_done"] > 0:
             break
         time.sleep(0.05)
