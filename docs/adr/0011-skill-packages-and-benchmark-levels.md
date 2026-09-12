@@ -34,9 +34,14 @@ The project rule is that nothing may claim more than it does.
 - **Model-written code runs in a limited sandbox.** `python_tests` executes the candidate
   in a separate interpreter process (`-I -S`, or the frozen binary re-executing itself with
   `--sandbox`), with an import allow-list installed before the code runs, an empty scratch
-  directory, a stripped environment, a wall-clock timeout and, on POSIX, address-space,
-  CPU-time and file-size limits. This is containment for accidents, not a security boundary
-  against a hostile model; the README says so.
+  directory, a stripped environment, a wall-clock timeout and, on POSIX, CPU-time and
+  file-size limits. A memory cap is claimed only on Linux: macOS accepts `RLIMIT_AS` and
+  then ignores it for the mmap-backed allocations CPython uses for large objects, which CI
+  demonstrated by allocating 2 GiB under a 512 MiB cap, and Windows has no equivalent. The
+  limit is still requested wherever it exists, but `sandbox.containment()` is the single
+  source for what any surface tells a user, so the claim follows the platform. This is
+  containment for accidents, not a security boundary against a hostile model; the README
+  says so.
 - **Jobs are cooperative.** One job at a time (§40 "prevent accidental resource
   overload"); pause, resume and cancel are honoured between tasks; jobs left active by a
   restart are marked failed on startup (§74).

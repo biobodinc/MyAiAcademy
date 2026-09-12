@@ -7,7 +7,10 @@ still untrusted output, so it runs:
 * in a fresh interpreter process with ``-I`` (isolated) and ``-S`` (no site-packages),
 * with an import allow-list installed before the candidate code is executed,
 * in an empty scratch directory with a stripped environment,
-* under a wall-clock timeout and, on POSIX, address-space, CPU-time and file-size limits.
+* under a wall-clock timeout and, on POSIX, CPU-time and file-size limits.
+
+A memory cap is only claimed where the kernel actually applies one: see
+:data:`MEMORY_LIMIT_ENFORCED`. Everywhere else the timeout is the backstop.
 
 In a PyInstaller bundle there is no ``python`` executable, so the frozen service
 re-executes itself with ``--sandbox`` and dispatches to :func:`harness_main`.
@@ -54,6 +57,37 @@ ALLOWED_IMPORTS = frozenset(
 )
 MEMORY_LIMIT_BYTES = 512 * 1024**2
 OUTPUT_LIMIT_BYTES = 1024**2
+
+MEMORY_LIMIT_ENFORCED = sys.platform.startswith("linux")
+"""Whether the address-space cap actually stops a runaway allocation here.
+
+Linux enforces ``RLIMIT_AS`` against every mapping, so the allocation fails with
+``MemoryError``. macOS accepts the same call and then ignores it for the mmap-backed
+allocations CPython uses for large objects — a 2 GiB ``bytearray`` succeeds under a
+512 MiB cap — and Windows has no equivalent at all. The limit is still requested
+everywhere it exists, because it costs nothing and catches the allocations it does
+cover, but only Linux may be described as capping memory. Elsewhere the wall-clock
+timeout is what bounds a runaway process.
+"""
+
+
+def containment() -> tuple[str, ...]:
+    """What actually contains benchmark code on this machine, in plain words.
+
+    Written for display: anything shown to a user about the sandbox should come from
+    here rather than from a fixed sentence that is only true on one platform.
+    """
+    measures = [
+        "a separate interpreter process with no access to installed packages",
+        "an import allow-list applied before the code runs",
+        "an empty scratch directory and a stripped environment",
+        "a wall-clock timeout",
+    ]
+    if sys.platform != "win32":
+        measures.append("a CPU-time limit and a file-size limit")
+    if MEMORY_LIMIT_ENFORCED:
+        measures.append(f"a {MEMORY_LIMIT_BYTES // 1024**2} MiB address-space limit")
+    return tuple(measures)
 
 
 @dataclass(slots=True)

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import sys
-
 import pytest
 
-from myai_core.skills import graders
+from myai_core.skills import graders, sandbox
 from myai_core.skills.packages import bundled_package, bundled_skill_ids, load_package
 from myai_core.skills.sandbox import run_python_tests
 
@@ -82,10 +80,25 @@ def test_sandbox_times_out() -> None:
     assert out.error and "timed out" in out.error
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="rlimits are POSIX only")
+@pytest.mark.skipif(
+    not sandbox.MEMORY_LIMIT_ENFORCED,
+    reason="only Linux enforces RLIMIT_AS against the mappings CPython uses",
+)
 def test_sandbox_memory_limit() -> None:
     out = run_python_tests("x = bytearray(2 * 1024**3)\n", ["True"], timeout=10)
     assert out.error and ("MemoryError" in out.error or "no result" in out.error)
+
+
+def test_containment_claims_only_what_this_platform_enforces() -> None:
+    """macOS accepts RLIMIT_AS and ignores it, so a memory cap must not be claimed
+    there. Anything shown to a user about the sandbox comes from this list, so it is
+    the thing that has to stay true on every platform."""
+    measures = sandbox.containment()
+    assert any("separate interpreter" in m for m in measures)
+    assert any("allow-list" in m for m in measures)
+    assert any("timeout" in m for m in measures)
+    mentions_memory = any("address-space" in m for m in measures)
+    assert mentions_memory is sandbox.MEMORY_LIMIT_ENFORCED
 
 
 def test_python_tests_check_end_to_end() -> None:
