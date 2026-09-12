@@ -31,6 +31,10 @@ class DownloadManager:
         self._threads: dict[str, threading.Thread] = {}
         self._lock = threading.Lock()
 
+    @property
+    def downloader(self) -> ModelDownloader:
+        return self._downloader
+
     def start(self, job_id: str, model: CatalogModel, dest: Path) -> None:
         cancel = threading.Event()
         thread = threading.Thread(
@@ -104,12 +108,16 @@ class DownloadManager:
         with self._sessions() as session:
             storage = StorageManager(session, probe_volumes)
             ModelService(session, storage).record_installed(
-                model, result.path, result.size_bytes, result.sha256
+                model, result.path, result.size_bytes, result.sha256, result.verified_against
             )
             AuditService(session).record(
                 AuditCategory.SYSTEM,
                 "model_installed",
-                f"Model '{model.name}' downloaded and verified",
+                (
+                    f"Model '{model.name}' downloaded and verified"
+                    if result.verified
+                    else f"Model '{model.name}' downloaded (no publisher hash to verify against)"
+                ),
                 {
                     "model_id": model.id,
                     "size_bytes": result.size_bytes,

@@ -14,3 +14,5 @@ Short records of decisions that were not obvious. Format: context, decision, con
 | [0008](0008-local-inference-and-retrieval.md)                 | llama.cpp for local inference; lexical retrieval first          |
 | [0009](0009-measured-benchmark-and-builtin-guide.md)          | Measured benchmark, live metrics and a deterministic guide      |
 | [0010](0010-stream-cancellation-and-synthetic-model-tests.md) | Real stream cancellation and testing against the real runtime   |
+| [0011](0011-skill-packages-and-benchmark-levels.md)           | Skill packages, benchmark-set levels and the coding sandbox     |
+| [0012](0012-only-promised-hashes-may-fail-a-download.md)      | Only a promised hash may fail a download                        |

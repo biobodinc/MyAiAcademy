@@ -115,10 +115,18 @@ def test_dispatch_help_and_hardware(session) -> None:  # type: ignore[no-untyped
     assert "estimate" in hw.message
 
 
-def test_dispatch_learn_is_honest_about_unavailability(session) -> None:  # type: ignore[no-untyped-def]
+def test_dispatch_learn_without_job_runner_is_honest(session) -> None:  # type: ignore[no-untyped-def]
     res = execute("/learn video", _ctx(session))
     assert res.outcome is CommandOutcome.UNAVAILABLE
-    assert "Nothing has been downloaded" in res.message
+    assert "cannot start jobs" in res.message
+
+
+def test_dispatch_job_controls_without_a_job(session) -> None:  # type: ignore[no-untyped-def]
+    for text in ("/pause", "/resume", "/stop"):
+        res = execute(text, _ctx(session))
+        assert res.outcome is CommandOutcome.UNAVAILABLE and "No job" in res.title
+    hist = execute("/history", _ctx(session))
+    assert hist.outcome is CommandOutcome.OK and "No benchmark runs" in hist.message
 
 
 def test_dispatch_train_unlearned_offers_learn(session) -> None:  # type: ignore[no-untyped-def]
@@ -139,7 +147,6 @@ def test_dispatch_parse_error_and_chat(session) -> None:  # type: ignore[no-unty
 
 
 def test_dispatch_later_phase_commands(session) -> None:  # type: ignore[no-untyped-def]
-    for text in ("/pause", "/projects", "/history"):
-        res = execute(text, _ctx(session))
-        assert res.outcome is CommandOutcome.UNAVAILABLE
-        assert "Phase" in res.message
+    res = execute("/projects", _ctx(session))
+    assert res.outcome is CommandOutcome.UNAVAILABLE
+    assert "Phase 7" in res.message

@@ -1,7 +1,7 @@
 import threading
 import time
 
-from myai_core.status.service import Availability, InternetMonitor
+from myai_core.status.service import AIState, Availability, InternetMonitor, _describe_ai
 
 
 class _SlowMonitor(InternetMonitor):
@@ -41,3 +41,46 @@ def test_internet_monitor_never_blocks_callers() -> None:
     time.sleep(0.25)
     monitor.current()
     assert monitor.probes == 2
+
+
+def _with_runtime(active: str | None = None, loaded: str | None = None) -> tuple[Availability, str]:
+    return _describe_ai(
+        AIState(
+            runtime_available=True,
+            runtime_detail="llama.cpp runtime 0.0.0",
+            active_model_id=active,
+            loaded_model_id=loaded,
+        )
+    )
+
+
+def test_every_ai_state_says_why_in_its_own_words() -> None:
+    """The status line is what a user reads when nothing works, so each state explains
+    itself. These four are environment-dependent in real use: the inference runtime is
+    an optional extra, so a plain install reports the first one and a full install the
+    others. A test that only exercised one of them would pass on one machine and fail
+    on another."""
+    availability, detail = _describe_ai(
+        AIState(
+            runtime_available=False,
+            runtime_detail="The local inference runtime (llama-cpp-python) is not installed.",
+            active_model_id=None,
+            loaded_model_id=None,
+        )
+    )
+    assert availability is Availability.UNAVAILABLE
+    assert "runtime" in detail.lower()
+
+    availability, detail = _with_runtime()
+    assert availability is Availability.NOT_CONFIGURED
+    assert "model" in detail.lower()
+
+    availability, detail = _with_runtime("a-model")
+    assert availability is Availability.AVAILABLE
+    assert "a-model" in detail and "installed" in detail
+
+    availability, detail = _with_runtime("a-model", "a-model")
+    assert availability is Availability.AVAILABLE
+    assert "a-model" in detail and "ready" in detail
+
+    assert _describe_ai(None)[0] is Availability.UNKNOWN

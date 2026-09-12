@@ -27,7 +27,22 @@ def test_status_when_service_missing(tmp_path: Path) -> None:
 
 def test_status_and_hardware(running_service: Path) -> None:
     code, out = _run("status", data_dir=running_service)
-    assert code == 0 and "AI:" in out and "model" in out.lower()
+    assert code == 0
+    for label in ("Internet:", "AI:", "Training:", "Privacy mode:"):
+        assert label in out
+
+    # The AI line depends on the environment: the inference runtime is an optional
+    # extra, so it is absent from a plain install and present in the build that runs
+    # the real-runtime tests. Both readings must explain themselves, and neither may
+    # claim the AI is ready. Asserting on the JSON avoids the panel's line wrapping.
+    code, raw = _run("status", "--json", data_dir=running_service)
+    assert code == 0
+    status = json.loads(raw)
+    detail = status["ai_detail"].lower()
+    if status["ai"] == "unavailable":
+        assert "runtime" in detail
+    else:
+        assert status["ai"] == "not_configured" and "model" in detail
     code, out = _run("hardware", "--json", data_dir=running_service)
     assert code == 0
     assert json.loads(out)["tier"]["method"] == "specification-estimate"
@@ -58,7 +73,7 @@ def test_run_command_shows_mapping(running_service: Path) -> None:
     code, out = _run("run", "teach yourself video", data_dir=running_service)
     assert code == 0
     assert "/learn video" in out and "natural language" in out
-    assert "not available yet" in out
+    assert "cannot be learned yet" in out  # creative skills have no benchmark package
 
 
 def test_storage_flow(running_service: Path, tmp_path: Path) -> None:
@@ -119,3 +134,17 @@ def test_models_import_and_providers(running_service: Path, tmp_path: Path) -> N
     assert code == 0 and "(imported)" in out
     code, out = _run("models", "show", "local-mine", data_dir=running_service)
     assert code == 0 and "Your own licence" in out
+
+
+def test_learn_is_honest_without_a_model(running_service: Path) -> None:
+    _run("profile", "create", "--name", "Nova", data_dir=running_service)  # no-op if it exists
+    code, out = _run("learn", "science", "--yes", data_dir=running_service)  # locked by the tree
+    assert code == 1 and "cannot be learned yet" in out and "Research" in out
+    code, out = _run("learn", "video", "--yes", data_dir=running_service)
+    assert code == 1 and "no measurable benchmark" in out
+    code, out = _run("history", data_dir=running_service)
+    assert code == 0 and "No benchmark runs yet" in out
+    code, out = _run("jobs", "list", data_dir=running_service)
+    assert code == 0
+    code, out = _run("jobs", "stop", data_dir=running_service)
+    assert code == 1 and "No job" in out

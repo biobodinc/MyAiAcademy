@@ -102,3 +102,18 @@ def test_api_chat_benchmark_and_unload_with_real_runtime(client: TestClient) -> 
     assert bench["inference"]["generation_tokens_per_second"] > 0
 
     assert client.post("/api/models/unload").json()["loaded_model_id"] is None
+
+
+def test_learn_science_with_real_runtime(client: TestClient) -> None:
+    """The whole learning pipeline against the real backend. The tiny model answers
+    nonsense, so the only assertions are that the benchmark ran and set a level."""
+    job = client.post("/api/skills/conversation/learn").json()
+    state = client.app.state.core  # type: ignore[attr-defined]
+    state.jobs.wait(job["id"], 120)
+    job = client.get(f"/api/jobs/{job['id']}").json()
+    assert job["status"] == "completed", job
+    assert job["progress_done"] == job["progress_total"] == 12
+    skill = client.get("/api/skills/conversation").json()
+    assert skill["learned"] and 1 <= skill["level"] <= 100
+    history = client.get("/api/skills/conversation/evaluations").json()
+    assert history[0]["model_id"] == "tiny" and len(history[0]["task_results"]) == 12

@@ -512,8 +512,9 @@ function DoneStep({ onFinish, busy }: { onFinish: () => void; busy: boolean }) {
       </div>
       <h2 className="mt-3 text-2xl font-bold">{profile.data?.name ?? "Your AI"} is ready</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-fg-muted">
-        Say hello in Chat, or try <code className="font-mono">/help</code>. When skill packages
-        arrive, <code className="font-mono">/learn coding</code> will teach your AI its first skill.
+        Say hello in Chat, or try <code className="font-mono">/help</code>. Then open Skills or type{" "}
+        <code className="font-mono">/learn conversation</code>: your AI learns a skill by passing
+        its benchmark, and that score becomes its level.
       </p>
       <div className="mt-8">
         <Button size="lg" onClick={onFinish} disabled={busy}>

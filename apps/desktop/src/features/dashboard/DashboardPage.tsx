@@ -28,7 +28,7 @@ const quickActions = [
   { to: "/models", label: "Models", hint: "Download and activate", ready: true },
   { to: "/memory", label: "Memory", hint: "What it remembers", ready: true },
   { to: "/knowledge", label: "Knowledge", hint: "Documents it can cite", ready: true },
-  { to: "/skills", label: "Learn", hint: "Skill packages", ready: false, phase: 3 },
+  { to: "/skills", label: "Learn", hint: "Skills and benchmarks", ready: true },
   { to: "/skills", label: "Train", hint: "Training jobs", ready: false, phase: 4 },
 ];
 
@@ -77,8 +77,8 @@ export function DashboardPage() {
         >
           {skills.data && skills.data.skills.every((s) => !s.learned) ? (
             <p className="text-sm text-fg-muted">
-              No skills learned yet. Your AI's first skill arrives with <code>/learn</code> in Phase
-              3; until then the catalog shows what it will be able to learn.
+              No skills learned yet. Open Skills or type <code>/learn conversation</code> in the
+              Console to learn the first one: its benchmark sets the level.
             </p>
           ) : null}
           <ul className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-3">

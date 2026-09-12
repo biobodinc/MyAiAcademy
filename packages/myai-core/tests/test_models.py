@@ -27,10 +27,14 @@ from myai_core.hardware.models import (
 from myai_core.hardware.volumes import probe_volumes
 from myai_core.models.catalog import all_catalog_models, get_catalog_model
 from myai_core.models.download import (
+    HOST_ETAG,
+    PINNED,
+    PUBLISHER,
+    UNVERIFIED,
     DownloadCancelled,
     IntegrityError,
     ModelDownloader,
-    declared_sha256,
+    read_host_info,
 )
 from myai_core.models.llama_cpp_provider import LlamaCppProvider
 from myai_core.models.provider import (
@@ -108,6 +112,9 @@ def test_hardware_fit_and_recommendation() -> None:
 class _RangeHandler(BaseHTTPRequestHandler):
     payload = b""
     etag: str | None = None
+    """The host's opaque validator. Advisory only: never fails a download."""
+    linked_etag: str | None = None
+    """``X-Linked-Etag``: the hash the publisher promises. May fail a download."""
     honour_range = True
     fail_after: int | None = None
 
@@ -119,6 +126,8 @@ class _RangeHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(length))
         if self.etag:
             self.send_header("ETag", f'"{self.etag}"')
+        if self.linked_etag:
+            self.send_header("X-Linked-Etag", f'"{self.linked_etag}"')
         for k, v in (extra or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -153,6 +162,7 @@ def file_server() -> Iterator[tuple[str, type[_RangeHandler]]]:
 
     Handler.payload = bytes(range(256)) * 40_000  # ~10 MB
     Handler.etag = hashlib.sha256(Handler.payload).hexdigest()
+    Handler.linked_etag = None
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -173,7 +183,7 @@ def test_download_verifies_against_host_declared_hash(
     result = _downloader().download(url, dest, on_progress=lambda d, t: progress.append((d, t)))
     assert dest.is_file() and dest.stat().st_size == len(handler.payload)
     assert result.sha256 == handler.etag
-    assert result.verified_against == "host-declared"
+    assert result.verified_against == HOST_ETAG
     assert progress[-1] == (len(handler.payload), len(handler.payload))
     assert not dest.with_name("m.gguf.part").exists()
 
@@ -230,12 +240,110 @@ def test_download_cancel(file_server: tuple[str, type[_RangeHandler]], tmp_path:
         _downloader().download(url, tmp_path / "m.gguf", cancel=cancel)
 
 
-def test_declared_sha256_parsing() -> None:
-    digest = "a" * 64
-    assert declared_sha256(httpx.Headers({"ETag": f'"{digest}"'})) == digest
-    assert declared_sha256(httpx.Headers({"X-Linked-ETag": f'W/"{digest}"'})) == digest
-    assert declared_sha256(httpx.Headers({"ETag": '"not-a-hash"'})) is None
-    assert declared_sha256(httpx.Headers({})) is None
+def _response(
+    headers: dict[str, str], history: list[dict[str, str]] | None = None
+) -> httpx.Response:
+    request = httpx.Request("HEAD", "https://cdn.example/file.gguf")
+    return httpx.Response(
+        200,
+        headers=headers,
+        request=request,
+        history=[
+            httpx.Response(
+                302, headers=h, request=httpx.Request("HEAD", "https://origin.example/file.gguf")
+            )
+            for h in (history or [])
+        ],
+    )
+
+
+def test_host_info_reads_the_publisher_hash_from_before_the_redirect() -> None:
+    """Hugging Face puts X-Linked-Etag on its own response, then redirects to a CDN."""
+    publisher = "a" * 64
+    cdn_id = "b" * 64
+    info = read_host_info(
+        _response(
+            {"ETag": f'"{cdn_id}"', "Content-Length": "10"},
+            history=[{"X-Linked-Etag": f'"{publisher}"', "X-Linked-Size": "4096"}],
+        )
+    )
+    assert info.publisher_sha256 == publisher
+    assert info.etag_sha256 == cdn_id
+    assert info.size_bytes == 4096  # the publisher's size wins over the CDN's
+
+
+def test_host_info_ignores_values_that_are_not_hashes() -> None:
+    info = read_host_info(_response({"ETag": '"not-a-hash"'}))
+    assert info.publisher_sha256 is None and info.etag_sha256 is None
+    weak = read_host_info(_response({"X-Linked-Etag": f'W/"{"c" * 64}"'}))
+    assert weak.publisher_sha256 == "c" * 64
+
+
+def test_download_survives_an_etag_that_is_not_a_content_hash(
+    file_server: tuple[str, type[_RangeHandler]], tmp_path: Path
+) -> None:
+    """The bug this guards against: Hugging Face's Xet CDN returns a 64-character
+    hexadecimal id that is not the file's SHA-256. Treating it as one failed every
+    download of a perfectly good file and deleted it."""
+    url, handler = file_server
+    handler.etag = "f" * 64  # looks like a hash, is not the content hash
+    dest = tmp_path / "m.gguf"
+
+    result = _downloader().download(url, dest)
+
+    assert dest.is_file() and dest.stat().st_size == len(handler.payload)
+    assert result.sha256 == hashlib.sha256(handler.payload).hexdigest()
+    assert result.verified_against == UNVERIFIED and result.verified is False
+
+
+def test_download_fails_when_the_publisher_hash_does_not_match(
+    file_server: tuple[str, type[_RangeHandler]], tmp_path: Path
+) -> None:
+    url, handler = file_server
+    handler.linked_etag = "d" * 64
+    dest = tmp_path / "m.gguf"
+
+    with pytest.raises(IntegrityError) as excinfo:
+        _downloader().download(url, dest)
+
+    message = str(excinfo.value)
+    assert "d" * 64 in message  # what was expected
+    assert hashlib.sha256(handler.payload).hexdigest() in message  # what we got
+    assert "publisher" in message
+    assert not dest.exists() and not dest.with_name("m.gguf.part").exists()
+
+
+def test_download_verifies_against_the_publisher_hash(
+    file_server: tuple[str, type[_RangeHandler]], tmp_path: Path
+) -> None:
+    url, handler = file_server
+    handler.linked_etag = hashlib.sha256(handler.payload).hexdigest()
+    handler.etag = "e" * 64  # a wrong ETag must not matter when a real hash exists
+    result = _downloader().download(url, tmp_path / "m.gguf")
+    assert result.verified_against == PUBLISHER and result.verified is True
+
+
+def test_pinned_hash_outranks_the_host(
+    file_server: tuple[str, type[_RangeHandler]], tmp_path: Path
+) -> None:
+    url, handler = file_server
+    digest = hashlib.sha256(handler.payload).hexdigest()
+    result = _downloader().download(url, tmp_path / "m.gguf", expected_sha256=digest)
+    assert result.verified_against == PINNED and result.verified is True
+
+    with pytest.raises(IntegrityError, match="pinned catalog hash"):
+        _downloader().download(url, tmp_path / "other.gguf", expected_sha256="9" * 64)
+
+
+def test_inspect_reports_what_the_host_declares_without_downloading(
+    file_server: tuple[str, type[_RangeHandler]], tmp_path: Path
+) -> None:
+    url, handler = file_server
+    handler.linked_etag = "1" * 64
+    info = _downloader().inspect(url)
+    assert info.publisher_sha256 == "1" * 64
+    assert info.size_bytes == len(handler.payload)
+    assert not (tmp_path / "m.gguf").exists()
 
 
 # --- model service ----------------------------------------------------------------------
@@ -265,7 +373,7 @@ def test_model_service_requires_license_then_installs(
 
     dest.parent.mkdir(parents=True)
     dest.write_bytes(b"gguf")
-    svc.record_installed(model, dest, 4, "abc")
+    svc.record_installed(model, dest, 4, "abc", PUBLISHER)
     assert svc.active_model_id() == model.id  # first install becomes active
     entries = {e.catalog.id: e for e in svc.entries(None)}
     assert entries[model.id].installed and entries[model.id].active

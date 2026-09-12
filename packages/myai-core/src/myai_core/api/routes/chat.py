@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from myai_core.api.command_context import build_command_context
 from myai_core.api.deps import PreferencesDep, ProfileDep, SessionDep, StateDep, StorageDep
 from myai_core.api.model_loading import prepare_active_model
 from myai_core.api.streaming import stream_with_cancel
@@ -19,13 +20,10 @@ from myai_core.chat.service import (
     MessageRead,
     SendMessage,
 )
-from myai_core.commands.dispatcher import CommandContext, execute
+from myai_core.commands.dispatcher import execute
 from myai_core.commands.parser import is_command
-from myai_core.hardware import HardwareReport, detect_hardware
-from myai_core.memory.service import MemoryService
 from myai_core.models.provider import GenerationOptions, ProviderError
 from myai_core.models.service import ModelService
-from myai_core.skills.service import SkillsService
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -155,34 +153,7 @@ def _run_command(
     prefs: PreferencesDep,
     storage: StorageDep,
 ) -> dict[str, object]:
-    row = profile.get()
-    preferences = prefs.get()
-
-    def hardware() -> HardwareReport:
-        if state.hardware_cache is None:
-            state.hardware_cache = detect_hardware()
-        return state.hardware_cache
-
-    def status_labels() -> dict[str, object]:
-        built = state.status.build(
-            profile_exists=row is not None,
-            storage_configured=storage.get_config() is not None,
-            onboarding_completed=preferences.onboarding_completed,
-            privacy_mode=preferences.privacy_mode.value,
-            ai_state=state.ai_state(session),
-        )
-        return state.status.labels(built)
-
-    def memories() -> list[str]:
-        if row is None:
-            return []
-        return [m.content for m in MemoryService(session, row.ai_id).list_all()]
-
-    ctx = CommandContext(
-        hardware=hardware,
-        skills=lambda: SkillsService(session).summary(row.ai_id if row else None),
-        preferences=lambda: preferences,
-        status=status_labels,
-        memories=memories,
+    ctx = build_command_context(
+        state, session, profile=profile.get(), preferences=prefs.get(), storage=storage
     )
-    return execute(text, ctx).model_dump()
+    return execute(text, ctx).model_dump(mode="json")

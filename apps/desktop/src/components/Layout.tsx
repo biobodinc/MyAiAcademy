@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { useProfile, useStatus } from "../lib/api";
+import { titleCase } from "@myai/api-client";
 import { cx } from "../lib/cx";
 import { StatusPill } from "./ui";
 
@@ -73,6 +74,15 @@ export function Layout() {
         </nav>
         <div className="space-y-2 border-t border-border p-4 text-xs">
           <StatusPill tone="success">MyAI running locally</StatusPill>
+          {status.data?.job && (
+            <NavLink to="/skills" className="block">
+              <StatusPill tone={status.data.job.status === "paused" ? "warning" : "info"}>
+                {status.data.job.kind === "learn" ? "Learning" : "Evaluating"}{" "}
+                {titleCase(status.data.job.skill_id)} {status.data.job.progress_percent}%
+                {status.data.job.status === "paused" ? " (paused)" : ""}
+              </StatusPill>
+            </NavLink>
+          )}
           <StatusPill
             tone={
               internet === "available" ? "info" : internet === "unavailable" ? "muted" : "warning"

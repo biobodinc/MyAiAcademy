@@ -256,7 +256,10 @@ def test_import_local_gguf_and_providers(client: TestClient, tmp_path: Path) -> 
     assert entry["active"] is True and data["active_model_id"] == entry["id"]
     copied = Path(entry["file_path"])
     assert copied.parent.name == "imported" and copied.exists() and outside.exists()
-    assert entry["verified_sha256"] is not None
+    assert entry["file_sha256"] is not None
+    # An imported file was not checked against any publisher, and says so.
+    assert entry["verification"] == "imported"
+    assert "did not verify" in entry["verification_detail"]
 
     # Same bytes again: refused as a duplicate, not silently re-copied.
     r = client.post("/api/models/import", json={"path": str(outside), "rights_confirmed": True})

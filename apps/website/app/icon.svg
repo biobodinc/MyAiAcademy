@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MyAI Academy">
+  <rect width="512" height="512" rx="113" fill="#6d4aff" />
+  <g fill="#fff">
+    <path d="M256 84 L426 163 L256 242 L86 163 Z" />
+    <path d="M171 186 v78 a85 60 0 0 0 170 0 v-78 l-85 40 Z" />
+    <rect x="419" y="163" width="14" height="148" rx="7" />
+    <circle cx="426" cy="328" r="21" />
+  </g>
+</svg>

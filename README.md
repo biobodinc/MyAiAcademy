@@ -9,7 +9,7 @@ devices. Private by default. Local by design. Sharing by choice.
 
 ## Status
 
-Phases 1 (Foundation) and 2 (Local AI) are implemented and tested. Later phases are visible
+Phases 1 (Foundation), 2 (Local AI) and 3 (Skills) are implemented and tested. Later phases are visible
 in the product as clearly labelled "Planned · Phase N" states; nothing is faked. See
 [`docs/phases.md`](docs/phases.md) for the per-phase table.
 
@@ -41,8 +41,21 @@ updated.
   paired") and nothing else. Pairing, chat and controls arrive in Phase 6.
 - **Knowledge retrieval is keyword-based** (BM25 over SQLite FTS5), not semantic. It finds
   passages that share words with your question.
-- **Skills, levels and training are not implemented.** The catalog and skill tree show what
-  will be learnable; `/learn` and `/train` say so instead of doing anything.
+- **Training is not implemented (Phase 4).** Skills are learned from bundled packages
+  (instructions plus a 12-task benchmark) and a skill's level is the score its benchmark
+  produced with your local model; `/train` shows its information and states that training
+  jobs arrive in Phase 4. Creative skills (images, video, music, games) have no benchmark
+  yet and cannot be learned.
+- **Not every model download can be hash-verified.** A download is only failed when it
+  disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or
+  Hugging Face's `X-Linked-Etag`). A plain `ETag` is an opaque validator, not a content
+  hash, so it is never used to reject a file. Where no published hash exists the download
+  is checked for completeness only, and the app labels that model "unverified" rather than
+  implying it was checked. `myai models check <id>` shows what a host declares.
+- **The coding benchmark executes code written by your local model.** It runs in a
+  separate interpreter with an import allow-list, a scratch directory, a timeout and
+  resource limits. That contains accidents; it is not a security boundary against a
+  hostile model, so treat imported models with the same care as any software you run.
 - **Network activity is limited to** an internet reachability check (a TCP connect with
   no payload) and model downloads you start after accepting a licence. Nothing you write,
   remember or add to knowledge leaves your machine.
@@ -64,6 +77,8 @@ uv run myai models list
 uv run myai models download qwen2.5-1.5b-instruct-q4km   # shows the licence, asks, then downloads
 uv run myai chat
 uv run myai models import ~/models/some.gguf --confirm-rights   # use a GGUF you already have
+uv run myai learn conversation                       # preview, confirm, benchmark -> level
+uv run myai history                                  # every level change and why
 uv run myai ask "what is training?"                  # built-in guide, not the model
 uv run myai hardware --benchmark                     # memory bandwidth + measured tokens/s
 uv run myai storage cleanup                          # leftovers; --delete removes them

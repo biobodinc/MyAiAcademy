@@ -27,3 +27,19 @@ AI stack, which Phase 4 training will use.
   honest. Release builds include it.
 - Retrieval quality depends on shared vocabulary between question and passage; the chat
   shows which passages were used so users can judge.
+
+## Correction (2026-09-12)
+
+"Verified against the host-declared SHA-256" was wrong about what a host declares. This
+decision read any 64-character hexadecimal `ETag` as the file's SHA-256. Hugging Face's
+Xet-backed CDN returns an identifier in exactly that shape which is **not** the content
+hash, so every such download was reported corrupt and deleted after transferring the
+whole file. A user hit this on the first real download.
+
+Only a hash the publisher promises may now fail a download: a hash pinned in the catalog,
+or `X-Linked-Etag`, which Hugging Face documents as the LFS object's SHA-256 and sets on
+its own response before redirecting to a CDN (so it is read from the redirect history, not
+the final response). A bare `ETag` is used opportunistically: matching is extra confidence,
+mismatching means nothing. Where no promised hash exists the model is recorded and shown
+as unverified rather than being presented with a SHA-256 that nothing checked. See
+`models/download.py` and ADR-0012.

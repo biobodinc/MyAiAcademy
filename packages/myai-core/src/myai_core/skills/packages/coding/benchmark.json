@@ -1,0 +1,140 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 200,
+  "tasks": [
+    {
+      "id": "add",
+      "area": "coding",
+      "prompt": "Write a Python function add(a, b) that returns the sum of a and b.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["add(2, 3) == 5", "add(-1, 1) == 0", "add(0.5, 0.25) == 0.75"]
+        }
+      ]
+    },
+    {
+      "id": "palindrome",
+      "area": "coding",
+      "prompt": "Write a Python function is_palindrome(s) that returns True when the string s reads the same forwards and backwards, ignoring letter case.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": [
+            "is_palindrome('Level') is True",
+            "is_palindrome('hello') is False",
+            "is_palindrome('') is True"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fizz",
+      "area": "coding",
+      "prompt": "Write a Python function fizz(n) that returns 'FizzBuzz' if n is divisible by 15, 'Fizz' if divisible by 3, 'Buzz' if divisible by 5, and otherwise the number as a string.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": [
+            "fizz(15) == 'FizzBuzz'",
+            "fizz(9) == 'Fizz'",
+            "fizz(10) == 'Buzz'",
+            "fizz(7) == '7'"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "count-vowels",
+      "area": "coding",
+      "prompt": "Write a Python function count_vowels(s) that returns how many vowels (a, e, i, o, u, in either case) the string s contains.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": [
+            "count_vowels('hello') == 2",
+            "count_vowels('AEIOU xyz') == 5",
+            "count_vowels('') == 0"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "second-largest",
+      "area": "coding",
+      "prompt": "Write a Python function second_largest(nums) that returns the second largest distinct value in a list of numbers with at least two distinct values.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": [
+            "second_largest([3, 1, 2]) == 2",
+            "second_largest([5, 5, 4, 4, 1]) == 4",
+            "second_largest([1, 2]) == 1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fix-factorial",
+      "area": "debugging",
+      "prompt": "This function should return the factorial of n but has a bug. Return the corrected function.\n\n```python\ndef fact(n):\n    if n == 0:\n        return 0\n    return n * fact(n - 1)\n```",
+      "checks": [
+        { "type": "python_tests", "tests": ["fact(0) == 1", "fact(5) == 120", "fact(1) == 1"] }
+      ]
+    },
+    {
+      "id": "fix-first-n",
+      "area": "debugging",
+      "prompt": "This function should return the first n items of a list but returns one too few. Return the corrected function.\n\n```python\ndef first_n(items, n):\n    return items[:n - 1]\n```",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": [
+            "first_n([1, 2, 3, 4], 2) == [1, 2]",
+            "first_n([1, 2, 3], 0) == []",
+            "first_n(['a'], 5) == ['a']"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fix-reverse",
+      "area": "debugging",
+      "prompt": "This function should return the reversed string but returns None. Return the corrected function.\n\n```python\ndef rev(s):\n    s[::-1]\n```",
+      "checks": [{ "type": "python_tests", "tests": ["rev('abc') == 'cba'", "rev('') == ''"] }]
+    },
+    {
+      "id": "print-len",
+      "area": "reasoning",
+      "prompt": "What does this Python code print? Reply with the value only.\n\nprint(len('hello') * 2)",
+      "checks": [{ "type": "numeric", "expected": 10 }]
+    },
+    {
+      "id": "sum-list",
+      "area": "reasoning",
+      "prompt": "What does this Python code print? Reply with the value only.\n\nx = [1, 2, 3]\nx.append(4)\nprint(sum(x))",
+      "checks": [{ "type": "numeric", "expected": 10 }]
+    },
+    {
+      "id": "dict-lookup",
+      "area": "reasoning",
+      "prompt": "In Python, which is faster for looking up a value by key: a list or a dict? Answer with one word.",
+      "checks": [
+        { "type": "contains_all", "terms": ["dict"] },
+        { "type": "word_count", "max": 3 }
+      ]
+    },
+    {
+      "id": "mean-with-docstring",
+      "area": "quality",
+      "prompt": "Write a Python function mean(nums) that returns the average of a list of numbers and returns 0.0 for an empty list. Include a docstring.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["mean([1, 2, 3]) == 2", "mean([]) == 0.0", "mean([4]) == 4"]
+        },
+        { "type": "code_contains", "pattern": "\"\"\"|'''" }
+      ]
+    }
+  ]
+}

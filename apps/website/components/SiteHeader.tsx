@@ -1,35 +1,30 @@
 import Link from "next/link";
 
+import { MobileNav } from "@/components/MobileNav";
+import { NAV_LINKS, SIGN_IN } from "@/lib/nav";
 import { SITE } from "@/lib/site";
-
-const links = [
-  { href: "/download", label: "Download" },
-  { href: "/cli", label: "Command line" },
-  { href: "/disclosures", label: "Disclosures" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/security", label: "Security" },
-];
 
 export function SiteHeader() {
   return (
     <header className="border-b border-border bg-bg-elevated/80 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-lg font-bold tracking-tight">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+        <Link href="/" className="text-base font-bold tracking-tight sm:text-lg">
           {SITE.name}
         </Link>
-        <nav className="flex items-center gap-6 text-sm" aria-label="Main">
-          {links.map((l) => (
-            <Link key={l.href} href={l.href} className="text-fg-muted hover:text-fg">
-              {l.label}
+        <nav className="hidden items-center gap-6 text-sm md:flex" aria-label="Main">
+          {NAV_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="py-2 text-fg-muted hover:text-fg">
+              {link.label}
             </Link>
           ))}
           <Link
-            href="/sign-in"
-            className="rounded-full bg-accent px-4 py-1.5 font-medium text-accent-fg hover:brightness-110"
+            href={SIGN_IN.href}
+            className="rounded-full bg-accent px-4 py-2 font-medium text-accent-fg hover:brightness-110"
           >
-            Sign in
+            {SIGN_IN.label}
           </Link>
         </nav>
+        <MobileNav />
       </div>
     </header>
   );
