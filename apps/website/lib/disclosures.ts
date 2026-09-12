@@ -26,6 +26,14 @@ export const DISCLOSURES = [
     body: "Images, video, music and games have no measurable benchmark in this build, so they cannot be learned or trained, and every surface says so rather than showing a level.",
   },
   {
+    title: "There are no accounts, and nothing signs in.",
+    body: "This build has no account server and no code path that would send anything to one. Everything stays on the machine it runs on. An account is planned as the way to get installers and to sign in on more than one device; until it exists, the app, the command line and this site all say there is none rather than implying otherwise.",
+  },
+  {
+    title: "Pairing grants access to programs on your machine, not to other machines.",
+    body: "The local service listens on 127.0.0.1 only, so nothing on your network can reach it. Each paired client holds its own credential that you can revoke on its own, and only the installation itself can grant access, revoke it, export your data or erase it. Credentials are stored as SHA-256 hashes and shown once.",
+  },
+  {
     title: "Not every model download can be hash-verified.",
     body: "A download is only failed when it disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or Hugging Face's X-Linked-Etag header). A plain ETag is an opaque validator rather than a content hash, so it is never used to reject a file. Where no published hash exists the download is checked for completeness only, and the app labels that model \u201cunverified\u201d rather than implying it was checked.",
   },

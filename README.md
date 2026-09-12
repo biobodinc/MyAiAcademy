@@ -52,6 +52,15 @@ updated.
   [ADR-0013](docs/adr/0013-training-optimises-instructions-not-weights.md)).
 - **Creative skills cannot be learned or trained yet** (images, video, music, games): there
   is no measurable benchmark for them in this build, and every surface says so.
+- **There are no accounts, and nothing signs in.** There is no account server in this
+  build and no code path that would send anything to one. Everything is local to the
+  machine it runs on. An account is planned as the way to get installers and to sign in on
+  more than one device; until it exists, every surface says there is none.
+- **Pairing grants access to programs on this machine, not to other machines.** The local
+  service listens on 127.0.0.1 only, so nothing on your network can reach it. A paired
+  client holds its own credential, which you can revoke on its own; only the installation
+  itself can grant or revoke access, export or erase
+  ([ADR-0014](docs/adr/0014-per-client-credentials-and-erasure.md)).
 - **Not every model download can be hash-verified.** A download is only failed when it
   disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or
   Hugging Face's `X-Linked-Etag`). A plain `ETag` is an opaque validator, not a content

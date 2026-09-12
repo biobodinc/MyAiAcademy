@@ -54,8 +54,14 @@ def get_skills_service(session: SessionDep) -> SkillsService:
     return SkillsService(session)
 
 
-def get_audit_service(session: SessionDep) -> AuditService:
-    return AuditService(session)
+def get_audit_service(session: SessionDep, request: Request) -> AuditService:
+    """An audit service that already knows who is acting.
+
+    Routes record *what* happened; who did it comes from the authenticated caller rather
+    than from every call site remembering to pass it.
+    """
+    caller = getattr(request.state, "caller", None)
+    return AuditService(session, actor_device_id=getattr(caller, "device_id", None))
 
 
 ProfileDep = Annotated[ProfileService, Depends(get_profile_service)]

@@ -11,7 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Read Audit */
+        /**
+         * Read Audit
+         * @description The local activity log. Summaries only: it never holds message or document text.
+         */
         get: operations["read_audit_api_audit_get"];
         put?: never;
         post?: never;
@@ -690,6 +693,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/privacy/erase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Erase Everything
+         * @description Delete everything. Requires the confirmation phrase, and cannot be undone.
+         */
+        post: operations["erase_everything_api_privacy_erase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/erase-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Erase Preview
+         * @description What erasing would delete. Deletes nothing.
+         */
+        get: operations["erase_preview_api_privacy_erase_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/privacy/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export Everything
+         * @description Write an archive of everything this installation holds about you.
+         *
+         *     Credentials are deliberately left out: they are access grants, not your data.
+         */
+        post: operations["export_everything_api_privacy_export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile": {
         parameters: {
             query?: never;
@@ -707,6 +772,126 @@ export interface paths {
         head?: never;
         /** Update Profile */
         patch: operations["update_profile_api_profile_patch"];
+        trace?: never;
+    };
+    "/api/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Overview */
+        get: operations["read_overview_api_security_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Account */
+        get: operations["read_account_api_security_account_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Devices */
+        get: operations["list_devices_api_security_devices_get"];
+        put?: never;
+        /**
+         * Register Device
+         * @description Issue a credential directly. Owner only; the secret is returned once.
+         */
+        post: operations["register_device_api_security_devices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/devices/{device_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoke Device
+         * @description Stop a client from acting as your AI. Takes effect on its next request.
+         */
+        post: operations["revoke_device_api_security_devices__device_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/pair": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pair
+         * @description Exchange a pairing code for a credential of your own.
+         *
+         *     This is the only route that cannot require a credential — a client has none yet — so
+         *     the code itself is the authentication. It is still behind the loopback bind and the
+         *     Host and Origin checks, it is single use, it expires in minutes, and a wrong code is
+         *     counted against every live code so guessing is bounded and visible in the audit log.
+         */
+        post: operations["pair_api_security_pair_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/pairing-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Pairing Code
+         * @description Create a single-use code a client can exchange for its own credential. Owner only.
+         */
+        post: operations["create_pairing_code_api_security_pairing_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/skills": {
@@ -1047,6 +1232,29 @@ export interface components {
          * @enum {string}
          */
         AcceleratorBackend: "cuda" | "rocm" | "metal" | "none";
+        /**
+         * AccountState
+         * @description The account picture, stated as it is rather than as it is planned to be.
+         */
+        AccountState: {
+            /**
+             * Available
+             * @default false
+             */
+            available: boolean;
+            /**
+             * Detail
+             * @default This build has no accounts. There is no sign-in, no account server and no code path that would send your data anywhere. An account is planned as the way to get installers and to sign in on more than one device; until it exists, everything here is local to this machine.
+             */
+            detail: string;
+            /**
+             * Linked
+             * @default false
+             */
+            linked: boolean;
+            /** Provider */
+            provider: string | null;
+        };
         /** AchievementStatus */
         AchievementStatus: {
             /** Earned */
@@ -1066,7 +1274,7 @@ export interface components {
          * AuditCategory
          * @enum {string}
          */
-        AuditCategory: "profile" | "storage" | "preferences" | "security" | "system";
+        AuditCategory: "profile" | "storage" | "preferences" | "security" | "privacy" | "system";
         /** AuditEventRead */
         AuditEventRead: {
             /** Action */
@@ -1346,6 +1554,28 @@ export interface components {
             /** Skills */
             skills: string[];
         };
+        /** DeviceRead */
+        DeviceRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Last Seen At */
+            last_seen_at: string | null;
+            /** Name */
+            name: string;
+            /** Platform */
+            platform: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Revoked Reason */
+            revoked_reason: string | null;
+        };
         /** DocumentAddPath */
         DocumentAddPath: {
             /** Path */
@@ -1408,6 +1638,58 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * ErasePlan
+         * @description What erasing would remove, before anything is removed.
+         */
+        ErasePlan: {
+            /**
+             * Confirmation Phrase
+             * @default ERASE MY DATA
+             */
+            confirmation_phrase: string;
+            /** Row Counts */
+            row_counts: {
+                [key: string]: number;
+            };
+            /** Storage Bytes */
+            storage_bytes: number;
+            /** Storage File Count */
+            storage_file_count: number;
+            /** Storage Root */
+            storage_root: string | null;
+            /** Warnings */
+            warnings: string[];
+        };
+        /** EraseRequest */
+        EraseRequest: {
+            /**
+             * Confirm
+             * @description Must be exactly 'ERASE MY DATA'.
+             */
+            confirm: string;
+            /**
+             * Remove Files
+             * @description Also delete the files under your storage root.
+             * @default false
+             */
+            remove_files: boolean;
+        };
+        /** EraseResult */
+        EraseResult: {
+            /** Bytes Freed */
+            bytes_freed: number;
+            /** Files Deleted */
+            files_deleted: number;
+            /** Notes */
+            notes: string[];
+            /** Rows Deleted */
+            rows_deleted: {
+                [key: string]: number;
+            };
+            /** Storage Removed */
+            storage_removed: boolean;
+        };
         /** EvaluationRead */
         EvaluationRead: {
             /** Area Scores */
@@ -1445,6 +1727,63 @@ export interface components {
          * @enum {string}
          */
         ExperienceMode: "beginner" | "advanced";
+        /**
+         * ExportManifest
+         * @description The archive's self-description, written inside the archive.
+         */
+        ExportManifest: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Excludes */
+            excludes: string[];
+            /** File Bytes */
+            file_bytes: number;
+            /** File Count */
+            file_count: number;
+            /**
+             * Format
+             * @default myai-export
+             */
+            format: string;
+            /**
+             * Format Version
+             * @default 1
+             */
+            format_version: number;
+            /** Includes */
+            includes: string[];
+            /** Row Counts */
+            row_counts: {
+                [key: string]: number;
+            };
+            /** Service Version */
+            service_version: string;
+        };
+        /** ExportRequest */
+        ExportRequest: {
+            /**
+             * Destination
+             * @description Where to write it. Defaults to Exports in your storage root.
+             */
+            destination?: string | null;
+            /**
+             * Include Model Files
+             * @description Copy the files in your storage root as well. Large; off by default.
+             * @default false
+             */
+            include_model_files: boolean;
+        };
+        /** ExportResult */
+        ExportResult: {
+            manifest: components["schemas"]["ExportManifest"];
+            /** Path */
+            path: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
         /** GenerationOptions */
         GenerationOptions: {
             /**
@@ -1623,6 +1962,23 @@ export interface components {
             prompt_seconds: number;
             /** Prompt Tokens */
             prompt_tokens: number | null;
+        };
+        /**
+         * IssuedCredential
+         * @description A credential, returned once. It is not stored and cannot be shown again.
+         */
+        IssuedCredential: {
+            device: components["schemas"]["DeviceRead"];
+            /**
+             * Note
+             * @default This credential is shown once. If it is lost, revoke the client and pair again.
+             */
+            note: string;
+            /**
+             * Token
+             * @description Shown once. Store it; it cannot be recovered.
+             */
+            token: string;
         };
         /** JobRead */
         JobRead: {
@@ -1966,6 +2322,48 @@ export interface components {
             /** Version */
             version: string;
         };
+        /**
+         * PairingCodeRead
+         * @description A pairing code, returned once, with the moment it stops working.
+         */
+        PairingCodeRead: {
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
+            /** Label */
+            label: string;
+            /**
+             * Note
+             * @default Single use, and only until it expires. Type it into the client you are pairing; anyone who has it can obtain a credential, so treat it like a password.
+             */
+            note: string;
+        };
+        /** PairingCodeRequest */
+        PairingCodeRequest: {
+            /**
+             * Label
+             * @default
+             */
+            label: string;
+        };
+        /** PairRequest */
+        PairRequest: {
+            /** Code */
+            code: string;
+            /**
+             * Kind
+             * @default cli
+             */
+            kind: string;
+            /** Name */
+            name: string;
+        };
         /** ParsedCommand */
         ParsedCommand: {
             /** Args */
@@ -2208,6 +2606,17 @@ export interface components {
              */
             status: "available" | "unavailable" | "planned";
         };
+        /** RegisterClient */
+        RegisterClient: {
+            /**
+             * Kind
+             * @description One of: desktop, cli, mobile, integration, unknown
+             * @default integration
+             */
+            kind: string;
+            /** Name */
+            name: string;
+        };
         /** RetrievedChunk */
         RetrievedChunk: {
             /** Chunk Id */
@@ -2225,6 +2634,71 @@ export interface components {
              * @description BM25 rank; lower is better (SQLite convention).
              */
             score: number;
+        };
+        /** RevokeRequest */
+        RevokeRequest: {
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /**
+         * SecretStorageReport
+         * @description What was checked, what it found, and what could not be determined.
+         */
+        SecretStorageReport: {
+            /**
+             * Checked
+             * @description False on platforms where permissions cannot be read this way.
+             * @default true
+             */
+            checked: boolean;
+            /** Data Dir Owner Only */
+            data_dir_owner_only: boolean | null;
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+            /**
+             * Mode
+             * @description Octal permissions, POSIX only.
+             */
+            mode: string | null;
+            /**
+             * Owner Only
+             * @description True when only the owner can read the secrets; None when unverifiable.
+             */
+            owner_only: boolean | null;
+            /** Problems */
+            problems: string[];
+            /** Token File Exists */
+            token_file_exists: boolean;
+        };
+        /**
+         * SecurityOverview
+         * @description What protects this installation right now.
+         */
+        SecurityOverview: {
+            account: components["schemas"]["AccountState"];
+            /** Active Clients */
+            active_clients: number;
+            /**
+             * Bound To Loopback
+             * @description The service listens on 127.0.0.1 only; nothing on the LAN.
+             * @default true
+             */
+            bound_to_loopback: boolean;
+            /** Caller Is Owner */
+            caller_is_owner: boolean;
+            /** Caller Name */
+            caller_name: string;
+            /** Notes */
+            notes: string[];
+            /** Revoked Clients */
+            revoked_clients: number;
+            secret_storage: components["schemas"]["SecretStorageReport"];
         };
         /** SendMessage */
         SendMessage: {
@@ -2373,7 +2847,7 @@ export interface components {
          * StorageCategory
          * @enum {string}
          */
-        StorageCategory: "core" | "models" | "skills" | "training" | "checkpoints" | "memory" | "knowledge" | "projects" | "generated";
+        StorageCategory: "core" | "models" | "skills" | "training" | "checkpoints" | "memory" | "knowledge" | "projects" | "generated" | "exports";
         /**
          * StorageLocationCheck
          * @description Result of validating a candidate storage root before committing to it.
@@ -2684,6 +3158,7 @@ export interface components {
     pathItems: never;
 }
 export type SchemaAcceleratorBackend = components['schemas']['AcceleratorBackend'];
+export type SchemaAccountState = components['schemas']['AccountState'];
 export type SchemaAchievementStatus = components['schemas']['AchievementStatus'];
 export type SchemaAuditCategory = components['schemas']['AuditCategory'];
 export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
@@ -2708,12 +3183,19 @@ export type SchemaConversationRead = components['schemas']['ConversationRead'];
 export type SchemaConversationUpdate = components['schemas']['ConversationUpdate'];
 export type SchemaCpuInfo = components['schemas']['CpuInfo'];
 export type SchemaDegreeStatus = components['schemas']['DegreeStatus'];
+export type SchemaDeviceRead = components['schemas']['DeviceRead'];
 export type SchemaDocumentAddPath = components['schemas']['DocumentAddPath'];
 export type SchemaDocumentAddText = components['schemas']['DocumentAddText'];
 export type SchemaDocumentRead = components['schemas']['DocumentRead'];
 export type SchemaDownloadStatus = components['schemas']['DownloadStatus'];
+export type SchemaErasePlan = components['schemas']['ErasePlan'];
+export type SchemaEraseRequest = components['schemas']['EraseRequest'];
+export type SchemaEraseResult = components['schemas']['EraseResult'];
 export type SchemaEvaluationRead = components['schemas']['EvaluationRead'];
 export type SchemaExperienceMode = components['schemas']['ExperienceMode'];
+export type SchemaExportManifest = components['schemas']['ExportManifest'];
+export type SchemaExportRequest = components['schemas']['ExportRequest'];
+export type SchemaExportResult = components['schemas']['ExportResult'];
 export type SchemaGenerationOptions = components['schemas']['GenerationOptions'];
 export type SchemaGpuInfo = components['schemas']['GpuInfo'];
 export type SchemaGpuMetrics = components['schemas']['GpuMetrics'];
@@ -2727,6 +3209,7 @@ export type SchemaHardwareTier = components['schemas']['HardwareTier'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
 export type SchemaImportRequest = components['schemas']['ImportRequest'];
 export type SchemaInferenceBenchmark = components['schemas']['InferenceBenchmark'];
+export type SchemaIssuedCredential = components['schemas']['IssuedCredential'];
 export type SchemaJobRead = components['schemas']['JobRead'];
 export type SchemaJobSummary = components['schemas']['JobSummary'];
 export type SchemaKnowledgeOverview = components['schemas']['KnowledgeOverview'];
@@ -2746,6 +3229,9 @@ export type SchemaModelsOverview = components['schemas']['ModelsOverview'];
 export type SchemaOnboardingStep = components['schemas']['OnboardingStep'];
 export type SchemaOsInfo = components['schemas']['OsInfo'];
 export type SchemaPackageInfo = components['schemas']['PackageInfo'];
+export type SchemaPairingCodeRead = components['schemas']['PairingCodeRead'];
+export type SchemaPairingCodeRequest = components['schemas']['PairingCodeRequest'];
+export type SchemaPairRequest = components['schemas']['PairRequest'];
 export type SchemaParsedCommand = components['schemas']['ParsedCommand'];
 export type SchemaPreferences = components['schemas']['Preferences'];
 export type SchemaPreferencesUpdate = components['schemas']['PreferencesUpdate'];
@@ -2755,7 +3241,11 @@ export type SchemaProfileCreate = components['schemas']['ProfileCreate'];
 export type SchemaProfileRead = components['schemas']['ProfileRead'];
 export type SchemaProfileUpdate = components['schemas']['ProfileUpdate'];
 export type SchemaProviderInfo = components['schemas']['ProviderInfo'];
+export type SchemaRegisterClient = components['schemas']['RegisterClient'];
 export type SchemaRetrievedChunk = components['schemas']['RetrievedChunk'];
+export type SchemaRevokeRequest = components['schemas']['RevokeRequest'];
+export type SchemaSecretStorageReport = components['schemas']['SecretStorageReport'];
+export type SchemaSecurityOverview = components['schemas']['SecurityOverview'];
 export type SchemaSendMessage = components['schemas']['SendMessage'];
 export type SchemaServiceStatus = components['schemas']['ServiceStatus'];
 export type SchemaSkillAvailability = components['schemas']['SkillAvailability'];
@@ -2783,7 +3273,11 @@ export interface operations {
         parameters: {
             query?: {
                 category?: components["schemas"]["AuditCategory"] | null;
+                /** @description Only what this client did. */
+                device_id?: string | null;
                 limit?: number;
+                /** @description Only events at or after this. */
+                since?: string | null;
             };
             header?: never;
             path?: never;
@@ -4081,6 +4575,92 @@ export interface operations {
             };
         };
     };
+    erase_everything_api_privacy_erase_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraseRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraseResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    erase_preview_api_privacy_erase_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErasePlan"];
+                };
+            };
+        };
+    };
+    export_everything_api_privacy_export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     read_profile_api_profile_get: {
         parameters: {
             query?: never;
@@ -4154,6 +4734,200 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_overview_api_security_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityOverview"];
+                };
+            };
+        };
+    };
+    read_account_api_security_account_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountState"];
+                };
+            };
+        };
+    };
+    list_devices_api_security_devices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceRead"][];
+                };
+            };
+        };
+    };
+    register_device_api_security_devices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterClient"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCredential"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_device_api_security_devices__device_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevokeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pair_api_security_pair_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCredential"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_pairing_code_api_security_pairing_codes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairingCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingCodeRead"];
                 };
             };
             /** @description Validation Error */

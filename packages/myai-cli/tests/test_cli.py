@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -162,3 +163,38 @@ def test_train_is_honest_about_what_it_cannot_do_yet(running_service: Path) -> N
     # A duration that is not a duration is refused rather than silently defaulted.
     code, out = _run("train", "science", "--duration", "soon", data_dir=running_service)
     assert code == 2 and "Could not read a duration" in out
+
+
+def test_security_pairing_and_revocation_from_the_cli(running_service: Path) -> None:
+    code, out = _run("security", "show", data_dir=running_service)
+    assert code == 0 and "127.0.0.1 only" in out and "Account: none" in out
+
+    code, out = _run("security", "clients", data_dir=running_service)
+    assert code == 0 and "No paired clients" in out
+
+    code, out = _run("security", "pairing-code", "--label", "test", data_dir=running_service)
+    assert code == 0 and "Pairing code" in out
+    match = re.search(r"\b(\d{8})\b", out)
+    assert match, out
+    pairing_code = match.group(1)
+
+    code, out = _run(
+        "security", "pair", pairing_code, "--name", "Test CLI", data_dir=running_service
+    )
+    assert code == 0 and "shown once" in out
+
+    code, out = _run("security", "clients", "--json", data_dir=running_service)
+    assert code == 0
+    clients = json.loads(out)
+    assert len(clients) == 1 and clients[0]["name"] == "Test CLI"
+
+    code, out = _run(
+        "security", "revoke", clients[0]["id"], "--reason", "done", data_dir=running_service
+    )
+    assert code == 0 and "no longer act as your AI" in out
+
+
+def test_export_writes_an_archive_and_says_what_it_left_out(running_service: Path) -> None:
+    code, out = _run("security", "export", data_dir=running_service)
+    assert code == 0 and "Exported to" in out
+    assert "Not included" in out

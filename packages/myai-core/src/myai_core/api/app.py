@@ -24,6 +24,7 @@ from myai_core.api.routes import (
     preferences,
     privacy,
     profile,
+    security,
     skills,
     status,
     storage,
@@ -43,6 +44,7 @@ from myai_core.models.runtime import InferenceRuntime
 from myai_core.paths import AppPaths, resolve_app_paths
 from myai_core.security.auth import LocalAuthPolicy, require_local_auth
 from myai_core.security.local_token import load_or_create_token
+from myai_core.security.storage_checks import repair_secret_storage
 from myai_core.skills.jobs import JobManager
 from myai_core.skills.trainer import TrainingService
 from myai_core.status.service import InternetMonitor, StatusService
@@ -69,6 +71,8 @@ def create_app(
         engine = make_engine(paths.database_file)
         upgrade_to_head(engine)
         resolved_token = token or load_or_create_token(paths.token_file)
+        for change in repair_secret_storage(paths):
+            log.warning("tightened permissions on a secret that others could read: %s", change)
         started_at = datetime.now(tz=UTC)
         internet = InternetMonitor()
         session_factory = make_session_factory(engine)
@@ -135,6 +139,7 @@ def create_app(
         jobs_routes,
         audit,
         privacy,
+        security,
         models,
         chat,
         memory,
@@ -142,6 +147,10 @@ def create_app(
     ):
         protected.include_router(module.router)
     app.include_router(protected)
+    # Pairing is the one route that cannot require a credential: a client being paired
+    # does not have one yet. It keeps the loopback bind and the Host and Origin checks,
+    # and the pairing code itself is the authentication (security/devices.py).
+    app.include_router(security.pairing_router, prefix=API_PREFIX)
 
     @app.get("/healthz", include_in_schema=False)
     def healthz() -> dict[str, str]:
