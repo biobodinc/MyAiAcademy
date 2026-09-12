@@ -130,12 +130,19 @@ def test_a_model_written_rule_is_tried_and_kept_only_if_it_measures_better() -> 
     assert any(r.source == "model" for r in outcome.rounds)
 
 
-def test_the_budget_is_respected() -> None:
+def test_the_budget_is_respected_even_when_rounds_appear_to_cost_nothing() -> None:
+    """A budget that cannot expire is not a budget.
+
+    Windows' ``time.monotonic`` ticks about every 16 ms, which is longer than a round with
+    a scripted model takes, so rounds there measured as free and an estimate-only check
+    never fired. The loop therefore stops on the elapsed budget itself as well as on its
+    estimate of the next round.
+    """
     outcome = train_skill(
         base_instructions=BASE,
         practice=_practice(),
         generate=ScriptedModel(),
-        plan=TrainingPlan(budget_seconds=0.0, seed=1),
+        plan=TrainingPlan(budget_seconds=0.0, seed=1, max_rounds=40),
     )
     assert outcome.rounds == []
     assert outcome.stopped_because == "the budget ran out"

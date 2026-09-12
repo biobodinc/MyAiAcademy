@@ -315,7 +315,7 @@ def train_skill(
     """
     control = control or JobControl()
     split = split_practice(practice, focus_area=plan.focus_area)
-    started = time.monotonic()
+    started = time.perf_counter()
     rounds: list[RoundRecord] = []
 
     def score(candidate: Candidate, tasks: Sequence[BenchmarkTask]) -> list[TaskOutcome]:
@@ -353,12 +353,17 @@ def train_skill(
         if before_round is not None:
             before_round()
             control.checkpoint()
-        elapsed = time.monotonic() - started
+        elapsed = time.perf_counter() - started
         if len(rounds) >= plan.max_rounds:
             stopped = f"it reached the {plan.max_rounds}-round limit"
             break
-        per_round = _average_round_seconds(rounds, elapsed)
-        if elapsed + per_round > plan.budget_seconds:
+        # Two separate stops. The first is the budget itself, and it must not depend on
+        # being able to measure a round: a fast model on a coarse clock can make rounds
+        # look free, and a budget that can never expire is not a budget. The second keeps
+        # the promise that a round is never cut off half-scored.
+        if elapsed >= plan.budget_seconds:
+            break
+        if elapsed + _average_round_seconds(rounds, elapsed) > plan.budget_seconds:
             break
         if (
             plan.target_level is not None
@@ -370,7 +375,7 @@ def train_skill(
 
         failures = [(by_id[o.task_id], o) for o in last_outcomes if not o.passed]
         solved = [(by_id[o.task_id], o) for o in last_outcomes if o.passed]
-        round_started = time.monotonic()
+        round_started = time.perf_counter()
         proposal = proposer.propose(best, failures=failures, solved=solved, generate=generate)
         if proposal is None:
             stopped = "it ran out of changes worth trying"
@@ -396,7 +401,7 @@ def train_skill(
                 search_score=search_score,
                 check_score=check_score,
                 accepted=accepted,
-                seconds=round(time.monotonic() - round_started, 2),
+                seconds=round(time.perf_counter() - round_started, 3),
             )
         )
         if on_round is not None:
@@ -410,13 +415,17 @@ def train_skill(
         best_search=best_search,
         best_check=best_check,
         stopped_because=stopped,
-        seconds=round(time.monotonic() - started, 2),
+        seconds=round(time.perf_counter() - started, 3),
     )
 
 
 def _average_round_seconds(rounds: Sequence[RoundRecord], elapsed: float) -> float:
-    """How long to expect the next round to take, from what this run has measured."""
+    """How long to expect the next round to take, from what this run has measured.
+
+    Before the first round the baseline runs are the best available guide: they answer the
+    same tasks a round does.
+    """
     if not rounds:
-        return elapsed  # the baseline runs cost about what one round will
+        return elapsed
     recent = [r.seconds for r in rounds[-3:]]
     return sum(recent) / len(recent)

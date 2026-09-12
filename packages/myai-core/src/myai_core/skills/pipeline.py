@@ -279,7 +279,7 @@ def _training_work(
 
         control.checkpoint()
         state.runtime.ensure_loaded(prepared.path, prepared.config)
-        started = time.monotonic()
+        started = time.perf_counter()
         temperature_limit = preferences.temperature_limit_c
 
         def before_round() -> None:
@@ -290,8 +290,8 @@ def _training_work(
             """
             if temperature_limit is None:
                 return
-            deadline = time.monotonic() + THERMAL_WAIT_SECONDS
-            while time.monotonic() < deadline:
+            deadline = time.perf_counter() + THERMAL_WAIT_SECONDS
+            while time.perf_counter() < deadline:
                 control.checkpoint()
                 gpu = probe_metrics(state.hardware_cache.gpus if state.hardware_cache else None).gpu
                 if (
@@ -393,7 +393,7 @@ def _projected_total(done: int, started: float, plan: TrainingPlan) -> int:
     Guessing up front would be wrong in both directions; the bar is honest as long as it
     is derived from measured speed and the remaining budget.
     """
-    elapsed = time.monotonic() - started
+    elapsed = time.perf_counter() - started
     per_round = elapsed / done if done else 0.0
     remaining = max(0.0, plan.budget_seconds - elapsed)
     projected = done + (int(remaining / per_round) if per_round > 0 else 0)
