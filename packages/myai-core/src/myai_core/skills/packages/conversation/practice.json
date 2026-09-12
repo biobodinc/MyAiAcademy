@@ -1,0 +1,184 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 96,
+  "tactics": [
+    "When a format is requested, reply in exactly that format and nothing else.",
+    "If one word is asked for, reply with one word and no punctuation.",
+    "Do not add greetings, preambles or explanations unless they were asked for.",
+    "Count the items, lines or words the request asks for before replying.",
+    "When the user states a fact about themselves, repeat it exactly when asked for it.",
+    "If the question asks for yes or no, reply with only yes or no.",
+    "Match the letter case the request asks for."
+  ],
+  "tasks": [
+    {
+      "id": "only-done",
+      "area": "instruction_following",
+      "prompt": "Reply with only the word DONE.",
+      "checks": [
+        {
+          "type": "exact",
+          "expected": ["done", "done."]
+        }
+      ]
+    },
+    {
+      "id": "four-seasons",
+      "area": "instruction_following",
+      "prompt": "List the four seasons as exactly four bullet points, one season per bullet, nothing else.",
+      "checks": [
+        {
+          "type": "bullets",
+          "expected": 4
+        },
+        {
+          "type": "contains_all",
+          "terms": ["spring", "summer", "winter"],
+          "partial": true
+        }
+      ]
+    },
+    {
+      "id": "capital-japan",
+      "area": "clarity",
+      "prompt": "What is the capital of Japan? Answer with one word.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["tokyo"]
+        },
+        {
+          "type": "word_count",
+          "max": 3
+        }
+      ]
+    },
+    {
+      "id": "age-recall",
+      "area": "context",
+      "prompt": "My age is 41. Tell me my age in one short sentence.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["41"]
+        },
+        {
+          "type": "word_count",
+          "max": 20
+        }
+      ]
+    },
+    {
+      "id": "lowercase-only",
+      "area": "instruction_following",
+      "prompt": "Answer in lowercase letters only: what month comes after March?",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "^[^A-Z]*$",
+          "ignore_case": false,
+          "full": true,
+          "multiline": true
+        },
+        {
+          "type": "contains_all",
+          "terms": ["april"]
+        }
+      ]
+    },
+    {
+      "id": "true-false",
+      "area": "instruction_following",
+      "prompt": "Answer with true or false only: water freezes at 0 degrees Celsius.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "(true|false)[.!]?",
+          "full": true
+        }
+      ]
+    },
+    {
+      "id": "count-down",
+      "area": "instruction_following",
+      "prompt": "Write the numbers from 5 down to 1 separated by spaces, and nothing else.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "5[ ,]+4[ ,]+3[ ,]+2[ ,]+1\\.?",
+          "full": true
+        }
+      ]
+    },
+    {
+      "id": "pet-recall",
+      "area": "context",
+      "prompt": "Earlier I told you my dog is called Biscuit. What is my dog's name? Answer with one word.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["biscuit"]
+        },
+        {
+          "type": "word_count",
+          "max": 3
+        }
+      ]
+    },
+    {
+      "id": "french-morning",
+      "area": "instruction_following",
+      "prompt": "Translate 'good morning' into French. Reply with the French phrase only.",
+      "checks": [
+        {
+          "type": "contains_any",
+          "terms": ["bonjour"]
+        },
+        {
+          "type": "word_count",
+          "max": 5
+        }
+      ]
+    },
+    {
+      "id": "json-book",
+      "area": "instruction_following",
+      "prompt": "Output only a JSON object with the keys \"title\" and \"pages\" for a book titled Orbit with 240 pages.",
+      "checks": [
+        {
+          "type": "json_object",
+          "expected": {
+            "title": "Orbit",
+            "pages": 240
+          }
+        }
+      ]
+    },
+    {
+      "id": "explain-password",
+      "area": "clarity",
+      "prompt": "Explain what a password is in no more than 25 words.",
+      "checks": [
+        {
+          "type": "word_count",
+          "max": 25
+        },
+        {
+          "type": "contains_any",
+          "terms": ["secret", "prove", "identity", "access", "log in", "login"]
+        }
+      ]
+    },
+    {
+      "id": "repeat-exactly",
+      "area": "context",
+      "prompt": "Repeat this sentence exactly: Sixty zippers were quickly picked from the woven jute bag.",
+      "checks": [
+        {
+          "type": "exact",
+          "expected": ["Sixty zippers were quickly picked from the woven jute bag."]
+        }
+      ]
+    }
+  ]
+}

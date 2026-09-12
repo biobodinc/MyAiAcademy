@@ -16,6 +16,8 @@ BUNDLED_DIR = Path(__file__).parent / "packages"
 MANIFEST = "skill.json"
 INSTRUCTIONS = "instructions.md"
 BENCHMARK = "benchmark.json"
+PRACTICE = "practice.json"
+TRAINED = "trained.md"
 
 
 class BenchmarkTask(ApiModel):
@@ -48,6 +50,23 @@ class Benchmark(ApiModel):
         return seen
 
 
+class PracticeSet(ApiModel):
+    """Tasks used to search for better instructions, never to set a level (Phase 4).
+
+    Kept strictly apart from the benchmark: training selects on these, and the level is
+    still measured on the benchmark the training loop never sees. An improvement that
+    only exists on the tasks it was selected against is not an improvement.
+    """
+
+    version: str
+    default_max_tokens: int = Field(default=128, ge=8, le=2048)
+    tactics: list[str] = Field(
+        default_factory=list,
+        description="Guidance lines training may try. Each is kept only if it measures better.",
+    )
+    tasks: list[BenchmarkTask] = Field(min_length=4)
+
+
 class SkillManifest(ApiModel):
     id: str
     version: str
@@ -62,6 +81,9 @@ class SkillPackage(ApiModel):
     manifest: SkillManifest
     instructions: str
     benchmark: Benchmark
+    practice: PracticeSet | None = Field(
+        default=None, description="Absent for a package that cannot be trained yet."
+    )
     path: str
     size_bytes: int
 
@@ -83,6 +105,12 @@ def load_package(folder: Path) -> SkillPackage:
             json.loads((folder / BENCHMARK).read_text(encoding="utf-8"))
         )
         instructions = (folder / INSTRUCTIONS).read_text(encoding="utf-8").strip()
+        practice_file = folder / PRACTICE
+        practice = (
+            PracticeSet.model_validate(json.loads(practice_file.read_text(encoding="utf-8")))
+            if practice_file.is_file()
+            else None
+        )
     except (OSError, ValueError) as exc:
         raise PackageError(f"Invalid skill package at {folder}: {exc}") from exc
     if set(manifest.areas) != set(benchmark.areas):
@@ -90,11 +118,22 @@ def load_package(folder: Path) -> SkillPackage:
             f"{manifest.id}: manifest areas {manifest.areas} differ from benchmark areas "
             f"{benchmark.areas}"
         )
+    if practice is not None:
+        shared = {t.id for t in practice.tasks} & {t.id for t in benchmark.tasks}
+        if shared:
+            raise PackageError(
+                f"{manifest.id}: practice and benchmark share task ids {sorted(shared)}. "
+                "Training must never select on a task the level is measured with."
+            )
+        unknown = {t.area for t in practice.tasks} - set(manifest.areas)
+        if unknown:
+            raise PackageError(f"{manifest.id}: practice uses unknown areas {sorted(unknown)}")
     size = sum(p.stat().st_size for p in folder.iterdir() if p.is_file())
     return SkillPackage(
         manifest=manifest,
         instructions=instructions,
         benchmark=benchmark,
+        practice=practice,
         path=str(folder),
         size_bytes=size,
     )
@@ -115,6 +154,8 @@ def install_package(package: SkillPackage, skills_root: Path) -> Path:
     """Copy a package into ``Skills/<id>/<version>/`` and return that folder."""
     dest = skills_root / package.id / package.manifest.version
     dest.mkdir(parents=True, exist_ok=True)
-    for name in (MANIFEST, INSTRUCTIONS, BENCHMARK):
-        shutil.copy2(Path(package.path) / name, dest / name)
+    for name in (MANIFEST, INSTRUCTIONS, BENCHMARK, PRACTICE):
+        source = Path(package.path) / name
+        if source.is_file():
+            shutil.copy2(source, dest / name)
     return dest

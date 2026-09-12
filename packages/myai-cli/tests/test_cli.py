@@ -148,3 +148,17 @@ def test_learn_is_honest_without_a_model(running_service: Path) -> None:
     assert code == 0
     code, out = _run("jobs", "stop", data_dir=running_service)
     assert code == 1 and "No job" in out
+
+
+def test_train_is_honest_about_what_it_cannot_do_yet(running_service: Path) -> None:
+    _run("profile", "create", "--name", "Nova", data_dir=running_service)  # no-op if it exists
+    code, out = _run("train", "science", "--yes", data_dir=running_service)
+    assert code == 1 and "cannot be trained yet" in out
+    assert "Learn Science first" in out
+    code, out = _run("train", "video", "--yes", data_dir=running_service)
+    assert code == 1 and "cannot be trained yet" in out
+    code, out = _run("training", "science", data_dir=running_service)
+    assert code == 0 and "No training runs" in out
+    # A duration that is not a duration is refused rather than silently defaulted.
+    code, out = _run("train", "science", "--duration", "soon", data_dir=running_service)
+    assert code == 2 and "Could not read a duration" in out

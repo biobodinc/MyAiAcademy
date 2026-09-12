@@ -13,6 +13,7 @@ import {
   type ProfileCreate,
   type ProfileUpdate,
   type StorageCategory,
+  type TrainRequest,
 } from "@myai/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -230,6 +231,9 @@ export function useSkills() {
 export const skillKeys = {
   learnPreview: (id: string) => ["skills", "learn-preview", id] as const,
   evaluations: (id: string) => ["skills", "evaluations", id] as const,
+  trainPreview: (id: string, request: TrainRequest) =>
+    ["skills", "train-preview", id, request] as const,
+  training: (id: string) => ["skills", "training", id] as const,
   history: ["skills", "history"] as const,
   jobs: ["jobs"] as const,
   currentJob: ["jobs", "current"] as const,
@@ -288,6 +292,64 @@ export function useEvaluations(skillId: string | null) {
         }),
       ),
     enabled: skillId !== null,
+  });
+}
+
+/** What training would do with these qualifiers. Starts nothing. */
+export function useTrainPreview(skillId: string | null, request: TrainRequest) {
+  return useQuery({
+    queryKey: skillKeys.trainPreview(skillId ?? "", request),
+    queryFn: () =>
+      unwrap(
+        api.POST("/api/skills/{skill_id}/train-preview", {
+          params: { path: { skill_id: skillId ?? "" } },
+          body: request,
+        }),
+      ),
+    enabled: skillId !== null,
+  });
+}
+
+export function useStartTrain() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ skill_id, request }: { skill_id: string; request: TrainRequest }) =>
+      unwrap(
+        api.POST("/api/skills/{skill_id}/train", {
+          params: { path: { skill_id } },
+          body: request,
+        }),
+      ),
+    onSuccess: () => {
+      invalidateSkills(qc);
+    },
+  });
+}
+
+export function useTrainingRuns(skillId: string | null) {
+  return useQuery({
+    queryKey: skillKeys.training(skillId ?? ""),
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/skills/{skill_id}/training", {
+          params: { path: { skill_id: skillId ?? "" } },
+        }),
+      ),
+    enabled: skillId !== null,
+  });
+}
+
+/** Put back the instructions the package shipped with. The level is left as measured. */
+export function useRevertTraining() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (skill_id: string) =>
+      unwrap(
+        api.POST("/api/skills/{skill_id}/training/revert", { params: { path: { skill_id } } }),
+      ),
+    onSuccess: () => {
+      invalidateSkills(qc);
+    },
   });
 }
 

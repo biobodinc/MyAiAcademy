@@ -117,3 +117,46 @@ def test_learn_science_with_real_runtime(client: TestClient) -> None:
     assert skill["learned"] and 1 <= skill["level"] <= 100
     history = client.get("/api/skills/conversation/evaluations").json()
     assert history[0]["model_id"] == "tiny" and len(history[0]["task_results"]) == 12
+
+
+def test_train_conversation_with_real_runtime(client: TestClient) -> None:
+    """A whole training run against the real backend, kept to one round by a tiny budget.
+
+    The tiny model answers nonsense, so nothing can be claimed about improvement. What is
+    asserted is what must hold regardless: the run happens, it records what it tried, it
+    finishes with a decision, and the level it leaves behind came from a benchmark run.
+    """
+    learn = client.post("/api/skills/conversation/learn").json()
+    state = client.app.state.core  # type: ignore[attr-defined]
+    state.jobs.wait(learn["id"], 120)
+    level_after_learning = client.get("/api/skills/conversation").json()["level"]
+
+    started = client.post(
+        "/api/skills/conversation/train",
+        json={"duration_seconds": 60, "all_areas": True, "seed": 7},
+    )
+    assert started.status_code == 202, started.text
+    job_id = started.json()["id"]
+    state.jobs.wait(job_id, 600)
+    job = client.get(f"/api/jobs/{job_id}").json()
+    assert job["status"] == "completed", job
+    result = job["result"]
+    assert result["rounds"] >= 1
+    assert result["benchmark_before"] is not None
+    assert isinstance(result["applied"], bool)
+    assert result["summary"]
+
+    runs = client.get("/api/skills/conversation/training").json()
+    assert len(runs) == 1 and runs[0]["rounds_completed"] == result["rounds"]
+    assert runs[0]["model_id"] == "tiny"
+
+    # Whatever the decision, the level on display was measured by a benchmark run.
+    evaluations = client.get("/api/skills/conversation/evaluations").json()
+    assert len(evaluations) == 2  # the learn run, then the run that judged training
+    latest = evaluations[0]
+    assert latest["job_id"] == job_id and len(latest["task_results"]) == 12
+    skill = client.get("/api/skills/conversation").json()
+    assert skill["level"] == latest["level_after"]
+    if not result["applied"]:
+        assert skill["trained_at"] is None
+    assert 1 <= skill["level"] <= 100 and level_after_learning >= 1

@@ -164,7 +164,8 @@ const ADVANCED: Array<{
     unit: "%",
     min: 10,
     max: 100,
-    enforced: "Stored now; applied by training jobs (Phase 4).",
+    enforced:
+      "Stored only: how much of a model is offloaded to the GPU follows the compute preset.",
   },
   {
     key: "temperature_limit_c",
@@ -172,7 +173,8 @@ const ADVANCED: Array<{
     unit: "°C",
     min: 50,
     max: 100,
-    enforced: "Stored now; training pauses above it once telemetry exists (Phase 4).",
+    enforced:
+      "Enforced during training where a GPU reports its temperature: a round waits until the machine is back under this.",
   },
   {
     key: "time_limit_minutes",
@@ -180,7 +182,7 @@ const ADVANCED: Array<{
     unit: "min",
     min: 1,
     max: 43200,
-    enforced: "Stored now; caps a training job's duration (Phase 4).",
+    enforced: "Enforced now: the ceiling on how long a training run may practise.",
   },
 ];
 

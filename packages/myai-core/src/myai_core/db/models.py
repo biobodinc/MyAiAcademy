@@ -15,7 +15,16 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from myai_core.db.base import Base, utcnow
@@ -92,6 +101,8 @@ class SkillState(Base):
     # Phase 3: which package version is installed and where (spec §36).
     package_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     installed_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Phase 4: when training last replaced this skill's instructions (spec §37).
+    trained_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Job(Base):
@@ -138,6 +149,49 @@ class SkillEvaluation(Base):
     evaluated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )
+
+
+class TrainingRun(Base):
+    """One training run (spec §37, §40): the record of a search for better instructions.
+
+    The row is written when the run starts and updated after every round, so a run
+    interrupted by a crash leaves both an explanation and the best candidate it had found.
+    That candidate is where the next run starts, which is what makes training resumable
+    across restarts rather than only across a pause.
+
+    Levels are not written here. ``evaluation_id`` points at the benchmark run that
+    measured the result, and that evaluation is what set the level (ADR-0007).
+    """
+
+    __tablename__ = "training_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    skill_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    job_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    model_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    package_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="running")
+    budget_seconds: Mapped[float] = mapped_column(nullable=False, default=0.0)
+    target_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    focus_area: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    seed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rounds_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rounds: Mapped[list[object]] = mapped_column(JSON, nullable=False, default=list)
+    best_candidate: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    baseline_practice: Mapped[float | None] = mapped_column(nullable=True)
+    best_practice: Mapped[float | None] = mapped_column(nullable=True)
+    benchmark_before: Mapped[float | None] = mapped_column(nullable=True)
+    benchmark_after: Mapped[float | None] = mapped_column(nullable=True)
+    level_before: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    level_after: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    applied: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    evaluation_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AuditEvent(Base):

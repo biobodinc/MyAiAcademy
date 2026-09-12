@@ -41,11 +41,17 @@ updated.
   paired") and nothing else. Pairing, chat and controls arrive in Phase 6.
 - **Knowledge retrieval is keyword-based** (BM25 over SQLite FTS5), not semantic. It finds
   passages that share words with your question.
-- **Training is not implemented (Phase 4).** Skills are learned from bundled packages
-  (instructions plus a 12-task benchmark) and a skill's level is the score its benchmark
-  produced with your local model; `/train` shows its information and states that training
-  jobs arrive in Phase 4. Creative skills (images, video, music, games) have no benchmark
-  yet and cannot be learned.
+- **Training does not change your model's weights.** `/train` searches for better
+  _instructions_ for one skill — short rules from its package, rules your AI writes for
+  itself after a mistake, and worked examples — and keeps a change only when it scores
+  higher on practice tasks. When the search ends, that skill's benchmark runs with the old
+  and the new instructions and the result is kept only if the score went up; if it did not,
+  the run says so and nothing changes. Levels still come only from a benchmark run.
+  Fine-tuning a quantised local model is not something this program can honestly do, so it
+  does not claim to (see
+  [ADR-0013](docs/adr/0013-training-optimises-instructions-not-weights.md)).
+- **Creative skills cannot be learned or trained yet** (images, video, music, games): there
+  is no measurable benchmark for them in this build, and every surface says so.
 - **Not every model download can be hash-verified.** A download is only failed when it
   disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or
   Hugging Face's `X-Linked-Etag`). A plain `ETag` is an opaque validator, not a content

@@ -1,0 +1,154 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 96,
+  "tactics": [
+    "Work the calculation through step by step, then reply with the final value only.",
+    "Check which unit the question asks for and convert before answering.",
+    "When a number only is asked for, give digits with no words and no units.",
+    "Estimate the size of the answer first, and re-check if the result is far from the estimate.",
+    "For a yes or no question, decide first, then answer with that single word."
+  ],
+  "tasks": [
+    {
+      "id": "multiply-2",
+      "area": "arithmetic",
+      "prompt": "What is 23 multiplied by 19? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 437
+        }
+      ]
+    },
+    {
+      "id": "divide-2",
+      "area": "arithmetic",
+      "prompt": "What is 256 divided by 8? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 32
+        }
+      ]
+    },
+    {
+      "id": "percent-2",
+      "area": "arithmetic",
+      "prompt": "What is 25 percent of 160? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 40
+        }
+      ]
+    },
+    {
+      "id": "m-to-cm",
+      "area": "units",
+      "prompt": "How many centimetres are in 3.2 metres? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 320
+        }
+      ]
+    },
+    {
+      "id": "minutes-to-seconds",
+      "area": "units",
+      "prompt": "How many seconds are in 4 minutes? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 240
+        }
+      ]
+    },
+    {
+      "id": "f-to-celsius",
+      "area": "units",
+      "prompt": "What is 68 degrees Fahrenheit in degrees Celsius? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 20
+        }
+      ]
+    },
+    {
+      "id": "car-time",
+      "area": "reasoning",
+      "prompt": "A car travels 180 km at 60 km per hour. How many hours does the journey take? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 3
+        }
+      ]
+    },
+    {
+      "id": "larger-fraction",
+      "area": "reasoning",
+      "prompt": "Which is larger, 2/3 or 3/5? Answer with the fraction only.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["2/3"]
+        },
+        {
+          "type": "word_count",
+          "max": 3
+        }
+      ]
+    },
+    {
+      "id": "freezing-point",
+      "area": "explanation",
+      "prompt": "At sea level, at what temperature in degrees Celsius does water freeze? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "why-seasons",
+      "area": "explanation",
+      "prompt": "In at most 40 words, explain why Earth has seasons.",
+      "checks": [
+        {
+          "type": "word_count",
+          "max": 40
+        },
+        {
+          "type": "contains_any",
+          "terms": ["tilt", "tilted", "axis", "axial"]
+        }
+      ]
+    },
+    {
+      "id": "octagon",
+      "area": "reasoning",
+      "prompt": "How many sides does an octagon have? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 8
+        }
+      ]
+    },
+    {
+      "id": "prime-51",
+      "area": "reasoning",
+      "prompt": "Is 51 a prime number? Answer yes or no only.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "no[.!]?",
+          "full": true
+        }
+      ]
+    }
+  ]
+}

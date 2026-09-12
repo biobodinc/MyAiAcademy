@@ -3684,6 +3684,25 @@
             },
             "title": "Specializations",
             "type": "array"
+          },
+          "trainable": {
+            "default": false,
+            "description": "A practice set exists, so this skill can be trained.",
+            "title": "Trainable",
+            "type": "boolean"
+          },
+          "trained_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When training last replaced this skill's instructions.",
+            "title": "Trained At"
           }
         },
         "required": [
@@ -3701,6 +3720,8 @@
           "band",
           "last_evaluation_score",
           "learned_at",
+          "trained_at",
+          "trainable",
           "locked",
           "locked_reason",
           "learnable",
@@ -4140,6 +4161,287 @@
         "title": "TierEstimate",
         "type": "object"
       },
+      "TrainPreview": {
+        "description": "What ``/train <skill>`` shows before anything starts (spec \u00a737).",
+        "properties": {
+          "areas": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Areas",
+            "type": "array"
+          },
+          "blockers": {
+            "description": "Why training cannot start; empty when it can.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "budget_minutes": {
+            "title": "Budget Minutes",
+            "type": "number"
+          },
+          "budget_note": {
+            "title": "Budget Note",
+            "type": "string"
+          },
+          "check_tasks": {
+            "title": "Check Tasks",
+            "type": "integer"
+          },
+          "current_level": {
+            "title": "Current Level",
+            "type": "integer"
+          },
+          "estimate_note": {
+            "title": "Estimate Note",
+            "type": "string"
+          },
+          "estimated_rounds_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Rounds Max"
+          },
+          "estimated_rounds_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimated Rounds Min"
+          },
+          "focus_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus Area"
+          },
+          "focus_note": {
+            "title": "Focus Note",
+            "type": "string"
+          },
+          "icon": {
+            "title": "Icon",
+            "type": "string"
+          },
+          "last_area_scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Last Area Scores",
+            "type": "object"
+          },
+          "learned": {
+            "title": "Learned",
+            "type": "boolean"
+          },
+          "model_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "practice_tasks": {
+            "title": "Practice Tasks",
+            "type": "integer"
+          },
+          "recommended_target": {
+            "title": "Recommended Target",
+            "type": "integer"
+          },
+          "resume_rounds": {
+            "default": 0,
+            "description": "Rounds already banked by an earlier run this will continue from.",
+            "title": "Resume Rounds",
+            "type": "integer"
+          },
+          "search_tasks": {
+            "title": "Search Tasks",
+            "type": "integer"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "target_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Level"
+          },
+          "trainable": {
+            "title": "Trainable",
+            "type": "boolean"
+          },
+          "what_happens": {
+            "title": "What Happens",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skill_id",
+          "name",
+          "icon",
+          "learned",
+          "trainable",
+          "blockers",
+          "model_id",
+          "current_level",
+          "target_level",
+          "recommended_target",
+          "areas",
+          "last_area_scores",
+          "focus_area",
+          "focus_note",
+          "budget_minutes",
+          "budget_note",
+          "practice_tasks",
+          "search_tasks",
+          "check_tasks",
+          "estimated_rounds_min",
+          "estimated_rounds_max",
+          "estimate_note",
+          "resume_rounds",
+          "what_happens"
+        ],
+        "title": "TrainPreview",
+        "type": "object"
+      },
+      "TrainRequest": {
+        "description": "Qualifiers from ``/train <skill> \u2026`` (spec \u00a738), already parsed.",
+        "properties": {
+          "all_areas": {
+            "default": false,
+            "title": "All Areas",
+            "type": "boolean"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From '2h' or '90m'.",
+            "title": "Duration Seconds"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fix the search's seed to repeat a run exactly.",
+            "title": "Seed"
+          },
+          "specialization": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "One of the skill's areas.",
+            "title": "Specialization"
+          },
+          "target_level": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Level"
+          }
+        },
+        "title": "TrainRequest",
+        "type": "object"
+      },
+      "TrainRoundRead": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "change": {
+            "title": "Change",
+            "type": "string"
+          },
+          "check_score": {
+            "title": "Check Score",
+            "type": "number"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "search_score": {
+            "title": "Search Score",
+            "type": "number"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "source",
+          "change",
+          "search_score",
+          "check_score",
+          "accepted",
+          "seconds"
+        ],
+        "title": "TrainRoundRead",
+        "type": "object"
+      },
       "TrainTarget": {
         "description": "Optional qualifiers for ``/train`` (spec \u00a738).",
         "properties": {
@@ -4194,6 +4496,189 @@
           "all_areas"
         ],
         "title": "TrainTarget",
+        "type": "object"
+      },
+      "TrainingRunRead": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "baseline_practice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Practice"
+          },
+          "benchmark_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark After"
+          },
+          "benchmark_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark Before"
+          },
+          "best_practice": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Practice"
+          },
+          "budget_seconds": {
+            "title": "Budget Seconds",
+            "type": "number"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "focus_area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus Area"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "level_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level After"
+          },
+          "level_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Before"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "rounds": {
+            "items": {
+              "$ref": "#/components/schemas/TrainRoundRead"
+            },
+            "title": "Rounds",
+            "type": "array"
+          },
+          "rounds_completed": {
+            "title": "Rounds Completed",
+            "type": "integer"
+          },
+          "skill_id": {
+            "title": "Skill Id",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "target_level": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Level"
+          }
+        },
+        "required": [
+          "id",
+          "skill_id",
+          "job_id",
+          "model_id",
+          "status",
+          "budget_seconds",
+          "target_level",
+          "focus_area",
+          "rounds_completed",
+          "rounds",
+          "baseline_practice",
+          "best_practice",
+          "benchmark_before",
+          "benchmark_after",
+          "level_before",
+          "level_after",
+          "applied",
+          "summary",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "TrainingRunRead",
         "type": "object"
       },
       "ValidationError": {
@@ -6363,6 +6848,217 @@
           }
         },
         "summary": "Learn Preview",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/train": {
+      "post": {
+        "description": "Start a training job: search for better instructions, then let the benchmark judge.",
+        "operationId": "train_api_skills__skill_id__train_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainRequest",
+                "default": {
+                  "all_areas": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Train",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/train-preview": {
+      "post": {
+        "description": "What training would do. Starts nothing (spec \u00a737).",
+        "operationId": "train_preview_api_skills__skill_id__train_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrainRequest",
+                "default": {
+                  "all_areas": false
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Train Preview",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/training": {
+      "get": {
+        "operationId": "training_runs_api_skills__skill_id__training_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TrainingRunRead"
+                  },
+                  "title": "Response Training Runs Api Skills  Skill Id  Training Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Training Runs",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/api/skills/{skill_id}/training/revert": {
+      "post": {
+        "description": "Put back the instructions the skill package shipped with.\n\nThe level is left exactly as it was: it was measured, and reverting instructions does\nnot re-measure anything. Re-run the benchmark to see what the original scores now.",
+        "operationId": "revert_training_api_skills__skill_id__training_revert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "skill_id",
+            "required": true,
+            "schema": {
+              "title": "Skill Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revert Training",
         "tags": [
           "skills"
         ]

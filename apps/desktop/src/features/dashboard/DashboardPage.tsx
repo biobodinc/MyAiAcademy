@@ -23,13 +23,20 @@ import {
 import { primaryGpu } from "../hardware/model";
 import { headline } from "./model";
 
-const quickActions = [
+const quickActions: Array<{
+  to: string;
+  label: string;
+  hint: string;
+  ready: boolean;
+  /** Set on an action this build cannot do yet, so the card says which phase brings it. */
+  phase?: number;
+}> = [
   { to: "/chat", label: "Chat", hint: "Talk to your AI locally", ready: true },
   { to: "/models", label: "Models", hint: "Download and activate", ready: true },
   { to: "/memory", label: "Memory", hint: "What it remembers", ready: true },
   { to: "/knowledge", label: "Knowledge", hint: "Documents it can cite", ready: true },
   { to: "/skills", label: "Learn", hint: "Skills and benchmarks", ready: true },
-  { to: "/skills", label: "Train", hint: "Training jobs", ready: false, phase: 4 },
+  { to: "/skills", label: "Train", hint: "Practise a learned skill", ready: true },
 ];
 
 export function DashboardPage() {

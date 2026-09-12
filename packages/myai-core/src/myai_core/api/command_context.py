@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from myai_core.api.state import AppState
 from myai_core.commands.dispatcher import CommandContext
+from myai_core.commands.models import TrainTarget
 from myai_core.db.models import AIProfile
 from myai_core.hardware import HardwareReport, detect_hardware
 from myai_core.hardware.benchmark_store import BenchmarkStore
@@ -14,8 +15,9 @@ from myai_core.models.service import ModelService
 from myai_core.preferences.schemas import Preferences
 from myai_core.skills.jobs import JobSummary, summarise
 from myai_core.skills.learning import EvaluationRead, LearnPreview, SkillLearningService
-from myai_core.skills.pipeline import start_skill_job
-from myai_core.skills.service import SkillsService
+from myai_core.skills.pipeline import start_skill_job, start_training_job, training_preview
+from myai_core.skills.service import SkillsService, count_trainable_skills
+from myai_core.skills.trainer import TrainPreview
 from myai_core.storage import StorageManager
 
 
@@ -43,6 +45,7 @@ def build_command_context(
             privacy_mode=preferences.privacy_mode.value,
             ai_state=state.ai_state(session),
             job=summarise(current) if current else None,
+            trainable_skills=count_trainable_skills(session, ai_id),
         )
         return state.status.labels(built)
 
@@ -69,6 +72,34 @@ def build_command_context(
         assert ai_id is not None
         return summarise(
             start_skill_job(state, session, kind="learn", skill_id=skill_id, ai_id=ai_id)
+        )
+
+    def train_preview(skill_id: str, target: TrainTarget | None) -> TrainPreview:
+        assert ai_id is not None
+        return training_preview(
+            state,
+            session,
+            skill_id=skill_id,
+            ai_id=ai_id,
+            duration_seconds=target.duration_seconds if target else None,
+            target_level=target.target_level if target else None,
+            specialization=_focus(target),
+            all_areas=bool(target and target.all_areas),
+        )
+
+    def start_train(skill_id: str, target: TrainTarget | None) -> JobSummary:
+        assert ai_id is not None
+        return summarise(
+            start_training_job(
+                state,
+                session,
+                skill_id=skill_id,
+                ai_id=ai_id,
+                duration_seconds=target.duration_seconds if target else None,
+                target_level=target.target_level if target else None,
+                specialization=_focus(target),
+                all_areas=bool(target and target.all_areas),
+            )
         )
 
     def current_job() -> JobSummary | None:
@@ -99,4 +130,17 @@ def build_command_context(
         current_job=current_job,
         job_action=job_action,
         history=history,
+        train_preview=train_preview if has_profile else None,
+        start_train=start_train if has_profile else None,
     )
+
+
+def _focus(target: TrainTarget | None) -> str | None:
+    """Drop the confirmation words the parser collects as a trailing specialization."""
+    if target is None or not target.specialization:
+        return None
+    words = [w for w in target.specialization.split() if w not in _CONFIRMATIONS]
+    return " ".join(words) or None
+
+
+_CONFIRMATIONS = {"start", "confirm", "yes", "go"}

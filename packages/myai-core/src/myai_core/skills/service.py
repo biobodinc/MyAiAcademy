@@ -33,6 +33,12 @@ class SkillStatus(ApiModel):
     band: LevelBand
     last_evaluation_score: float | None
     learned_at: datetime | None
+    trained_at: datetime | None = Field(
+        default=None, description="When training last replaced this skill's instructions."
+    )
+    trainable: bool = Field(
+        default=False, description="A practice set exists, so this skill can be trained."
+    )
     locked: bool
     locked_reason: str | None
     learnable: bool = Field(description="A package with a measurable benchmark exists.")
@@ -121,6 +127,8 @@ class SkillsService:
             band=band_for_level(level),
             last_evaluation_score=state.last_evaluation_score if state else None,
             learned_at=state.learned_at if state else None,
+            trained_at=state.trained_at if state else None,
+            trainable=package is not None and package.practice is not None,
             locked=locked,
             locked_reason=(
                 "Requires: " + ", ".join(m.title() for m in missing) if locked else None
@@ -140,3 +148,18 @@ class SkillsService:
             ),
             area_scores=area_scores,
         )
+
+
+def count_trainable_skills(session: Session, ai_id: str | None) -> int:
+    """Learned skills that have a practice set, so ``/train`` has something to work on."""
+    if ai_id is None:
+        return 0
+    rows = session.scalars(
+        select(SkillState).where(SkillState.ai_id == ai_id, SkillState.status == "learned")
+    ).all()
+    total = 0
+    for row in rows:
+        package = bundled_package(row.skill_id)
+        if package is not None and package.practice is not None:
+            total += 1
+    return total
