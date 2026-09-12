@@ -8,9 +8,11 @@ from datetime import datetime
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from myai_core.config import CoreSettings
 from myai_core.hardware.models import HardwareReport
 from myai_core.models.download_manager import DownloadManager
 from myai_core.models.runtime import InferenceRuntime
+from myai_core.network import NetworkListener
 from myai_core.paths import AppPaths
 from myai_core.security.auth import LocalAuthPolicy
 from myai_core.skills.jobs import JobManager
@@ -29,7 +31,10 @@ class AppState:
     runtime: InferenceRuntime
     downloads: DownloadManager
     jobs: JobManager
+    settings: CoreSettings | None = None
     hardware_cache: HardwareReport | None = None
+    network: NetworkListener | None = None
+    """The opt-in HTTPS listener for paired devices, when the user has turned it on."""
 
     def ai_state(self, session: Session) -> AIState:
         """What the AI can do right now: runtime present, model installed, model loaded."""

@@ -29,6 +29,8 @@ from myai_core.security.devices import OWNER_CALLER, Caller, DeviceService
 from myai_core.security.local_token import tokens_match
 
 _ALLOWED_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
+LAN_SCOPE_KEY = "myai.lan"
+"""Set on the ASGI scope by the network listener, so a request knows how it arrived."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +64,11 @@ def get_auth_policy(request: Request) -> LocalAuthPolicy:
     return policy
 
 
+def arrived_over_network(request: Request) -> bool:
+    """True when this request came in on the opt-in listener rather than loopback."""
+    return bool(request.scope.get(LAN_SCOPE_KEY, False))
+
+
 def bearer_token(request: Request) -> str | None:
     authorization = request.headers.get("authorization")
     if authorization and authorization.lower().startswith("bearer "):
@@ -79,7 +86,9 @@ def require_local_origin(
     a hole in the browser protections: a web page must not be able to walk a user through
     pairing itself.
     """
-    if not policy.check_host(request.headers.get("host")):
+    if not arrived_over_network(request) and not policy.check_host(request.headers.get("host")):
+        # Only the loopback listener can insist on a loopback Host: a phone legitimately
+        # addresses this machine by its address on the network.
         raise HTTPException(status.HTTP_421_MISDIRECTED_REQUEST, "Unexpected Host header.")
     if not policy.check_origin(request.headers.get("origin")):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Origin not allowed.")
@@ -98,6 +107,14 @@ def require_local_auth(
     require_local_origin(request, policy)
     presented = bearer_token(request)
     if tokens_match(presented, policy.token):
+        if arrived_over_network(request):
+            # The installation token is the master key and has no business crossing a
+            # network, even an encrypted one. A device pairs and gets its own credential.
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                "This installation's own token cannot be used from the network. Pair this "
+                "device to get a credential of its own.",
+            )
         request.state.caller = OWNER_CALLER
         return OWNER_CALLER
     caller = _paired_caller(request, presented)

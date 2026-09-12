@@ -198,3 +198,11 @@ def test_export_writes_an_archive_and_says_what_it_left_out(running_service: Pat
     code, out = _run("security", "export", data_dir=running_service)
     assert code == 0 and "Exported to" in out
     assert "Not included" in out
+
+
+def test_network_access_is_off_and_says_so(running_service: Path) -> None:
+    code, out = _run("security", "network", data_dir=running_service)
+    assert code == 0 and "Off." in out
+    # Nothing can be invited while nothing can reach the machine.
+    code, out = _run("security", "invite", data_dir=running_service)
+    assert code == 1 and "Turn on network access first" in out

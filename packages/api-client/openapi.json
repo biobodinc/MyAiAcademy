@@ -2882,6 +2882,123 @@
         "title": "ModelsOverview",
         "type": "object"
       },
+      "NetworkAccess": {
+        "description": "Whether devices on this network may reach the service, and how they verify it.",
+        "properties": {
+          "addresses": {
+            "description": "Where a device on this network can reach you.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Addresses",
+            "type": "array"
+          },
+          "certificate_expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Expires At"
+          },
+          "certificate_fingerprint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "SHA-256 of the certificate a device pins when pairing.",
+            "title": "Certificate Fingerprint"
+          },
+          "certificate_fingerprint_groups": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The same fingerprint in readable groups, to compare by eye.",
+            "title": "Certificate Fingerprint Groups"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          }
+        },
+        "required": [
+          "enabled",
+          "host",
+          "port",
+          "addresses",
+          "certificate_fingerprint",
+          "certificate_fingerprint_groups",
+          "certificate_expires_at",
+          "detail"
+        ],
+        "title": "NetworkAccess",
+        "type": "object"
+      },
+      "NetworkAccessRequest": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "maximum": 65535.0,
+                "minimum": 1024.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "NetworkAccessRequest",
+        "type": "object"
+      },
       "OnboardingStep": {
         "enum": [
           "welcome",
@@ -3072,6 +3189,70 @@
           }
         },
         "title": "PairingCodeRequest",
+        "type": "object"
+      },
+      "PairingInvite": {
+        "description": "Everything a device needs to reach this host safely, for one pairing.\n\nThe fingerprint and the code travel together, over the air gap of the user looking at\ntheir own screen. That is what lets the device pin this host's certificate and refuse\nevery other, with no certificate authority in the trust path.",
+        "properties": {
+          "addresses": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Addresses",
+            "type": "array"
+          },
+          "certificate_fingerprint": {
+            "title": "Certificate Fingerprint",
+            "type": "string"
+          },
+          "certificate_fingerprint_groups": {
+            "title": "Certificate Fingerprint Groups",
+            "type": "string"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "expires_in_seconds": {
+            "title": "Expires In Seconds",
+            "type": "integer"
+          },
+          "host_name": {
+            "title": "Host Name",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "payload": {
+            "description": "Compact JSON for a QR code; the same fields, encoded.",
+            "title": "Payload",
+            "type": "string"
+          },
+          "port": {
+            "title": "Port",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "expires_at",
+          "expires_in_seconds",
+          "host_name",
+          "addresses",
+          "port",
+          "certificate_fingerprint",
+          "certificate_fingerprint_groups",
+          "payload",
+          "note"
+        ],
+        "title": "PairingInvite",
         "type": "object"
       },
       "ParsedCommand": {
@@ -3927,6 +4108,9 @@
             "title": "Caller Name",
             "type": "string"
           },
+          "network": {
+            "$ref": "#/components/schemas/NetworkAccess"
+          },
           "notes": {
             "items": {
               "type": "string"
@@ -3949,6 +4133,7 @@
           "active_clients",
           "revoked_clients",
           "secret_storage",
+          "network",
           "account",
           "notes"
         ],
@@ -7473,6 +7658,48 @@
         ]
       }
     },
+    "/api/security/network": {
+      "post": {
+        "description": "Let paired devices on this network reach the service, or stop them. Owner only.\n\nStarting and stopping are both recorded: \"can my AI be reached from the network\" is\nexactly the kind of thing someone should be able to check after the fact.",
+        "operationId": "set_network_access_api_security_network_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NetworkAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NetworkAccess"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Network Access",
+        "tags": [
+          "security"
+        ]
+      }
+    },
     "/api/security/pair": {
       "post": {
         "description": "Exchange a pairing code for a credential of your own.\n\nThis is the only route that cannot require a credential \u2014 a client has none yet \u2014 so\nthe code itself is the authentication. It is still behind the loopback bind and the\nHost and Origin checks, it is single use, it expires in minutes, and a wrong code is\ncounted against every live code so guessing is bounded and visible in the audit log.",
@@ -7552,6 +7779,48 @@
           }
         },
         "summary": "Create Pairing Code",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/pairing-invite": {
+      "post": {
+        "description": "A pairing code together with how to reach this host and which certificate to trust.",
+        "operationId": "create_pairing_invite_api_security_pairing_invite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairingCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairingInvite"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Pairing Invite",
         "tags": [
           "security"
         ]

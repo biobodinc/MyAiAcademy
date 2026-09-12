@@ -18,6 +18,8 @@ dependencies = [
   "python-ulid>=3.0",
   "httpx>=0.27",
   "pypdf>=5.0",
+  # X.509 for the certificate the host mints when you let a phone reach it (Phase 6).
+  "cryptography>=45.0",
 ]
 
 [project.optional-dependencies]

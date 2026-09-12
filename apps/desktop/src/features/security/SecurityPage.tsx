@@ -4,20 +4,37 @@
  * Two things on this page are irreversible — revoking a client and erasing everything — so
  * both state what they will do before they do it, and erasing asks for a typed phrase.
  */
-import { formatBytes, type DeviceRead } from "@myai/api-client";
-import { KeyRound, ShieldAlert, ShieldCheck, Trash2 } from "lucide-react";
-import { useState } from "react";
+import {
+  formatBytes,
+  type DeviceRead,
+  type NetworkAccess,
+  type PairingInvite,
+} from "@myai/api-client";
+import { KeyRound, ShieldAlert, ShieldCheck, Trash2, Wifi } from "lucide-react";
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
 
-import { Alert, Button, Card, PageHeader, Spinner, Stat, StatusPill } from "../../components/ui";
+import {
+  Alert,
+  Button,
+  Card,
+  PageHeader,
+  Row,
+  Spinner,
+  Stat,
+  StatusPill,
+} from "../../components/ui";
 import {
   describeError,
   useCreatePairingCode,
+  useCreatePairingInvite,
   useDevices,
   useEraseData,
   useErasePreview,
   useExportData,
   useRevokeDevice,
   useSecurityOverview,
+  useSetNetworkAccess,
 } from "../../lib/api";
 
 export function SecurityPage() {
@@ -81,6 +98,7 @@ export function SecurityPage() {
           </div>
         </Card>
 
+        <NetworkCard network={d.network} canManage={d.caller_is_owner} />
         <ClientsCard devices={devices.data ?? []} canManage={d.caller_is_owner} />
         <DataCard canManage={d.caller_is_owner} />
 
@@ -93,6 +111,110 @@ export function SecurityPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+function NetworkCard({ network, canManage }: { network: NetworkAccess; canManage: boolean }) {
+  const setAccess = useSetNetworkAccess();
+  const invite = useCreatePairingInvite();
+
+  return (
+    <Card
+      title="Your phone and other devices"
+      action={
+        canManage ? (
+          <Button
+            size="sm"
+            variant={network.enabled ? "secondary" : "primary"}
+            disabled={setAccess.isPending}
+            onClick={() => {
+              setAccess.mutate({ enabled: !network.enabled });
+            }}
+          >
+            <Wifi className="h-4 w-4" aria-hidden />
+            {network.enabled ? "Turn off" : "Allow devices on this network"}
+          </Button>
+        ) : undefined
+      }
+    >
+      <p className="text-sm">{network.detail}</p>
+      {network.enabled && (
+        <dl className="mt-3 space-y-1 text-sm">
+          <Row label="Reachable at">
+            {network.addresses.map((a) => `${a}:${network.port ?? ""}`).join(", ")}
+          </Row>
+          <Row label="Certificate">
+            <span className="font-mono text-xs break-all">
+              {network.certificate_fingerprint_groups}
+            </span>
+            <span className="block text-xs text-fg-muted">
+              A device pins this when it pairs, and then accepts only this computer. Compare it on
+              the device if you want to check by eye.
+            </span>
+          </Row>
+        </dl>
+      )}
+      {setAccess.isError && (
+        <div className="mt-2">
+          <Alert tone="danger">{describeError(setAccess.error)}</Alert>
+        </div>
+      )}
+      {network.enabled && canManage && (
+        <div className="mt-4">
+          <Button
+            size="sm"
+            disabled={invite.isPending}
+            onClick={() => {
+              invite.mutate("");
+            }}
+          >
+            <KeyRound className="h-4 w-4" aria-hidden /> Show a pairing code
+          </Button>
+          {invite.isError && (
+            <div className="mt-2">
+              <Alert tone="danger">{describeError(invite.error)}</Alert>
+            </div>
+          )}
+          {invite.data && <InviteCard invite={invite.data} />}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function InviteCard({ invite }: { invite: PairingInvite }) {
+  const [qr, setQr] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Rendered in the app rather than fetched: the payload is a credential in transit and
+    // has no business being sent anywhere to be drawn.
+    void QRCode.toDataURL(invite.payload, { margin: 1, width: 240 }).then((url) => {
+      if (!cancelled) setQr(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [invite.payload]);
+
+  return (
+    <div className="mt-4 flex flex-wrap items-start gap-4 rounded-xl border border-border p-4">
+      {qr ? (
+        <img src={qr} alt="Pairing QR code" className="h-40 w-40 rounded-lg bg-white p-2" />
+      ) : (
+        <div className="h-40 w-40 animate-pulse rounded-lg bg-bg-muted" />
+      )}
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-mono text-2xl tracking-widest">{invite.code}</p>
+        <p className="mt-1 text-xs text-fg-muted">
+          {invite.host_name} · {invite.addresses.join(", ")}:{invite.port}
+        </p>
+        <p className="mt-2 text-xs break-all text-fg-muted">
+          {invite.certificate_fingerprint_groups}
+        </p>
+        <p className="mt-2 text-xs">{invite.note}</p>
+      </div>
+    </div>
   );
 }
 

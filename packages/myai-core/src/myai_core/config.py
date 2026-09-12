@@ -20,9 +20,10 @@ If it is busy the service picks a free port and records it in the discovery file
 class CoreSettings(BaseSettings):
     """Runtime settings, overridable via ``MYAI_CORE_*`` environment variables.
 
-    ``host`` is intentionally restricted to loopback addresses (spec §47, §73). There is
-    no configuration knob to expose the API on a network interface; remote access is a
-    later, separately designed feature (device pairing, spec §13–§18).
+    ``host`` is intentionally restricted to loopback addresses (spec §47, §73), and no
+    setting can change that. Letting a phone reach this service is a *separate* listener
+    (``lan_enabled``): HTTPS only, off unless the user turns it on, and it refuses the
+    installation token so the master key never leaves this machine.
     """
 
     model_config = SettingsConfigDict(env_prefix="MYAI_CORE_", extra="ignore")
@@ -32,6 +33,11 @@ class CoreSettings(BaseSettings):
     log_level: str = "info"
     dev_cors_origins: tuple[str, ...] = ("http://localhost:1420", "http://127.0.0.1:1420")
     """Vite dev-server origins allowed in addition to the packaged Tauri origins."""
+
+    lan_enabled: bool = False
+    """Whether paired devices on this network may reach the service. Off by default."""
+    lan_host: str = "0.0.0.0"  # noqa: S104 - the point of this listener is to be reachable
+    lan_port: int = Field(default=DEFAULT_PORT + 1, ge=1024, le=65535)
 
     @field_validator("host")
     @classmethod

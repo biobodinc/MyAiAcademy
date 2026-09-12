@@ -849,6 +849,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/security/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Network Access
+         * @description Let paired devices on this network reach the service, or stop them. Owner only.
+         *
+         *     Starting and stopping are both recorded: "can my AI be reached from the network" is
+         *     exactly the kind of thing someone should be able to check after the fact.
+         */
+        post: operations["set_network_access_api_security_network_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/security/pair": {
         parameters: {
             query?: never;
@@ -888,6 +911,26 @@ export interface paths {
          * @description Create a single-use code a client can exchange for its own credential. Owner only.
          */
         post: operations["create_pairing_code_api_security_pairing_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/pairing-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Pairing Invite
+         * @description A pairing code together with how to reach this host and which certificate to trust.
+         */
+        post: operations["create_pairing_invite_api_security_pairing_invite_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2290,6 +2333,44 @@ export interface components {
             runtime_detail: string;
         };
         /**
+         * NetworkAccess
+         * @description Whether devices on this network may reach the service, and how they verify it.
+         */
+        NetworkAccess: {
+            /**
+             * Addresses
+             * @description Where a device on this network can reach you.
+             */
+            addresses: string[];
+            /** Certificate Expires At */
+            certificate_expires_at: string | null;
+            /**
+             * Certificate Fingerprint
+             * @description SHA-256 of the certificate a device pins when pairing.
+             */
+            certificate_fingerprint: string | null;
+            /**
+             * Certificate Fingerprint Groups
+             * @description The same fingerprint in readable groups, to compare by eye.
+             */
+            certificate_fingerprint_groups: string | null;
+            /** Detail */
+            detail: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Host */
+            host: string | null;
+            /** Port */
+            port: number | null;
+        };
+        /** NetworkAccessRequest */
+        NetworkAccessRequest: {
+            /** Enabled */
+            enabled: boolean;
+            /** Port */
+            port?: number | null;
+        };
+        /**
          * OnboardingStep
          * @enum {string}
          */
@@ -2351,6 +2432,42 @@ export interface components {
              * @default
              */
             label: string;
+        };
+        /**
+         * PairingInvite
+         * @description Everything a device needs to reach this host safely, for one pairing.
+         *
+         *     The fingerprint and the code travel together, over the air gap of the user looking at
+         *     their own screen. That is what lets the device pin this host's certificate and refuse
+         *     every other, with no certificate authority in the trust path.
+         */
+        PairingInvite: {
+            /** Addresses */
+            addresses: string[];
+            /** Certificate Fingerprint */
+            certificate_fingerprint: string;
+            /** Certificate Fingerprint Groups */
+            certificate_fingerprint_groups: string;
+            /** Code */
+            code: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
+            /** Host Name */
+            host_name: string;
+            /** Note */
+            note: string;
+            /**
+             * Payload
+             * @description Compact JSON for a QR code; the same fields, encoded.
+             */
+            payload: string;
+            /** Port */
+            port: number;
         };
         /** PairRequest */
         PairRequest: {
@@ -2694,6 +2811,7 @@ export interface components {
             caller_is_owner: boolean;
             /** Caller Name */
             caller_name: string;
+            network: components["schemas"]["NetworkAccess"];
             /** Notes */
             notes: string[];
             /** Revoked Clients */
@@ -3226,11 +3344,14 @@ export type SchemaModelIdBody = components['schemas']['ModelIdBody'];
 export type SchemaModelLicense = components['schemas']['ModelLicense'];
 export type SchemaModelSourceInfo = components['schemas']['ModelSourceInfo'];
 export type SchemaModelsOverview = components['schemas']['ModelsOverview'];
+export type SchemaNetworkAccess = components['schemas']['NetworkAccess'];
+export type SchemaNetworkAccessRequest = components['schemas']['NetworkAccessRequest'];
 export type SchemaOnboardingStep = components['schemas']['OnboardingStep'];
 export type SchemaOsInfo = components['schemas']['OsInfo'];
 export type SchemaPackageInfo = components['schemas']['PackageInfo'];
 export type SchemaPairingCodeRead = components['schemas']['PairingCodeRead'];
 export type SchemaPairingCodeRequest = components['schemas']['PairingCodeRequest'];
+export type SchemaPairingInvite = components['schemas']['PairingInvite'];
 export type SchemaPairRequest = components['schemas']['PairRequest'];
 export type SchemaParsedCommand = components['schemas']['ParsedCommand'];
 export type SchemaPreferences = components['schemas']['Preferences'];
@@ -4875,6 +4996,39 @@ export interface operations {
             };
         };
     };
+    set_network_access_api_security_network_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NetworkAccessRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetworkAccess"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     pair_api_security_pair_post: {
         parameters: {
             query?: never;
@@ -4928,6 +5082,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PairingCodeRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_pairing_invite_api_security_pairing_invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PairingCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PairingInvite"];
                 };
             };
             /** @description Validation Error */

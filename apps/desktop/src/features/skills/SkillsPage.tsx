@@ -27,6 +27,7 @@ import {
   PageHeader,
   PhaseTag,
   ProgressBar,
+  Row,
   Spinner,
   StatusPill,
 } from "../../components/ui";
@@ -771,14 +772,5 @@ function AchievementsCard({ achievements }: { achievements: AchievementStatus[] 
         ))}
       </ul>
     </Card>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[6rem_1fr] gap-2">
-      <dt className="text-fg-muted">{label}</dt>
-      <dd className="min-w-0 break-words">{children}</dd>
-    </div>
   );
 }

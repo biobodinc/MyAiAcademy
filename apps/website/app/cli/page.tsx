@@ -34,6 +34,7 @@ const COMMANDS: Array<[string, string]> = [
   ['myai ask "what is training?"', "the built-in guide (not your AI model)"],
   ['myai run "/hardware"', "run any slash command"],
   ["myai security show | clients | pairing-code | pair | revoke", "who may act as your AI"],
+  ["myai security network | invite", "let devices on your network in, and pair them"],
   ["myai security export | erase", "take your data out, or delete all of it"],
   ["myai audit", "local security activity"],
 ];

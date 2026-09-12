@@ -18,3 +18,4 @@ Short records of decisions that were not obvious. Format: context, decision, con
 | [0012](0012-only-promised-hashes-may-fail-a-download.md)      | Only a promised hash may fail a download                        |
 | [0013](0013-training-optimises-instructions-not-weights.md)   | Training optimises instructions, not weights                    |
 | [0014](0014-per-client-credentials-and-erasure.md)            | Per-client credentials, and an erase that erases                |
+| [0015](0015-reaching-the-host-from-a-phone.md)                | Reaching the host from a phone: opt-in HTTPS with a pinned cert |

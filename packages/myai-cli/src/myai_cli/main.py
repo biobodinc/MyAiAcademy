@@ -935,6 +935,63 @@ def security_revoke(
     console.print(f"{data['name']} can no longer act as your AI. {data['revoked_reason']}")
 
 
+@security_app.command("network")
+def security_network(
+    on: Annotated[
+        bool | None, typer.Option("--on/--off", help="Turn network access on or off.")
+    ] = None,
+    port: Annotated[int | None, typer.Option(min=1024, max=65535)] = None,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Whether paired devices on this network may reach your AI. Off unless you turn it on."""
+    svc = _service(data_dir)
+    if on is None:
+        data = _call(svc.get, "/security")["network"]
+    else:
+        body: dict[str, Any] = {"enabled": on}
+        if port is not None:
+            body["port"] = port
+        data = _call(svc.post, "/security/network", body)
+    lines = [data["detail"]]
+    if data["enabled"]:
+        where = ", ".join(f"{a}:{data['port']}" for a in data["addresses"])
+        lines += [
+            f"Reachable at: {where}",
+            f"Certificate: {data['certificate_fingerprint_groups']}",
+            "A device pins that fingerprint when it pairs and then accepts only this computer.",
+        ]
+    console.print(Panel("\n".join(lines), title="Devices on your network"))
+
+
+@security_app.command("invite")
+def security_invite(
+    label: Annotated[str, typer.Option(help="What you are pairing, for the log.")] = "",
+    data_dir: DataDirOpt = None,
+    as_json: JsonOpt = False,
+) -> None:
+    """A pairing code plus the certificate a device should pin. Show it on the device."""
+    data = _call(_service(data_dir).post, "/security/pairing-invite", {"label": label})
+    if as_json:
+        return _emit_json(data)
+    console.print(
+        Panel(
+            "\n".join(
+                [
+                    f"Code: [bold]{data['code']}[/bold]",
+                    f"Host: {data['host_name']} at "
+                    + ", ".join(f"{a}:{data['port']}" for a in data["addresses"]),
+                    f"Certificate: {data['certificate_fingerprint_groups']}",
+                    "",
+                    data["note"],
+                ]
+            ),
+            title="Pair a device",
+        )
+    )
+    console.print("QR payload (encode this if you want to scan it):")
+    console.print(data["payload"])
+
+
 @security_app.command("export")
 def security_export(
     destination: Annotated[str | None, typer.Option(help="Where to write the archive.")] = None,
