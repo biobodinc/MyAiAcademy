@@ -99,6 +99,7 @@ def create_app(
             runtime=runtime,
             downloads=downloads,
             jobs=jobs,
+            settings=settings,
         )
         app.state.auth_policy = app.state.core.auth_policy
         log.info("myai-core %s ready (data dir: %s)", __version__, paths.data_dir)
@@ -107,6 +108,11 @@ def create_app(
         finally:
             jobs.shutdown()
             downloads.shutdown()
+            listener = app.state.core.network
+            if listener is not None:
+                # Network access never outlives the service that granted it.
+                listener.stop()
+                app.state.core.network = None
             runtime.unload()
             engine.dispose()
 

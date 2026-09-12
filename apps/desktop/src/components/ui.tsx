@@ -274,3 +274,13 @@ export function PhaseTag({ phase }: { phase: number }) {
     </span>
   );
 }
+
+/** A label/value line inside a definition list. Shared by the pages that explain things. */
+export function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[6rem_1fr] gap-2">
+      <dt className="text-fg-muted">{label}</dt>
+      <dd className="min-w-0 break-words">{children}</dd>
+    </div>
+  );
+}

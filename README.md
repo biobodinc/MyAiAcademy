@@ -37,8 +37,17 @@ updated.
   and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded
   to GitHub Releases, Google Play or the App Store. The download page will say
   "Not available yet" until that happens.
-- **The mobile app is a skeleton.** It shows its connection state truthfully ("not
-  paired") and nothing else. Pairing, chat and controls arrive in Phase 6.
+- **Your AI is reachable from your network only if you say so.** The service listens on
+  127.0.0.1 until you turn on network access; then it starts a second, HTTPS-only listener
+  with a certificate your device pins when it pairs, and it refuses this installation's own
+  token over the network so the master key never leaves the machine. Turning it on and off
+  is in the audit log ([ADR-0015](docs/adr/0015-reaching-the-host-from-a-phone.md)).
+- **The mobile app still cannot connect.** The computer side is built and tested — the
+  listener, the certificate, the pairing code and the QR that carries the fingerprint to
+  pin — but pinning a self-signed certificate in React Native needs a native module and a
+  device build, and we will not ship a connection that has never been made on real
+  hardware. The app parses pairing invites, compares fingerprints, and otherwise reports
+  itself unpaired, which is the truth.
 - **Knowledge retrieval is keyword-based** (BM25 over SQLite FTS5), not semantic. It finds
   passages that share words with your question.
 - **Training does not change your model's weights.** `/train` searches for better

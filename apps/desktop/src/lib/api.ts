@@ -15,6 +15,7 @@ import {
   type StorageCategory,
   type EraseRequest,
   type ExportRequest,
+  type NetworkAccessRequest,
   type TrainRequest,
 } from "@myai/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -404,6 +405,29 @@ export function useRevokeDevice() {
           body: { reason },
         }),
       ),
+    onSuccess: () => {
+      invalidateSecurity(qc);
+    },
+  });
+}
+
+/** Turn network access for paired devices on or off. Owner only, and audited. */
+export function useSetNetworkAccess() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: NetworkAccessRequest) => unwrap(api.POST("/api/security/network", { body })),
+    onSuccess: () => {
+      invalidateSecurity(qc);
+    },
+  });
+}
+
+/** A pairing code together with the certificate a device should pin. */
+export function useCreatePairingInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (label: string) =>
+      unwrap(api.POST("/api/security/pairing-invite", { body: { label } })),
     onSuccess: () => {
       invalidateSecurity(qc);
     },

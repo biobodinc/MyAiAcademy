@@ -26,6 +26,14 @@ export const DISCLOSURES = [
     body: "Images, video, music and games have no measurable benchmark in this build, so they cannot be learned or trained, and every surface says so rather than showing a level.",
   },
   {
+    title: "Your AI is reachable from your network only if you turn that on.",
+    body: "By default the service listens on 127.0.0.1 and nothing on your network can reach it. If you allow devices, it starts a second listener that is HTTPS only, with a certificate your device pins when it pairs \u2014 so the device accepts that one computer and no other, with no certificate authority involved. This installation's own token is refused over the network: a device uses its own credential, which you can revoke on its own. Turning access on and off is recorded in the audit log.",
+  },
+  {
+    title: "The phone app cannot connect to your computer yet.",
+    body: "The computer side is built and tested: the listener, the certificate, the pairing code and the QR that carries the fingerprint to pin. The phone side is not finished, because pinning a self-signed certificate in React Native needs a native module and a device build, and we will not ship a connection that has never been made on real hardware. The app reports itself unpaired, which is the truth.",
+  },
+  {
     title: "There are no accounts, and nothing signs in.",
     body: "This build has no account server and no code path that would send anything to one. Everything stays on the machine it runs on. An account is planned as the way to get installers and to sign in on more than one device; until it exists, the app, the command line and this site all say there is none rather than implying otherwise.",
   },
