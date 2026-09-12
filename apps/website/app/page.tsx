@@ -25,7 +25,7 @@ const status = [
   { label: "Desktop app (Windows first)", state: "Phase 1 · done" },
   { label: "Local chat, memory and knowledge", state: "Phase 2 · done, see disclosures" },
   { label: "Skills, /learn, benchmarks and levels", state: "Phase 3 · done" },
-  { label: "/train and training jobs", state: "Phase 4" },
+  { label: "/train, training jobs and checkpoints", state: "Phase 4 · done" },
   { label: "Accounts, device pairing, mobile", state: "Phases 5–6" },
   { label: "Encrypted sync and portable .myai export", state: "Phases 7–8" },
 ];

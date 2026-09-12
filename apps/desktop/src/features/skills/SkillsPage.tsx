@@ -12,8 +12,11 @@ import {
   type JobRead,
   type LearnPreview,
   type SkillStatus,
+  type TrainingRunRead,
+  type TrainPreview,
+  type TrainRequest,
 } from "@myai/api-client";
-import { GraduationCap, Lock, Pause, Play, RotateCcw, Square } from "lucide-react";
+import { Dumbbell, GraduationCap, Lock, Pause, Play, RotateCcw, Square, Undo2 } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -33,10 +36,14 @@ import {
   useEvaluations,
   useJobAction,
   useLearnPreview,
+  useRevertTraining,
   useSkillHistory,
   useSkills,
   useStartEvaluate,
   useStartLearn,
+  useStartTrain,
+  useTrainingRuns,
+  useTrainPreview,
 } from "../../lib/api";
 
 const DOMAIN_ORDER = ["core", "creative", "technical", "knowledge"] as const;
@@ -45,6 +52,7 @@ export function SkillsPage() {
   const skills = useSkills();
   const job = useCurrentJob();
   const [previewFor, setPreviewFor] = useState<string | null>(null);
+  const [trainFor, setTrainFor] = useState<string | null>(null);
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   const evaluate = useStartEvaluate();
 
@@ -94,6 +102,9 @@ export function SkillsPage() {
                   onHistory={() => {
                     setHistoryFor(s.id);
                   }}
+                  onTrain={() => {
+                    setTrainFor(s.id);
+                  }}
                 />
               ))}
             </div>
@@ -110,6 +121,14 @@ export function SkillsPage() {
           skillId={previewFor}
           onClose={() => {
             setPreviewFor(null);
+          }}
+        />
+      )}
+      {trainFor && (
+        <TrainDialog
+          skillId={trainFor}
+          onClose={() => {
+            setTrainFor(null);
           }}
         />
       )}
@@ -131,14 +150,17 @@ function SkillCard({
   onLearn,
   onEvaluate,
   onHistory,
+  onTrain,
 }: {
   skill: SkillStatus;
   busy: boolean;
   onLearn: () => void;
   onEvaluate: () => void;
   onHistory: () => void;
+  onTrain: () => void;
 }) {
   const areas = Object.entries(skill.area_scores);
+  const revert = useRevertTraining();
   return (
     <Card className={skill.locked ? "opacity-70" : undefined}>
       <div className="flex items-start gap-3">
@@ -151,6 +173,7 @@ function SkillCard({
             {skill.locked && <Lock className="h-3.5 w-3.5 text-fg-muted" aria-label="Locked" />}
             {!skill.learnable && <PhaseTag phase={skill.planned_phase} />}
             {skill.learned && <StatusPill tone="success">Learned</StatusPill>}
+            {skill.trained_at && <StatusPill tone="info">Trained</StatusPill>}
           </div>
           <p className="text-sm text-fg-muted">{skill.description}</p>
           <div className="mt-3 flex items-center gap-3">
@@ -171,6 +194,13 @@ function SkillCard({
                 </li>
               ))}
             </ul>
+          )}
+          {skill.trained_at && (
+            <p className="mt-2 text-xs text-fg-muted">
+              Trained on {new Date(skill.trained_at).toLocaleDateString()}: this skill uses
+              instructions training measured as better. Undoing puts the package\u2019s own back and
+              leaves the level as it was measured.
+            </p>
           )}
           {skill.locked_reason && (
             <p className="mt-2 text-xs text-warning">{skill.locked_reason}</p>
@@ -195,12 +225,29 @@ function SkillCard({
             )}
             {skill.learned && (
               <>
+                {skill.trainable && (
+                  <Button size="sm" onClick={onTrain} disabled={busy}>
+                    <Dumbbell className="h-4 w-4" aria-hidden /> Train
+                  </Button>
+                )}
                 <Button size="sm" variant="secondary" onClick={onEvaluate} disabled={busy}>
                   <RotateCcw className="h-4 w-4" aria-hidden /> Re-run benchmark
                 </Button>
                 <Button size="sm" variant="ghost" onClick={onHistory}>
                   History
                 </Button>
+                {skill.trained_at && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={busy || revert.isPending}
+                    onClick={() => {
+                      revert.mutate(skill.id);
+                    }}
+                  >
+                    <Undo2 className="h-4 w-4" aria-hidden /> Undo training
+                  </Button>
+                )}
               </>
             )}
           </div>
@@ -231,7 +278,9 @@ function JobCard({ job }: { job: JobRead }) {
             <ProgressBar value={pct} label={`${verb} progress`} tone="accent" />
             <div className="mt-1 text-xs text-fg-muted">
               {job.status}
-              {job.status === "paused" ? "" : "…"} · task {job.progress_done} of {total}
+              {job.status === "paused" ? "" : "…"} · {job.kind === "train" ? "round" : "task"}{" "}
+              {job.progress_done} of {total}
+              {job.kind === "train" ? " (estimated)" : ""}
               {job.model_id ? ` · ${job.model_id}` : ""}
             </div>
           </div>
@@ -270,8 +319,9 @@ function JobCard({ job }: { job: JobRead }) {
           </Button>
         </div>
         <p className="mt-2 text-xs text-fg-muted">
-          The skill counts as learned only when the benchmark finishes. Stopping leaves it as it
-          was.
+          {job.kind === "train"
+            ? "Each change is kept only if it measures better, and the benchmark at the end decides whether the result is kept at all. Stopping leaves the skill as it was."
+            : "The skill counts as learned only when the benchmark finishes. Stopping leaves it as it was."}
         </p>
         {act.isError && (
           <div className="mt-2">
@@ -357,8 +407,189 @@ function LearnDialog({ skillId, onClose }: { skillId: string; onClose: () => voi
   );
 }
 
+function TrainDialog({ skillId, onClose }: { skillId: string; onClose: () => void }) {
+  const [duration, setDuration] = useState(15);
+  const [focus, setFocus] = useState("");
+  const [target, setTarget] = useState("");
+  const request: TrainRequest = {
+    duration_seconds: duration * 60,
+    all_areas: focus === "all",
+    specialization: focus && focus !== "all" ? focus : null,
+    target_level: target ? Number(target) : null,
+  };
+  const preview = useTrainPreview(skillId, request);
+  const start = useStartTrain();
+  const runs = useTrainingRuns(skillId);
+  const p: TrainPreview | undefined = preview.data;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="train-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+    >
+      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-card border border-border bg-bg-elevated p-6 shadow-card">
+        {preview.isPending && <Spinner />}
+        {preview.isError && <Alert tone="danger">{describeError(preview.error)}</Alert>}
+        {p && (
+          <>
+            <h2 id="train-title" className="text-lg font-bold">
+              {p.icon} Train {p.name}
+            </h2>
+            <p className="mt-2 text-sm">{p.what_happens}</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <label className="text-sm">
+                <span className="block text-fg-muted">Minutes</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={480}
+                  value={duration}
+                  onChange={(e) => {
+                    setDuration(Math.max(1, Number(e.target.value) || 1));
+                  }}
+                  className="mt-1 w-full rounded-md border border-border bg-bg px-2 py-1"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="block text-fg-muted">Focus</span>
+                <select
+                  value={focus}
+                  onChange={(e) => {
+                    setFocus(e.target.value);
+                  }}
+                  className="mt-1 w-full rounded-md border border-border bg-bg px-2 py-1"
+                >
+                  <option value="">Weakest area</option>
+                  <option value="all">Every area</option>
+                  {p.areas.map((a) => (
+                    <option key={a} value={a}>
+                      {titleCase(a)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm">
+                <span className="block text-fg-muted">Stop at level</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  placeholder="optional"
+                  value={target}
+                  onChange={(e) => {
+                    setTarget(e.target.value);
+                  }}
+                  className="mt-1 w-full rounded-md border border-border bg-bg px-2 py-1"
+                />
+              </label>
+            </div>
+            <dl className="mt-4 space-y-1 text-sm">
+              <Row label="Current level">{p.current_level}</Row>
+              <Row label="Focus">{p.focus_note}</Row>
+              <Row label="Budget">
+                {p.budget_minutes} minutes
+                <span className="block text-xs text-fg-muted">{p.budget_note}</span>
+              </Row>
+              <Row label="Practice">
+                {p.search_tasks} tasks to search with, {p.check_tasks} to confirm with
+                <span className="block text-xs text-fg-muted">
+                  The benchmark that sets the level is a separate set training never sees.
+                </span>
+              </Row>
+              <Row label="Estimated">
+                {p.estimated_rounds_min != null && p.estimated_rounds_max != null
+                  ? `${p.estimated_rounds_min}\u2013${p.estimated_rounds_max} rounds`
+                  : "unknown"}
+                <span className="block text-xs text-fg-muted">{p.estimate_note}</span>
+              </Row>
+              <Row label="Model">{p.model_id ?? "none"}</Row>
+              {p.resume_rounds > 0 && (
+                <Row label="Continuing">from an earlier run of {p.resume_rounds} rounds</Row>
+              )}
+            </dl>
+            {p.blockers.length > 0 && (
+              <div className="mt-4">
+                <Alert tone="warning" title="Cannot start yet">
+                  <ul className="list-disc pl-5">
+                    {p.blockers.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                </Alert>
+              </div>
+            )}
+            {start.isError && (
+              <div className="mt-4">
+                <Alert tone="danger">{describeError(start.error)}</Alert>
+              </div>
+            )}
+            {runs.data && runs.data.length > 0 && (
+              <div className="mt-5">
+                <h3 className="text-sm font-semibold">Earlier runs</h3>
+                <ul className="mt-2 space-y-2 text-xs text-fg-muted">
+                  {runs.data.slice(0, 3).map((r) => (
+                    <li key={r.id}>
+                      {new Date(r.started_at).toLocaleDateString()} \u00b7 {r.rounds_completed}{" "}
+                      rounds \u00b7 {r.summary}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <Button variant="ghost" onClick={onClose} disabled={start.isPending}>
+                Cancel
+              </Button>
+              <Button
+                disabled={!p.trainable || start.isPending}
+                onClick={() => {
+                  start.mutate({ skill_id: skillId, request }, { onSuccess: onClose });
+                }}
+              >
+                {start.isPending ? "Starting\u2026" : "Start training"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TrainingRunsList({ runs }: { runs: TrainingRunRead[] }) {
+  return (
+    <ul className="mt-3 space-y-2 text-sm">
+      {runs.map((run) => (
+        <li key={run.id} className="rounded-xl border border-border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>
+              {new Date(run.started_at).toLocaleString()} \u00b7 {run.rounds_completed} rounds
+            </span>
+            <StatusPill tone={run.applied ? "success" : "muted"}>
+              {run.applied ? "kept" : run.status.replace("_", " ")}
+            </StatusPill>
+          </div>
+          <p className="mt-1 text-fg-muted">{run.summary}</p>
+          {run.rounds.length > 0 && (
+            <ul className="mt-2 space-y-0.5 text-xs text-fg-muted">
+              {run.rounds.map((r) => (
+                <li key={r.index}>
+                  {r.accepted ? "\u2713" : "\u00b7"} {r.change} ({Math.round(r.search_score * 100)}
+                  %)
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function EvaluationsDialog({ skillId, onClose }: { skillId: string; onClose: () => void }) {
   const evaluations = useEvaluations(skillId);
+  const runs = useTrainingRuns(skillId);
   return (
     <div
       role="dialog"
@@ -374,6 +605,16 @@ function EvaluationsDialog({ skillId, onClose }: { skillId: string; onClose: () 
         {evaluations.data?.map((e) => (
           <EvaluationDetail key={e.id} evaluation={e} />
         ))}
+        {runs.data && runs.data.length > 0 && (
+          <section className="mt-6">
+            <h3 className="text-sm font-semibold">Training runs</h3>
+            <p className="text-xs text-fg-muted">
+              Training searches for better instructions. A level shown above only ever came from a
+              benchmark run.
+            </p>
+            <TrainingRunsList runs={runs.data} />
+          </section>
+        )}
         <div className="mt-4 flex justify-end">
           <Button variant="ghost" onClick={onClose}>
             Close

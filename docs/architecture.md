@@ -90,15 +90,15 @@ identities (Phase 5) on top of this; they do not replace it.
 
 ## Where later phases plug in
 
-| Phase         | Extension point already present                                                                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2 Local AI    | `status.ai` becomes `available`; a `ModelProvider` package lands under `myai_core/models/`; `OnboardingStep.LOCAL_MODEL` gains a real screen.                    |
-| 3 Skills      | Done: bundled skill packages, benchmark jobs, levels from evaluations (ADR-0011). Phase 4 extends packages with datasets/adapters and adds the `train` job kind. |
-| 4 Training    | `TrainingJob` table (spec §40) with the same `version`/`updated_at` convention; `ComputePreset` percentages feed the scheduler.                                  |
-| 5 Security    | Device identity table; `AuditEvent.device_id` is already nullable for it; OIDC/PKCE flow terminates in the desktop shell via a deep link.                        |
-| 6 Mobile      | `apps/mobile/src/connection.ts` is the state machine screens are built on; `api-client` accepts device credentials through its provider interface.               |
-| 7 Sync        | Conflict detection uses the `version` columns; conflicts are surfaced, never auto-resolved for important state.                                                  |
-| 8 Portable AI | Storage layout is already the on-disk shape of a `.myai` package (`docs/formats/myai-package.md`).                                                               |
+| Phase         | Extension point already present                                                                                                                                             |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2 Local AI    | `status.ai` becomes `available`; a `ModelProvider` package lands under `myai_core/models/`; `OnboardingStep.LOCAL_MODEL` gains a real screen.                               |
+| 3 Skills      | Done: bundled skill packages, benchmark jobs, levels from evaluations (ADR-0011).                                                                                           |
+| 4 Training    | Done: the `train` job kind searches a skill's instructions against a practice set and the benchmark decides what is kept; `training_runs` holds the checkpoints (ADR-0013). |
+| 5 Security    | Device identity table; `AuditEvent.device_id` is already nullable for it; OIDC/PKCE flow terminates in the desktop shell via a deep link.                                   |
+| 6 Mobile      | `apps/mobile/src/connection.ts` is the state machine screens are built on; `api-client` accepts device credentials through its provider interface.                          |
+| 7 Sync        | Conflict detection uses the `version` columns; conflicts are surfaced, never auto-resolved for important state.                                                             |
+| 8 Portable AI | Storage layout is already the on-disk shape of a `.myai` package (`docs/formats/myai-package.md`).                                                                          |
 
 ## Repository layout
 

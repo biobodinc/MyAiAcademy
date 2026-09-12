@@ -18,8 +18,12 @@ export const DISCLOSURES = [
     body: "It uses BM25 over SQLite full-text search and finds passages that share words with your question. Embedding-based retrieval is planned and will be labelled when it ships.",
   },
   {
-    title: "Training is not implemented (Phase 4).",
-    body: "Skills are learned from bundled packages (instructions plus a 12-task benchmark) and a skill's level is the score its benchmark produced with your local model. /train shows its information and states that training jobs arrive in Phase 4. Creative skills (images, video, music, games) have no benchmark yet and cannot be learned.",
+    title: "Training does not change your model's weights.",
+    body: "/train searches for better instructions for one skill \u2014 short rules from its package, rules your AI writes for itself after a mistake, and worked examples \u2014 and keeps a change only when it scores higher on practice tasks that the benchmark never uses. When the search ends, the skill's benchmark runs with the old and the new instructions, and the result is kept only if the score went up; if it did not, the run says so and nothing changes. Fine-tuning a quantised local model is not something this program can honestly do on the hardware it targets, so it does not claim to.",
+  },
+  {
+    title: "Creative skills cannot be learned or trained yet.",
+    body: "Images, video, music and games have no measurable benchmark in this build, so they cannot be learned or trained, and every surface says so rather than showing a level.",
   },
   {
     title: "Not every model download can be hash-verified.",

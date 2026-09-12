@@ -1,0 +1,150 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 200,
+  "tactics": [
+    "Return the complete function definition, not a fragment.",
+    "Handle the empty, zero or missing case explicitly.",
+    "Match the function name and parameters the request asks for exactly.",
+    "Trace the code on one small example before answering.",
+    "When fixing a bug, change only the line that is wrong.",
+    "Reply with code only, inside a single fenced block."
+  ],
+  "tasks": [
+    {
+      "id": "multiply-fn",
+      "area": "coding",
+      "prompt": "Write a Python function multiply(a, b) that returns the product of a and b.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["multiply(3, 4) == 12", "multiply(-2, 5) == -10", "multiply(0, 9) == 0"]
+        }
+      ]
+    },
+    {
+      "id": "is-even",
+      "area": "coding",
+      "prompt": "Write a Python function is_even(n) that returns True when n is even and False otherwise.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["is_even(4) is True", "is_even(7) is False", "is_even(0) is True"]
+        }
+      ]
+    },
+    {
+      "id": "word-count-fn",
+      "area": "coding",
+      "prompt": "Write a Python function word_count(s) that returns how many whitespace-separated words the string s contains.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["word_count('a b  c') == 3", "word_count('') == 0", "word_count(' one ') == 1"]
+        }
+      ]
+    },
+    {
+      "id": "largest",
+      "area": "coding",
+      "prompt": "Write a Python function largest(nums) that returns the largest value in the list, or None when the list is empty.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["largest([3, 9, 2]) == 9", "largest([]) is None", "largest([-5, -1]) == -1"]
+        }
+      ]
+    },
+    {
+      "id": "unique-sorted",
+      "area": "coding",
+      "prompt": "Write a Python function unique_sorted(nums) that returns the distinct values of nums sorted in ascending order.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["unique_sorted([3, 1, 3, 2]) == [1, 2, 3]", "unique_sorted([]) == []"]
+        }
+      ]
+    },
+    {
+      "id": "fix-total",
+      "area": "debugging",
+      "prompt": "This function should return the sum of a list but returns one too many. Return the corrected function.\n\n```python\ndef total(nums):\n    return sum(nums) + 1\n```",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["total([1, 2, 3]) == 6", "total([]) == 0"]
+        }
+      ]
+    },
+    {
+      "id": "fix-biggest",
+      "area": "debugging",
+      "prompt": "This function should return the largest number but returns the smallest. Return the corrected function.\n\n```python\ndef biggest(nums):\n    return min(nums)\n```",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["biggest([4, 8, 1]) == 8", "biggest([-3, -9]) == -3"]
+        }
+      ]
+    },
+    {
+      "id": "fix-count",
+      "area": "debugging",
+      "prompt": "This function should count how many items equal target but always returns 0. Return the corrected function.\n\n```python\ndef count(items, target):\n    n = 0\n    for item in items:\n        if item == target:\n            pass\n    return n\n```",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["count([1, 2, 2], 2) == 2", "count([], 1) == 0"]
+        }
+      ]
+    },
+    {
+      "id": "print-slice",
+      "area": "reasoning",
+      "prompt": "What does this Python code print? Reply with the value only.\n\nprint('abcdef'[1:4])",
+      "checks": [
+        {
+          "type": "exact",
+          "expected": ["bcd"]
+        }
+      ]
+    },
+    {
+      "id": "print-sorted",
+      "area": "reasoning",
+      "prompt": "What does this Python code print? Reply with the value only.\n\nx = [3, 1, 2]\nx.sort()\nprint(x[0])",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "id": "set-vs-list",
+      "area": "reasoning",
+      "prompt": "In Python, which checks membership faster for a large collection: a list or a set? Answer with one word.",
+      "checks": [
+        {
+          "type": "exact",
+          "expected": ["set", "a set"]
+        }
+      ]
+    },
+    {
+      "id": "safe-divide",
+      "area": "quality",
+      "prompt": "Write a Python function safe_divide(a, b) that returns a divided by b and returns None when b is 0. Include a docstring.",
+      "checks": [
+        {
+          "type": "python_tests",
+          "tests": ["safe_divide(10, 2) == 5", "safe_divide(1, 0) is None"]
+        },
+        {
+          "type": "code_contains",
+          "pattern": "\"\"\"|'''"
+        }
+      ]
+    }
+  ]
+}

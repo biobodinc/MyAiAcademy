@@ -472,6 +472,143 @@ def evaluate(
 
 
 @app.command()
+def train(
+    skill: str,
+    duration: Annotated[
+        str | None, typer.Option(help="How long to practise, e.g. 30m or 2h. Default 15m.")
+    ] = None,
+    level: Annotated[int | None, typer.Option(min=1, max=100, help="Stop at this level.")] = None,
+    focus: Annotated[str | None, typer.Option(help="Practise one area (see myai skills).")] = None,
+    all_areas: Annotated[bool, typer.Option("--all", help="Practise every area.")] = False,
+    yes: Annotated[bool, typer.Option("--yes", "-y", help="Start without confirming.")] = False,
+    wait: Annotated[bool, typer.Option(help="Wait for training to finish.")] = True,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Practise a learned skill: search for better instructions, measured by its benchmark.
+
+    Your model's weights are never changed. Training tries short rules and worked examples,
+    keeps only what scores better on practice tasks, and then re-runs the benchmark to
+    decide whether the result is kept at all.
+    """
+    svc = _service(data_dir)
+    request: dict[str, Any] = {"all_areas": all_areas}
+    if duration is not None:
+        request["duration_seconds"] = _duration_seconds(duration)
+    if level is not None:
+        request["target_level"] = level
+    if focus is not None:
+        request["specialization"] = focus
+    preview = _call(svc.post, f"/skills/{skill}/train-preview", request)
+    if preview["blockers"]:
+        err_console.print(
+            f"[yellow]{preview['icon']} {preview['name']} cannot be trained yet:[/yellow]"
+        )
+        for b in preview["blockers"]:
+            err_console.print(f"  • {b}")
+        raise typer.Exit(code=1)
+    if preview["estimated_rounds_min"] is not None:
+        rounds = (
+            f"{preview['estimated_rounds_min']}-{preview['estimated_rounds_max']} rounds "
+            f"({preview['estimate_note']})"
+        )
+    else:
+        rounds = f"unknown ({preview['estimate_note']})"
+    areas = ", ".join(
+        f"{k.replace('_', ' ')} {round(v * 100)}%" for k, v in preview["last_area_scores"].items()
+    )
+    lines = [
+        preview["what_happens"],
+        "",
+        f"Current level: {preview['current_level']}",
+        f"Target level: {preview['target_level'] or preview['recommended_target']}",
+        f"Last benchmark by area: {areas or 'none yet'}",
+        preview["focus_note"],
+        f"Time budget: {preview['budget_minutes']:g} minutes. {preview['budget_note']}",
+        f"Practice: {preview['search_tasks']} tasks to search with, "
+        f"{preview['check_tasks']} to confirm with. The benchmark stays separate.",
+        f"Estimated: {rounds}",
+        f"Model: {preview['model_id']}",
+    ]
+    if preview["resume_rounds"]:
+        lines.append(f"Continuing from an earlier run of {preview['resume_rounds']} rounds.")
+    console.print(Panel("\n".join(lines), title=f"{preview['icon']} Training {preview['name']}"))
+    if not yes and not typer.confirm("Start training?", default=True):
+        raise typer.Exit(code=1)
+    job = _call(svc.post, f"/skills/{skill}/train", request)
+    console.print(f"Started job {job['id']}. The benchmark decides whether the result is kept.")
+    if wait:
+        _follow_job(svc, job["id"])
+
+
+@app.command()
+def training(
+    skill: str,
+    revert: Annotated[
+        bool, typer.Option("--revert", help="Put back the instructions the package shipped with.")
+    ] = False,
+    data_dir: DataDirOpt = None,
+    as_json: JsonOpt = False,
+) -> None:
+    """Training runs for a skill, or --revert to undo what training changed."""
+    svc = _service(data_dir)
+    if revert:
+        item = _call(svc.post, f"/skills/{skill}/training/revert", {})
+        console.print(
+            f"{item['name']} is back to its package instructions. Its level is unchanged "
+            f"(level {item['level']}): re-run the benchmark with 'myai evaluate {skill}' "
+            "to measure the original."
+        )
+        return
+    data = _call(svc.get, f"/skills/{skill}/training")
+    if as_json:
+        return _emit_json(data)
+    if not data:
+        console.print(f"No training runs for {skill} yet. Start one with: myai train {skill}")
+        return
+    table = Table(title=f"Training runs: {skill}")
+    table.add_column("When")
+    table.add_column("Rounds", justify="right")
+    table.add_column("Benchmark")
+    table.add_column("Level", justify="right")
+    table.add_column("Outcome")
+    for run in data:
+        before, after = run["benchmark_before"], run["benchmark_after"]
+        bench = (
+            f"{round(before * 100)}% → {round(after * 100)}%"
+            if before is not None and after is not None
+            else (f"{round(before * 100)}%" if before is not None else "—")
+        )
+        level = (
+            f"{run['level_before']} → {run['level_after']}"
+            if run["level_before"] is not None
+            else "—"
+        )
+        table.add_row(
+            run["started_at"][:16].replace("T", " "),
+            str(run["rounds_completed"]),
+            bench,
+            level,
+            "kept" if run["applied"] else run["status"].replace("_", " "),
+        )
+    console.print(table)
+    console.print(data[0]["summary"])
+
+
+def _duration_seconds(text: str) -> int:
+    """Accept '90', '90m', '1.5h' the way the /train command does."""
+    raw = text.strip().lower()
+    try:
+        if raw.endswith("h"):
+            return int(float(raw[:-1]) * 3600)
+        if raw.endswith("m"):
+            return int(float(raw[:-1]) * 60)
+        return int(float(raw) * 60)
+    except ValueError:
+        err_console.print(f"[red]Could not read a duration from '{text}'. Try 30m or 2h.[/red]")
+        raise typer.Exit(code=2) from None
+
+
+@app.command()
 def history(
     data_dir: DataDirOpt = None,
     limit: Annotated[int, typer.Option(min=1, max=500)] = 30,
@@ -517,17 +654,37 @@ def _follow_job(svc: LocalService, job_id: str) -> None:
         time.sleep(1.0)
     if job["status"] == "completed":
         r = job["result"]
-        console.print(
-            f"[green]Done: {job['skill_id']} level {r['level_before']} → {r['level_after']} "
-            f"({round(r['score'] * 100)}% in {r['duration_seconds']}s)[/green]"
-        )
-        for area, score in r.get("area_scores", {}).items():
-            console.print(f"  {area}: {round(score * 100)}%")
+        if job["kind"] == "train":
+            _print_training_result(job["skill_id"], r)
+        else:
+            console.print(
+                f"[green]Done: {job['skill_id']} level {r['level_before']} → {r['level_after']} "
+                f"({round(r['score'] * 100)}% in {r['duration_seconds']}s)[/green]"
+            )
+            for area, score in r.get("area_scores", {}).items():
+                console.print(f"  {area}: {round(score * 100)}%")
     elif job["status"] == "failed":
         err_console.print(f"[red]Failed: {job['error']}[/red]")
         raise typer.Exit(code=1)
     else:
-        console.print("[yellow]Cancelled. Nothing was learned.[/yellow]")
+        verb = "trained" if job["kind"] == "train" else "learned"
+        console.print(f"[yellow]Cancelled. Nothing was {verb}.[/yellow]")
+
+
+def _print_training_result(skill_id: str, r: dict[str, Any]) -> None:
+    """Training's result is a decision, not a score: say what was kept and why."""
+    colour = "green" if r.get("applied") else "yellow"
+    console.print(f"[{colour}]{skill_id}: {r.get('summary', 'Training finished.')}[/{colour}]")
+    console.print(
+        f"  Rounds: {r.get('rounds', 0)} tried, {r.get('accepted_rounds', 0)} kept "
+        f"({r.get('stopped_because', '')})"
+    )
+    before, after = r.get("practice_before"), r.get("practice_after")
+    if before is not None and after is not None:
+        console.print(
+            f"  Practice (confirmation split): {round(before * 100)}% → {round(after * 100)}%"
+        )
+    console.print(f"  Level: {r.get('level_before')} → {r.get('level_after')}")
 
 
 @jobs_app.command("list")

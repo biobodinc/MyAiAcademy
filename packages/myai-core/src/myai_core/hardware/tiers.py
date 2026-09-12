@@ -1,9 +1,10 @@
 """Capability tier estimation (spec §30).
 
-Phase 1 derives a tier purely from specifications. This is a *recommendation* used to
-suggest defaults; it is explicitly labelled as an estimate in the report so the UI can
-say so. A short real benchmark (inference tokens/s, training step time) arrives with the
-training runtime in Phase 4 and will replace ``method``.
+The tier is derived from specifications. This is a *recommendation* used to suggest
+defaults; it is explicitly labelled as an estimate in the report so the UI can say so.
+The measured hardware benchmark (``hardware/benchmark.py``) reports real tokens per
+second alongside it, and that measurement — not this estimate — is what time estimates
+for learning and training are derived from.
 
 Thresholds are deliberately conservative and reflect what actually fits in memory for
 local LLM inference and LoRA fine-tuning today:

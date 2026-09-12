@@ -8,7 +8,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from myai_core.commands.models import CommandName, CommandOutcome, CommandResult, ParsedCommand
+from myai_core.commands.models import (
+    CommandName,
+    CommandOutcome,
+    CommandResult,
+    ParsedCommand,
+    TrainTarget,
+)
 from myai_core.commands.parser import CommandParseError, parse
 from myai_core.guide import ask
 from myai_core.hardware.models import HardwareReport
@@ -17,6 +23,7 @@ from myai_core.skills.catalog import get_skill
 from myai_core.skills.jobs import JobSummary
 from myai_core.skills.learning import EvaluationRead, LearnPreview
 from myai_core.skills.service import SkillsSummary
+from myai_core.skills.trainer import TrainPreview
 
 GiB = 1024**3
 GUIDE_MIN_CONFIDENCE = 0.5
@@ -24,7 +31,7 @@ GUIDE_MIN_CONFIDENCE = 0.5
 HELP_TEXT = """Commands you can use:
 
 /learn <skill>      preview a new skill; "/learn <skill> start" installs it and runs its benchmark
-/train <skill>      improve a skill you already have (training jobs arrive in Phase 4)
+/train <skill>      practise a skill you have learned (add '2h', 'level 60', an area or 'all')
 /skills             list skills and levels
 /status             AI, internet, jobs and training status
 /hardware           what your computer can do
@@ -59,6 +66,8 @@ class CommandContext:
         current_job: Callable[[], JobSummary | None] | None = None,
         job_action: Callable[[str, str], bool] | None = None,
         history: Callable[[], list[EvaluationRead]] | None = None,
+        train_preview: Callable[[str, TrainTarget | None], TrainPreview] | None = None,
+        start_train: Callable[[str, TrainTarget | None], JobSummary] | None = None,
     ) -> None:
         self.hardware = hardware
         self.skills = skills
@@ -70,6 +79,8 @@ class CommandContext:
         self.current_job = current_job
         self.job_action = job_action
         self.history = history
+        self.train_preview = train_preview
+        self.start_train = start_train
 
 
 def execute(text: str, ctx: CommandContext) -> CommandResult:
@@ -304,44 +315,94 @@ def _train(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
         return _unknown_skill(cmd)
     skill = get_skill(cmd.skill)
     assert skill is not None
-    summary = ctx.skills()
-    current = next(s for s in summary.skills if s.id == skill.id)
-    if not current.learned:
+    current = next((s for s in ctx.skills().skills if s.id == skill.id), None)
+    if current is None or not current.learned:
         return CommandResult(
             outcome=CommandOutcome.UNAVAILABLE,
             command=cmd,
             title=f"You haven't learned {skill.name} yet",
-            message=f"Learn it first with /learn {skill.id}.",
+            message=f"Learn it first with /learn {skill.id}; training improves what is there.",
             suggestions=[f"/learn {skill.id}"],
         )
-    target = cmd.train.target_level if cmd.train and cmd.train.target_level else None
-    recommended = min(100, current.level + 4)
-    areas = [f"{k}: {round(v * 100)}%" for k, v in current.area_scores.items()]
-    if cmd.train and cmd.train.specialization:
-        focus = f"Focus: {cmd.train.specialization}"
-    elif cmd.train and cmd.train.all_areas:
-        focus = "Focus: all areas"
-    else:
-        focus = "Focus: weakest areas"
-    lines = [
-        f"Current level: {current.level}",
-        f"Target level: {target if target else recommended} (recommended {recommended})",
-        f"Training areas: {', '.join(skill.specializations)}",
-        "Last benchmark by area: " + (", ".join(areas) if areas else "none"),
-        focus,
-        "Estimated time: not available; training jobs arrive in Phase 4",
-        "Hardware usage: governed by your compute preset when training exists",
-        "",
-        "Nothing has started. Levels change only through the benchmark.",
-    ]
+    if ctx.train_preview is None or ctx.start_train is None:
+        return CommandResult(
+            outcome=CommandOutcome.UNAVAILABLE,
+            command=cmd,
+            title=f"{skill.icon} Training {skill.name} is not available here",
+            message="This build has no job runner, so nothing can be trained from it.",
+            suggestions=["/skills"],
+        )
+    preview = ctx.train_preview(skill.id, cmd.train)
+    if preview.blockers:
+        return CommandResult(
+            outcome=CommandOutcome.UNAVAILABLE,
+            command=cmd,
+            title=f"{skill.icon} {skill.name} cannot be trained yet",
+            message="\n".join(preview.blockers),
+            data={"navigate": "/skills"},
+            suggestions=["/skills", f"/learn {skill.id}"],
+        )
+    wants_start = any(a.lower() in {"start", "confirm", "yes", "go"} for a in cmd.args[1:])
+    if not wants_start:
+        return CommandResult(
+            outcome=CommandOutcome.OK,
+            command=cmd,
+            title=f"{skill.icon} Training {skill.name}",
+            message=_train_preview_text(preview),
+            data={"preview": preview.model_dump(mode="json")},
+            suggestions=[f"/train {skill.id} start", "/skills"],
+        )
+    job = ctx.start_train(skill.id, cmd.train)
     return CommandResult(
-        outcome=CommandOutcome.UNAVAILABLE,
+        outcome=CommandOutcome.OK,
         command=cmd,
-        title=f"{skill.icon} Training {skill.name} is not available yet",
-        message="\n".join(lines),
-        data={"navigate": "/skills"},
-        suggestions=["/skills", "/history"],
+        title=f"{skill.icon} Training {skill.name}",
+        message=(
+            f"Practising for about {preview.budget_minutes:g} minutes. Each change is kept "
+            f"only if it scores better on practice tasks, and at the end the {skill.name} "
+            "benchmark decides whether the result is kept at all. Follow progress with "
+            "/status; /pause, /resume and /stop control it."
+        ),
+        data={"job": job.model_dump(mode="json"), "navigate": "/skills"},
+        suggestions=["/status", "/pause", "/stop"],
     )
+
+
+def _train_preview_text(preview: TrainPreview) -> str:
+    if preview.estimated_rounds_min is not None and preview.estimated_rounds_max is not None:
+        rounds = (
+            f"{preview.estimated_rounds_min}-{preview.estimated_rounds_max} rounds "
+            f"({preview.estimate_note})"
+        )
+    else:
+        rounds = f"unknown ({preview.estimate_note})"
+    areas = [
+        f"{k.replace('_', ' ')}: {round(v * 100)}%" for k, v in preview.last_area_scores.items()
+    ]
+    lines = [
+        preview.what_happens,
+        "",
+        f"Current level: {preview.current_level}",
+        f"Target level: {preview.target_level or preview.recommended_target}"
+        + (
+            ""
+            if preview.target_level
+            else f" (recommended; add 'level {preview.recommended_target}')"
+        ),
+        "Last benchmark by area: " + (", ".join(areas) if areas else "none yet"),
+        preview.focus_note,
+        f"Time budget: {preview.budget_minutes:g} minutes. {preview.budget_note}",
+        f"Practice tasks: {preview.search_tasks} to search with, {preview.check_tasks} to confirm "
+        f"with, out of {preview.practice_tasks}. The benchmark is separate and untouched.",
+        f"Estimated: {rounds}",
+        f"Model: {preview.model_id}",
+    ]
+    if preview.resume_rounds:
+        lines.append(
+            f"Continuing from an earlier run that completed {preview.resume_rounds} rounds."
+        )
+    lines += ["", f"Start training? Reply with: /train {preview.skill_id} start"]
+    return "\n".join(lines)
 
 
 def _job_control(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:

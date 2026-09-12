@@ -1,0 +1,201 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 120,
+  "tactics": [
+    "Count the lines, words or list items before replying, and adjust until the count matches.",
+    "Reply with the requested text only: no title, no commentary, no quotation marks.",
+    "Keep every word the request forbids out of the answer.",
+    "When rewriting, change only what the instruction asks to change.",
+    "Prefer concrete nouns and strong verbs to adverbs.",
+    "When a length range is given, aim for the middle of it."
+  ],
+  "tasks": [
+    {
+      "id": "three-line-poem",
+      "area": "structure",
+      "prompt": "Write a poem about the sea that is exactly three lines long. Output the three lines and nothing else.",
+      "checks": [
+        {
+          "type": "line_count",
+          "expected": 3
+        }
+      ]
+    },
+    {
+      "id": "forest-sentence",
+      "area": "constraints",
+      "prompt": "Write one sentence describing a forest that includes the words 'pine' and 'silence'.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["pine", "silence"]
+        },
+        {
+          "type": "word_count",
+          "max": 40
+        }
+      ]
+    },
+    {
+      "id": "future-tense",
+      "area": "editing",
+      "prompt": "Rewrite this sentence in the future tense and reply with the sentence only: He cooks dinner.",
+      "checks": [
+        {
+          "type": "contains_any",
+          "terms": ["will cook", "is going to cook"]
+        },
+        {
+          "type": "word_count",
+          "max": 10
+        }
+      ]
+    },
+    {
+      "id": "fix-grammar",
+      "area": "editing",
+      "prompt": "Correct the grammar and reply with the corrected sentence only: She don't likes apples.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["she", "apples"]
+        },
+        {
+          "type": "contains_none",
+          "terms": ["don't likes", "dont likes"]
+        },
+        {
+          "type": "word_count",
+          "max": 10
+        }
+      ]
+    },
+    {
+      "id": "library-headline",
+      "area": "constraints",
+      "prompt": "Write a news headline of at most 6 words about a new library opening. Reply with the headline only.",
+      "checks": [
+        {
+          "type": "word_count",
+          "max": 6
+        },
+        {
+          "type": "contains_any",
+          "terms": ["library"]
+        }
+      ]
+    },
+    {
+      "id": "tea-steps",
+      "area": "structure",
+      "prompt": "Write a numbered list of exactly four steps for making a cup of tea. Output only the list.",
+      "checks": [
+        {
+          "type": "bullets",
+          "expected": 4
+        }
+      ]
+    },
+    {
+      "id": "expand",
+      "area": "editing",
+      "prompt": "Rewrite this in at least 15 words, keeping the meaning, and reply with the sentence only: The train was late.",
+      "checks": [
+        {
+          "type": "word_count",
+          "min": 15
+        },
+        {
+          "type": "contains_any",
+          "terms": ["train"]
+        }
+      ]
+    },
+    {
+      "id": "no-very-cold",
+      "area": "constraints",
+      "prompt": "Describe a winter morning in one sentence without using the words 'very' or 'cold'.",
+      "checks": [
+        {
+          "type": "contains_none",
+          "terms": ["very", "cold"]
+        },
+        {
+          "type": "word_count",
+          "min": 5,
+          "max": 40
+        }
+      ]
+    },
+    {
+      "id": "split-sentence",
+      "area": "editing",
+      "prompt": "Split this into two sentences and reply with them only: The rain stopped and the children went outside.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["rain", "children"]
+        },
+        {
+          "type": "regex",
+          "pattern": "\\.\\s+\\S"
+        }
+      ]
+    },
+    {
+      "id": "title-and-line",
+      "area": "structure",
+      "prompt": "Write a title on the first line and a one-sentence summary on the second line, about a lost cat. Output two lines only.",
+      "checks": [
+        {
+          "type": "line_count",
+          "expected": 2
+        },
+        {
+          "type": "contains_any",
+          "terms": ["cat"]
+        }
+      ]
+    },
+    {
+      "id": "stronger-verb",
+      "area": "editing",
+      "prompt": "Replace the word 'walked' with a stronger synonym in this sentence and reply with the sentence only: She walked into the room.",
+      "checks": [
+        {
+          "type": "contains_none",
+          "terms": ["walked"]
+        },
+        {
+          "type": "contains_any",
+          "terms": [
+            "strode",
+            "marched",
+            "stormed",
+            "burst",
+            "swept",
+            "charged",
+            "strolled",
+            "paced"
+          ]
+        },
+        {
+          "type": "word_count",
+          "max": 12
+        }
+      ]
+    },
+    {
+      "id": "blanket-blurb",
+      "area": "constraints",
+      "prompt": "Write a description of a wool blanket in 30 to 45 words.",
+      "checks": [
+        {
+          "type": "word_count",
+          "min": 30,
+          "max": 45
+        }
+      ]
+    }
+  ]
+}

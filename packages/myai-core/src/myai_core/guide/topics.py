@@ -25,10 +25,14 @@ TOPICS: tuple[GuideTopic, ...] = (
         question="What is training?",
         keywords=("training", "train", "fine tune", "fine-tune", "finetune", "lora", "epochs"),
         answer=(
-            "Training is how your AI improves a specific skill using examples and computation "
-            "from your own computer. It is targeted: training the Video skill does not make the "
-            "AI universally smarter. In this build training jobs are not available yet (they "
-            "arrive in Phase 4); the compute settings you choose now will govern them."
+            "Training improves one skill using your own computer, and it is targeted: training "
+            "Writing does not make your AI universally smarter. It does not change your model's "
+            "weights \u2014 fine-tuning a quantised local model is not something this program can "
+            "honestly do. Instead it searches for better instructions for that skill: short "
+            "rules, rules your AI writes for itself after getting a practice task wrong, and "
+            "worked examples. A change is kept only when it scores higher on practice tasks, "
+            "and at the end the skill's benchmark decides whether the result is kept at all. "
+            "If the benchmark does not improve, the old instructions stay and the run says so."
         ),
         related=("learning", "skills", "compute"),
     ),
@@ -43,7 +47,8 @@ TOPICS: tuple[GuideTopic, ...] = (
             "then on) and runs the skill's benchmark with your local model. The level it "
             "scores becomes the skill's level. Conversation, Writing, Coding, Research and "
             "Science can be learned today; creative skills have no measurable benchmark yet "
-            "and say so. Nothing is downloaded and the model is not retrained."
+            "and say so. Nothing is downloaded and the model is not retrained. Once a skill is "
+            "learned, '/train <skill>' can practise it."
         ),
         related=("training", "skills", "levels"),
     ),

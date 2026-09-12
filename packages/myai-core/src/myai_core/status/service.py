@@ -118,10 +118,12 @@ class StatusService:
         privacy_mode: str,
         ai_state: AIState | None = None,
         job: JobSummary | None = None,
+        trainable_skills: int = 0,
     ) -> ServiceStatus:
         internet, checked_at = self._internet.current()
         now = datetime.now(tz=UTC)
         ai, ai_detail = _describe_ai(ai_state)
+        training, training_detail = _describe_training(ai, trainable_skills)
         return ServiceStatus(
             service_version=__version__,
             started_at=self._started_at,
@@ -132,8 +134,8 @@ class StatusService:
             ai_detail=ai_detail,
             active_model_id=ai_state.active_model_id if ai_state else None,
             loaded_model_id=ai_state.loaded_model_id if ai_state else None,
-            training=Availability.UNAVAILABLE,
-            training_detail="Training jobs arrive in Phase 4.",
+            training=training,
+            training_detail=training_detail,
             job=job,
             profile_exists=profile_exists,
             storage_configured=storage_configured,
@@ -163,14 +165,43 @@ class StatusService:
             job_label = f"{verb} {status.job.skill_id.title()} {status.job.progress_percent}%" + (
                 " (paused)" if status.job.status == "paused" else ""
             )
+        training_label = {
+            Availability.AVAILABLE: "Ready",
+            Availability.NOT_CONFIGURED: "No skill to train yet",
+        }.get(status.training, "Unavailable")
         return {
             "ai_label": ai_label,
             "internet_label": internet,
-            "training_label": "Unavailable (Phase 4)",
+            "training_label": training_label,
             "job_label": job_label,
             "privacy_mode": status.privacy_mode,
             "cloud_uploads": status.cloud_uploads,
         }
+
+
+def _describe_training(ai: Availability, trainable_skills: int) -> tuple[Availability, str]:
+    """Training needs what the AI needs, plus a learned skill with a practice set.
+
+    It never reports "available" on the strength of the feature existing: without a model
+    there is nothing to answer practice tasks with, and without a learned skill there is
+    nothing to improve.
+    """
+    if ai is not Availability.AVAILABLE:
+        return (
+            Availability.UNAVAILABLE,
+            "Training practises a skill with your local model, which is not ready yet.",
+        )
+    if trainable_skills == 0:
+        return (
+            Availability.NOT_CONFIGURED,
+            "Learn a skill first; training improves a skill you already have.",
+        )
+    plural = "skill" if trainable_skills == 1 else "skills"
+    return (
+        Availability.AVAILABLE,
+        f"{trainable_skills} learned {plural} can be practised with /train. Training searches "
+        "for better instructions and never changes the model's weights.",
+    )
 
 
 def _describe_ai(state: AIState | None) -> tuple[Availability, str]:

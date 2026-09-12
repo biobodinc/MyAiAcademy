@@ -1,0 +1,174 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 120,
+  "tactics": [
+    "Answer only from the passage; never add a fact it does not state.",
+    "If the passage does not contain the answer, say so plainly instead of guessing.",
+    "Copy names, numbers and titles exactly as the passage writes them.",
+    "When asked which passage, reply with the title and nothing else.",
+    "In a summary, cover each distinct fact once and add nothing."
+  ],
+  "tasks": [
+    {
+      "id": "bridge-year",
+      "area": "extraction",
+      "prompt": "Passage: The Calder Bridge was completed in 1954 by the engineer Rosa Lindqvist. It carries 12,000 vehicles a day and was repainted in 2018.\n\nIn which year was the bridge completed? Answer with the year only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 1954
+        }
+      ]
+    },
+    {
+      "id": "bridge-engineer",
+      "area": "extraction",
+      "prompt": "Passage: The Calder Bridge was completed in 1954 by the engineer Rosa Lindqvist. It carries 12,000 vehicles a day and was repainted in 2018.\n\nWho was the engineer? Answer with the name only.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["rosa lindqvist"]
+        },
+        {
+          "type": "word_count",
+          "max": 5
+        }
+      ]
+    },
+    {
+      "id": "bridge-vehicles",
+      "area": "extraction",
+      "prompt": "Passage: The Calder Bridge was completed in 1954 by the engineer Rosa Lindqvist. It carries 12,000 vehicles a day and was repainted in 2018.\n\nHow many vehicles does the bridge carry each day? Answer with the number only.",
+      "checks": [
+        {
+          "type": "numeric",
+          "expected": 12000
+        }
+      ]
+    },
+    {
+      "id": "bridge-summary",
+      "area": "summarisation",
+      "prompt": "Passage: The Calder Bridge was completed in 1954 by the engineer Rosa Lindqvist. It carries 12,000 vehicles a day and was repainted in 2018.\n\nSummarise the passage in one sentence of at most 25 words.",
+      "checks": [
+        {
+          "type": "word_count",
+          "max": 25
+        },
+        {
+          "type": "contains_any",
+          "terms": ["bridge"]
+        }
+      ]
+    },
+    {
+      "id": "bridge-unsupported",
+      "area": "extraction",
+      "prompt": "Passage: The Calder Bridge was completed in 1954 by the engineer Rosa Lindqvist. It carries 12,000 vehicles a day and was repainted in 2018.\n\nClaim: the bridge was repainted in 2012. Does the passage support the claim? Answer yes or no only.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "no[.!]?",
+          "full": true
+        }
+      ]
+    },
+    {
+      "id": "log-ferry",
+      "area": "citation",
+      "prompt": "Passage titled 'Weather log': Rain fell for six hours on Thursday. Passage titled 'Ferry log': The morning ferry carried 88 passengers.\n\nWhich passage gives the number of passengers? Reply with the title only.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["ferry log"]
+        },
+        {
+          "type": "word_count",
+          "max": 4
+        }
+      ]
+    },
+    {
+      "id": "log-weather",
+      "area": "citation",
+      "prompt": "Passage titled 'Weather log': Rain fell for six hours on Thursday. Passage titled 'Ferry log': The morning ferry carried 88 passengers.\n\nWhich passage says how long the rain lasted? Reply with the title only.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["weather log"]
+        },
+        {
+          "type": "word_count",
+          "max": 4
+        }
+      ]
+    },
+    {
+      "id": "vegetables",
+      "area": "extraction",
+      "prompt": "From this list, which items are vegetables: pear, leek, plum, kale? Answer with the vegetables only, separated by commas.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["leek", "kale"]
+        },
+        {
+          "type": "contains_none",
+          "terms": ["pear", "plum"]
+        }
+      ]
+    },
+    {
+      "id": "yeast",
+      "area": "extraction",
+      "prompt": "Passage: The loaf needs 500 g of flour, 7 g of yeast and 320 ml of water.\n\nHow much yeast does the loaf need? Answer with the number and unit only.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["7 g"]
+        },
+        {
+          "type": "word_count",
+          "max": 4
+        }
+      ]
+    },
+    {
+      "id": "three-facts",
+      "area": "summarisation",
+      "prompt": "Passage: Wind turbines generate electricity from moving air. They produce less power on calm days. Grid batteries store surplus energy.\n\nList the three facts as exactly three bullet points.",
+      "checks": [
+        {
+          "type": "bullets",
+          "expected": 3
+        }
+      ]
+    },
+    {
+      "id": "not-stated-phone",
+      "area": "extraction",
+      "prompt": "Passage: The library opens at 10 am on Saturdays.\n\nWhat is the library's phone number? If the passage does not say, reply exactly: Not stated.",
+      "checks": [
+        {
+          "type": "contains_all",
+          "terms": ["not stated"]
+        },
+        {
+          "type": "word_count",
+          "max": 4
+        }
+      ]
+    },
+    {
+      "id": "order-years",
+      "area": "summarisation",
+      "prompt": "Passage: The factory closed in 2009, opened in 1962, and was rebuilt in 1985.\n\nList the three years in chronological order, separated by commas.",
+      "checks": [
+        {
+          "type": "regex",
+          "pattern": "1962\\D+1985\\D+2009"
+        }
+      ]
+    }
+  ]
+}

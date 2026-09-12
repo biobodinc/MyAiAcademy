@@ -817,6 +817,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/skills/{skill_id}/train": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Train
+         * @description Start a training job: search for better instructions, then let the benchmark judge.
+         */
+        post: operations["train_api_skills__skill_id__train_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/train-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Train Preview
+         * @description What training would do. Starts nothing (spec §37).
+         */
+        post: operations["train_preview_api_skills__skill_id__train_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/training": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Training Runs */
+        get: operations["training_runs_api_skills__skill_id__training_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/skills/{skill_id}/training/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revert Training
+         * @description Put back the instructions the skill package shipped with.
+         *
+         *     The level is left exactly as it was: it was measured, and reverting instructions does
+         *     not re-measure anything. Re-run the benchmark to see what the original scores now.
+         */
+        post: operations["revert_training_api_skills__skill_id__training_revert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/skills/history": {
         parameters: {
             query?: never;
@@ -2277,6 +2357,17 @@ export interface components {
             requires: string[];
             /** Specializations */
             specializations: string[];
+            /**
+             * Trainable
+             * @description A practice set exists, so this skill can be trained.
+             * @default false
+             */
+            trainable: boolean;
+            /**
+             * Trained At
+             * @description When training last replaced this skill's instructions.
+             */
+            trained_at: string | null;
         };
         /**
          * StorageCategory
@@ -2391,6 +2482,160 @@ export interface components {
             /** Rationale */
             rationale: string[];
             tier: components["schemas"]["HardwareTier"];
+        };
+        /** TrainingRunRead */
+        TrainingRunRead: {
+            /** Applied */
+            applied: boolean;
+            /** Baseline Practice */
+            baseline_practice: number | null;
+            /** Benchmark After */
+            benchmark_after: number | null;
+            /** Benchmark Before */
+            benchmark_before: number | null;
+            /** Best Practice */
+            best_practice: number | null;
+            /** Budget Seconds */
+            budget_seconds: number;
+            /** Finished At */
+            finished_at: string | null;
+            /** Focus Area */
+            focus_area: string | null;
+            /** Id */
+            id: number;
+            /** Job Id */
+            job_id: string | null;
+            /** Level After */
+            level_after: number | null;
+            /** Level Before */
+            level_before: number | null;
+            /** Model Id */
+            model_id: string;
+            /** Rounds */
+            rounds: components["schemas"]["TrainRoundRead"][];
+            /** Rounds Completed */
+            rounds_completed: number;
+            /** Skill Id */
+            skill_id: string;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string;
+            /** Target Level */
+            target_level: number | null;
+        };
+        /**
+         * TrainPreview
+         * @description What ``/train <skill>`` shows before anything starts (spec §37).
+         */
+        TrainPreview: {
+            /** Areas */
+            areas: string[];
+            /**
+             * Blockers
+             * @description Why training cannot start; empty when it can.
+             */
+            blockers: string[];
+            /** Budget Minutes */
+            budget_minutes: number;
+            /** Budget Note */
+            budget_note: string;
+            /** Check Tasks */
+            check_tasks: number;
+            /** Current Level */
+            current_level: number;
+            /** Estimate Note */
+            estimate_note: string;
+            /** Estimated Rounds Max */
+            estimated_rounds_max: number | null;
+            /** Estimated Rounds Min */
+            estimated_rounds_min: number | null;
+            /** Focus Area */
+            focus_area: string | null;
+            /** Focus Note */
+            focus_note: string;
+            /** Icon */
+            icon: string;
+            /** Last Area Scores */
+            last_area_scores: {
+                [key: string]: number;
+            };
+            /** Learned */
+            learned: boolean;
+            /** Model Id */
+            model_id: string | null;
+            /** Name */
+            name: string;
+            /** Practice Tasks */
+            practice_tasks: number;
+            /** Recommended Target */
+            recommended_target: number;
+            /**
+             * Resume Rounds
+             * @description Rounds already banked by an earlier run this will continue from.
+             * @default 0
+             */
+            resume_rounds: number;
+            /** Search Tasks */
+            search_tasks: number;
+            /** Skill Id */
+            skill_id: string;
+            /** Target Level */
+            target_level: number | null;
+            /** Trainable */
+            trainable: boolean;
+            /** What Happens */
+            what_happens: string;
+        };
+        /**
+         * TrainRequest
+         * @description Qualifiers from ``/train <skill> …`` (spec §38), already parsed.
+         */
+        TrainRequest: {
+            /**
+             * All Areas
+             * @default false
+             */
+            all_areas: boolean;
+            /**
+             * Duration Seconds
+             * @description From '2h' or '90m'.
+             */
+            duration_seconds?: number | null;
+            /**
+             * Seed
+             * @description Fix the search's seed to repeat a run exactly.
+             */
+            seed?: number | null;
+            /**
+             * Specialization
+             * @description One of the skill's areas.
+             */
+            specialization?: string | null;
+            /** Target Level */
+            target_level?: number | null;
+        };
+        /** TrainRoundRead */
+        TrainRoundRead: {
+            /** Accepted */
+            accepted: boolean;
+            /** Change */
+            change: string;
+            /** Check Score */
+            check_score: number;
+            /** Index */
+            index: number;
+            /** Search Score */
+            search_score: number;
+            /** Seconds */
+            seconds: number;
+            /** Source */
+            source: string;
         };
         /**
          * TrainTarget
@@ -2526,6 +2771,10 @@ export type SchemaStorageVolume = components['schemas']['StorageVolume'];
 export type SchemaSystemMetrics = components['schemas']['SystemMetrics'];
 export type SchemaTheme = components['schemas']['Theme'];
 export type SchemaTierEstimate = components['schemas']['TierEstimate'];
+export type SchemaTrainingRunRead = components['schemas']['TrainingRunRead'];
+export type SchemaTrainPreview = components['schemas']['TrainPreview'];
+export type SchemaTrainRequest = components['schemas']['TrainRequest'];
+export type SchemaTrainRoundRead = components['schemas']['TrainRoundRead'];
 export type SchemaTrainTarget = components['schemas']['TrainTarget'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
 export type $defs = Record<string, never>;
@@ -4080,6 +4329,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LearnPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    train_api_skills__skill_id__train_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TrainRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    train_preview_api_skills__skill_id__train_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TrainRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    training_runs_api_skills__skill_id__training_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingRunRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revert_training_api_skills__skill_id__training_revert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skill_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillStatus"];
                 };
             };
             /** @description Validation Error */

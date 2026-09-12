@@ -259,9 +259,14 @@ def test_learn_flow_end_to_end(client: TestClient, tmp_path: Path) -> None:
     # Console commands.
     res = client.post("/api/commands", json={"text": "/history"}).json()
     assert res["outcome"] == "ok" and "Science" in res["message"]
+    # /train previews and starts nothing until it is confirmed (Phase 4).
     res = client.post("/api/commands", json={"text": "/train science level 80"}).json()
-    assert res["outcome"] == "unavailable" and "Current level: 71" in res["message"]
+    assert res["outcome"] == "ok" and "Current level: 71" in res["message"]
     assert "Target level: 80" in res["message"]
+    assert "weights are not changed" in res["message"]
+    assert res["suggestions"][0] == "/train science start"
+    assert "job" not in res["data"]
+    assert client.get("/api/jobs/current").json() is None
     res = client.post("/api/commands", json={"text": "/learn coding"}).json()
     assert res["outcome"] == "ok" and "Start learning?" in res["message"]
     assert res["suggestions"][0] == "/learn coding start"

@@ -61,8 +61,13 @@ class AdvancedComputeSettings(ApiModel):
 
     * ``cpu_utilization_percent`` - enforced now: caps inference threads.
     * ``ram_limit_gib`` - enforced now: a model whose file is larger than this is refused.
-    * ``gpu_utilization_percent``, ``temperature_limit_c``, ``time_limit_minutes`` -
-      stored now, consumed by training jobs (Phase 4). The UI labels them as such.
+    * ``time_limit_minutes`` - enforced now: the ceiling on a training run's budget.
+    * ``temperature_limit_c`` - enforced during training when a GPU reports its
+      temperature: a round waits until the machine is back under the limit. There is no
+      portable CPU temperature, so none is claimed.
+    * ``gpu_utilization_percent`` - stored only. How much of a model is offloaded to the
+      GPU is chosen by the compute preset; this number does not change it yet, and the UI
+      says so.
     """
 
     cpu_utilization_percent: int | None = Field(default=None, ge=10, le=100)

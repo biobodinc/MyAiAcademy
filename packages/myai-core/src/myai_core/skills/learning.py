@@ -28,6 +28,7 @@ from myai_core.skills.catalog import SkillDefinition, get_skill
 from myai_core.skills.evaluate import EvaluationOutcome, level_from_score
 from myai_core.skills.packages import (
     INSTRUCTIONS,
+    TRAINED,
     SkillPackage,
     bundled_package,
     install_package,
@@ -36,7 +37,8 @@ from myai_core.skills.packages import (
 from myai_core.storage import StorageCategory, StorageManager
 
 ESTIMATED_TOKENS_PER_TASK = 60
-MAX_PROMPT_INSTRUCTION_CHARS = 2500
+MAX_PROMPT_INSTRUCTION_CHARS = 8000
+MAX_PROMPT_CHARS_PER_SKILL = 3000
 
 RECOMMENDED_COMPUTE: dict[HardwareTier, ComputePreset] = {
     HardwareTier.ENTRY: ComputePreset.LOW,
@@ -295,7 +297,14 @@ class SkillLearningService:
         return out
 
     def instructions_for_prompt(self) -> list[str]:
-        """Instruction texts of learned skills, in catalog order, capped in size."""
+        """Instruction texts of learned skills, in catalog order, capped in size.
+
+        Trained instructions are longer than the package's own, and the prompt cannot grow
+        without limit. When a skill's trained text will not fit what is left, its package
+        instructions are used instead of dropping the skill altogether: the skill keeps its
+        own voice, it just loses the practised additions. A skill is skipped only when even
+        that does not fit.
+        """
         texts: list[str] = []
         budget = MAX_PROMPT_INSTRUCTION_CHARS
         rows = self._session.scalars(
@@ -304,11 +313,13 @@ class SkillLearningService:
             )
         ).all()
         for state in sorted(rows, key=lambda r: r.skill_id):
-            text = _read_instructions(state.installed_path, state.skill_id)
-            if not text or len(text) > budget:
-                continue
-            budget -= len(text)
-            texts.append(text)
+            trained = _read_instructions(state.installed_path, state.skill_id)
+            base = _read_instructions(None, state.skill_id)
+            for text in (trained, base):
+                if text and len(text) <= min(budget, MAX_PROMPT_CHARS_PER_SKILL):
+                    budget -= len(text)
+                    texts.append(text)
+                    break
         return texts
 
     def _require_skill(self, skill_id: str) -> SkillDefinition:
@@ -319,11 +330,20 @@ class SkillLearningService:
 
 
 def _read_instructions(installed_path: str | None, skill_id: str) -> str:
+    """The instructions this skill contributes to the chat prompt.
+
+    Training writes its result to ``trained.md`` beside the package rather than over
+    ``instructions.md``, so what the package shipped is always recoverable and a trained
+    skill can be put back exactly as it was.
+    """
     if installed_path:
-        candidate = Path(installed_path) / INSTRUCTIONS
-        try:
-            return candidate.read_text(encoding="utf-8").strip()
-        except OSError:
-            pass
+        folder = Path(installed_path)
+        for name in (TRAINED, INSTRUCTIONS):
+            try:
+                text = (folder / name).read_text(encoding="utf-8").strip()
+            except OSError:
+                continue
+            if text:
+                return text
     package = bundled_package(skill_id)
     return package.instructions if package else ""
