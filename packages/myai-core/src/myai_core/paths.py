@@ -49,6 +49,11 @@ class AppPaths:
     def log_dir(self) -> Path:
         return self.data_dir / "logs"
 
+    @property
+    def export_dir(self) -> Path:
+        """Where an export or a portable package lands when the user names no destination."""
+        return self.data_dir / "exports"
+
     def ensure(self) -> AppPaths:
         """Create the data directory tree with owner-only permissions where supported."""
         self.data_dir.mkdir(parents=True, exist_ok=True)

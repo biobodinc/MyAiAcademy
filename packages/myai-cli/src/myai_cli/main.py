@@ -34,6 +34,9 @@ sync_app = typer.Typer(
     help="Keeping your own devices in step, and what never leaves this one.",
     no_args_is_help=True,
 )
+portable_app = typer.Typer(
+    help="Carry your AI to another machine, or keep it as a backup.", no_args_is_help=True
+)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
 app.add_typer(settings_app, name="settings")
@@ -43,6 +46,7 @@ app.add_typer(memory_app, name="memory")
 app.add_typer(knowledge_app, name="knowledge")
 app.add_typer(security_app, name="security")
 app.add_typer(sync_app, name="sync")
+app.add_typer(portable_app, name="portable")
 app.command(name="chat")(chat)
 
 console = Console()
@@ -1132,6 +1136,112 @@ def sync_dismiss(conflict_id: int, data_dir: DataDirOpt = None) -> None:
     """Stop showing a conflict. It stays in the record."""
     _call(_service(data_dir).post, f"/sync/conflicts/{conflict_id}/dismiss", {})
     console.print(f"Conflict {conflict_id} marked as seen. It is still in the record.")
+
+
+@portable_app.command("write")
+def portable_write(
+    destination: Annotated[
+        str, typer.Option("--to", help="Where to write it. Omit to use this installation's folder.")
+    ] = "",
+    lock: Annotated[
+        bool, typer.Option("--lock/--no-lock", help="Ask for a password and encrypt the package.")
+    ] = False,
+    data_dir: DataDirOpt = None,
+    as_json: JsonOpt = False,
+) -> None:
+    """Write a .myai package of this AI: identity, memories, conversations, skills."""
+    password = ""
+    if lock:
+        password = typer.prompt(
+            "Password for this package", hide_input=True, confirmation_prompt=True
+        )
+    data = _call(
+        _service(data_dir).post,
+        "/portable",
+        {"destination": destination, "password": password},
+    )
+    if as_json:
+        return _emit_json(data)
+    lines = [
+        f"Wrote {data['path']}",
+        f"{data['size_bytes'] / 1_000_000:.1f} MB · "
+        + ("locked with a password" if data["encrypted"] else "not encrypted"),
+        "",
+        *(f"• {note}" for note in data["notes"]),
+    ]
+    console.print(
+        Panel("\n".join(lines), title=f"Portable package — {data['manifest']['ai_name']}")
+    )
+
+
+@portable_app.command("inspect")
+def portable_inspect(path: str, data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Say whether a file is a MyAI package, and whether it needs a password."""
+    data = _call(_service(data_dir).get, "/portable/inspect", path=path)
+    if as_json:
+        return _emit_json(data)
+    if not data["is_package"]:
+        console.print(f"[red]{data.get('detail', 'Not a MyAI package.')}[/red]")
+        raise typer.Exit(code=1)
+    lock = "needs a password" if data["needs_password"] else "not encrypted"
+    console.print(f"A MyAI package, {lock}.")
+
+
+@portable_app.command("preview")
+def portable_preview(path: str, data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """What is in a package, and what of it will run on this machine. Changes nothing."""
+    svc = _service(data_dir)
+    password = ""
+    if _call(svc.get, "/portable/inspect", path=path).get("needs_password"):
+        password = typer.prompt("Password for this package", hide_input=True)
+    data = _call(svc.post, "/portable/preview", {"path": path, "password": password})
+    if as_json:
+        return _emit_json(data)
+
+    table = Table("What", "Here", "Detail")
+    for cap in data["capabilities"]:
+        table.add_row(cap["name"], cap["verdict"].replace("_", " "), cap["detail"])
+    console.print(
+        Panel(
+            f"{data['ai_name']}, written by version {data['exported_by']} on "
+            f"{data['exported_at']}.\n\n"
+            f"Importing would REPLACE the AI on this machine"
+            + (f" ({data['replaces_ai']})." if data["replaces_ai"] else "."),
+            title="Portable package",
+        )
+    )
+    console.print(table)
+    for warning in data["warnings"]:
+        console.print(f"[yellow]{warning}[/yellow]")
+
+
+@portable_app.command("import")
+def portable_import(path: str, data_dir: DataDirOpt = None) -> None:
+    """Replace this installation's AI with the one in a package."""
+    svc = _service(data_dir)
+    password = ""
+    if _call(svc.get, "/portable/inspect", path=path).get("needs_password"):
+        password = typer.prompt("Password for this package", hide_input=True)
+    preview = _call(svc.post, "/portable/preview", {"path": path, "password": password})
+
+    console.print(
+        "This replaces the AI on this machine"
+        + (f" ({preview['replaces_ai']})" if preview["replaces_ai"] else "")
+        + f" with {preview['ai_name']}. It cannot be undone."
+    )
+    typed = typer.prompt(f"Type {preview['confirmation_phrase']} to continue")
+    if typed != preview["confirmation_phrase"]:
+        console.print("Nothing was changed.")
+        raise typer.Exit(code=1)
+
+    data = _call(
+        svc.post,
+        "/portable/import",
+        {"path": path, "password": password, "confirm": typed},
+    )
+    console.print(f"Restored {sum(data['rows_written'].values())} records.")
+    for note in data["notes"]:
+        console.print(f"  • {note}")
 
 
 def entrypoint() -> None:

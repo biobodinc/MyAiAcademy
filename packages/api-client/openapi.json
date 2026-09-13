@@ -299,6 +299,28 @@
         "title": "BenchmarkResult",
         "type": "object"
       },
+      "CapabilityRead": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "name",
+          "verdict",
+          "detail"
+        ],
+        "title": "CapabilityRead",
+        "type": "object"
+      },
       "CatalogModel": {
         "properties": {
           "approx_size_bytes": {
@@ -1983,6 +2005,123 @@
         "title": "HardwareTier",
         "type": "string"
       },
+      "ImportDone": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/CapabilityRead"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "new_install_id": {
+            "title": "New Install Id",
+            "type": "string"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "rows_written": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Rows Written",
+            "type": "object"
+          }
+        },
+        "required": [
+          "rows_written",
+          "new_install_id",
+          "capabilities",
+          "notes"
+        ],
+        "title": "ImportDone",
+        "type": "object"
+      },
+      "ImportPreviewRead": {
+        "description": "What a package holds, and what of it will work here.",
+        "properties": {
+          "ai_name": {
+            "title": "Ai Name",
+            "type": "string"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/CapabilityRead"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "confirmation_phrase": {
+            "default": "REPLACE MY AI",
+            "title": "Confirmation Phrase",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "encrypted": {
+            "title": "Encrypted",
+            "type": "boolean"
+          },
+          "exported_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exported At"
+          },
+          "exported_by": {
+            "title": "Exported By",
+            "type": "string"
+          },
+          "replaces_ai": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The AI on this machine that importing would replace.",
+            "title": "Replaces Ai"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ai_name",
+          "exported_at",
+          "exported_by",
+          "encrypted",
+          "counts",
+          "capabilities",
+          "replaces_ai",
+          "confirmation_phrase",
+          "warnings"
+        ],
+        "title": "ImportPreviewRead",
+        "type": "object"
+      },
       "ImportRequest": {
         "properties": {
           "name": {
@@ -2397,6 +2536,66 @@
         ],
         "title": "LevelBand",
         "type": "string"
+      },
+      "ManifestRead": {
+        "properties": {
+          "ai_name": {
+            "title": "Ai Name",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "encrypted": {
+            "title": "Encrypted",
+            "type": "boolean"
+          },
+          "exported_at": {
+            "format": "date-time",
+            "title": "Exported At",
+            "type": "string"
+          },
+          "exported_by": {
+            "title": "Exported By",
+            "type": "string"
+          },
+          "format_version": {
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "models": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "skills": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "format_version",
+          "ai_name",
+          "exported_at",
+          "exported_by",
+          "encrypted",
+          "counts",
+          "models",
+          "skills"
+        ],
+        "title": "ManifestRead",
+        "type": "object"
       },
       "MemoryCategory": {
         "enum": [
@@ -3247,6 +3446,59 @@
         "title": "PackageInfo",
         "type": "object"
       },
+      "PackageRequest": {
+        "properties": {
+          "destination": {
+            "default": "",
+            "description": "Where to write it. Blank uses the cache.",
+            "title": "Destination",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "Locks the package. Without one, anyone who finds the file can read it.",
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "title": "PackageRequest",
+        "type": "object"
+      },
+      "PackageWritten": {
+        "properties": {
+          "encrypted": {
+            "title": "Encrypted",
+            "type": "boolean"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ManifestRead"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "size_bytes",
+          "encrypted",
+          "manifest",
+          "notes"
+        ],
+        "title": "PackageWritten",
+        "type": "object"
+      },
       "PairRequest": {
         "properties": {
           "code": {
@@ -3805,6 +4057,24 @@
         "title": "PreferencesUpdate",
         "type": "object"
       },
+      "PreviewRequest": {
+        "properties": {
+          "password": {
+            "default": "",
+            "title": "Password",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "PreviewRequest",
+        "type": "object"
+      },
       "PrivacyMode": {
         "description": "Only ``private`` exists. Contributor mode (spec \u00a79) is an additional opt-in flag,\nnever a replacement for private mode.",
         "enum": [
@@ -4210,6 +4480,30 @@
           "name"
         ],
         "title": "RegisterClient",
+        "type": "object"
+      },
+      "RestoreRequest": {
+        "properties": {
+          "confirm": {
+            "description": "Must be exactly 'REPLACE MY AI'.",
+            "title": "Confirm",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "title": "Password",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "confirm"
+        ],
+        "title": "RestoreRequest",
         "type": "object"
       },
       "RetrievedChunk": {
@@ -5836,6 +6130,15 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "Verdict": {
+        "enum": [
+          "supported",
+          "stored_only",
+          "missing"
+        ],
+        "title": "Verdict",
+        "type": "string"
       }
     }
   },
@@ -7530,6 +7833,178 @@
         "summary": "Source Info",
         "tags": [
           "models"
+        ]
+      }
+    },
+    "/api/portable": {
+      "post": {
+        "description": "Write a `.myai` package of this AI.",
+        "operationId": "write_api_portable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PackageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PackageWritten"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Write",
+        "tags": [
+          "portable"
+        ]
+      }
+    },
+    "/api/portable/import": {
+      "post": {
+        "description": "Replace this installation's AI with the one in a package.",
+        "operationId": "restore_api_portable_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportDone"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore",
+        "tags": [
+          "portable"
+        ]
+      }
+    },
+    "/api/portable/inspect": {
+      "get": {
+        "description": "Whether a file is a package at all, and whether it needs a password. No password used.",
+        "operationId": "inspect_api_portable_inspect_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "description": "A .myai file to look at.",
+              "title": "Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Inspect Api Portable Inspect Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Inspect",
+        "tags": [
+          "portable"
+        ]
+      }
+    },
+    "/api/portable/preview": {
+      "post": {
+        "description": "Read a package and say what importing it would do. Nothing is changed.",
+        "operationId": "preview_api_portable_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "portable"
         ]
       }
     },

@@ -21,6 +21,7 @@ from myai_core.api.routes import (
     knowledge,
     memory,
     models,
+    portable,
     preferences,
     privacy,
     profile,
@@ -156,6 +157,7 @@ def create_app(
         memory,
         knowledge,
         sync,
+        portable,
     ):
         protected.include_router(module.router)
     app.include_router(protected)
