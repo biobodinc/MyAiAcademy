@@ -16,6 +16,9 @@ import {
   type EraseRequest,
   type ExportRequest,
   type NetworkAccessRequest,
+  type PackageRequest,
+  type PreviewRequest,
+  type RestoreRequest,
   type TrainRequest,
 } from "@myai/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -473,6 +476,31 @@ export function useErasePreview() {
   return useQuery({
     queryKey: securityKeys.erasePreview,
     queryFn: () => unwrap(api.GET("/api/privacy/erase-preview")),
+  });
+}
+
+/** Write a portable `.myai` package of this AI. */
+export function useWritePackage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: PackageRequest) => unwrap(api.POST("/api/portable", { body })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: keys.audit }),
+  });
+}
+
+/** Read a package and report what importing it would do. Changes nothing. */
+export function usePreviewPackage() {
+  return useMutation({
+    mutationFn: (body: PreviewRequest) => unwrap(api.POST("/api/portable/preview", { body })),
+  });
+}
+
+/** Replaces this installation's AI. The caller must have collected the typed confirmation. */
+export function useRestorePackage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: RestoreRequest) => unwrap(api.POST("/api/portable/import", { body })),
+    onSuccess: () => void qc.invalidateQueries(),
   });
 }
 

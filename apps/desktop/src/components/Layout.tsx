@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router";
 import {
   Activity,
+  Archive,
   BookOpen,
   Boxes,
   Brain,
@@ -37,6 +38,7 @@ const nav = [
   { to: "/privacy", label: "Privacy Center", icon: ShieldCheck },
   { to: "/security", label: "Security", icon: KeyRound },
   { to: "/sync", label: "Sync", icon: RefreshCw },
+  { to: "/portable", label: "Portable", icon: Archive },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
