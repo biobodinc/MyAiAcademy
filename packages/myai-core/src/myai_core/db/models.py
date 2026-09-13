@@ -26,8 +26,28 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
+from ulid import ULID
 
 from myai_core.db.base import Base, utcnow
+
+
+def new_message_uid() -> str:
+    return f"msg_{ULID()}"
+
+
+class SyncedBase(Base):
+    """A row that travels between a user's own devices (spec §16, §72).
+
+    Both columns are maintained by the listener in ``sync/changes.py``, never by a service.
+    ``sync_seq`` is this installation's counter at the moment the row last changed;
+    ``sync_origin`` is the installation that made that change, which is what stops an edit
+    travelling forever around a ring of three devices.
+    """
+
+    __abstract__ = True
+
+    sync_seq: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    sync_origin: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class AIProfile(Base):
@@ -77,7 +97,7 @@ class StorageConfig(Base):
     )
 
 
-class SkillState(Base):
+class SkillState(SyncedBase):
     """Per-skill learned state. Definitions live in the static catalog; this is progress.
 
     ``level`` is only ever changed by an evaluation (spec §33, §89): it starts at 0 for a
@@ -313,7 +333,7 @@ class ModelDownload(Base):
     )
 
 
-class Conversation(Base):
+class Conversation(SyncedBase):
     __tablename__ = "conversations"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -327,10 +347,14 @@ class Conversation(Base):
     origin_device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
-class Message(Base):
+class Message(SyncedBase):
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    uid: Mapped[str] = mapped_column(
+        String(64), nullable=False, unique=True, default=new_message_uid
+    )
+    """Stable across devices. The primary key is local and cannot be, so sync uses this."""
     conversation_id: Mapped[str] = mapped_column(
         ForeignKey("conversations.id", ondelete="CASCADE"), index=True
     )
@@ -346,7 +370,7 @@ class Message(Base):
     finish_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
-class Memory(Base):
+class Memory(SyncedBase):
     """An explicit, user-visible fact the AI remembers (spec §44). Never auto-created."""
 
     __tablename__ = "memories"
@@ -394,3 +418,91 @@ class Chunk(Base):
     )
     ordinal: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+# --------------------------------------------------------------------------------------
+# Phase 7: synchronisation between a user's own installations (spec §16, §18, §72).
+# --------------------------------------------------------------------------------------
+
+
+class SyncIdentity(Base):
+    """This installation's name among the user's devices, and its logical clock.
+
+    The clock is a plain counter, not a timestamp. Two machines' wall clocks disagree —
+    sometimes by hours, and a laptop that has been asleep can disagree with itself — so
+    ordering changes by ``updated_at`` would make sync depend on something no one controls.
+    ``next_seq`` is only ever compared against a cursor from *this* installation, which
+    makes "everything you have not seen from me" an exact question.
+    """
+
+    __tablename__ = "sync_identity"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    install_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    next_seq: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SyncTombstone(Base):
+    """A row that was deleted here, so the deletion can travel like any other change.
+
+    Without these, sync would treat a deletion as "the other device has something I lack"
+    and helpfully restore it. A delete that will not stay deleted is worse than no sync.
+    """
+
+    __tablename__ = "sync_tombstones"
+    __table_args__ = (UniqueConstraint("entity", "uid", name="uq_tombstone_entity_uid"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    entity: Mapped[str] = mapped_column(String(32), nullable=False)
+    uid: Mapped[str] = mapped_column(String(64), nullable=False)
+    sync_seq: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    sync_origin: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SyncPeer(Base):
+    """Another installation of the user's own, and how far the two have got.
+
+    The two cursors are deliberately separate. ``received_through`` is a fact about the
+    peer's clock and ``sent_through`` about ours; conflating them is how sync engines end up
+    skipping changes after a restore from backup.
+    """
+
+    __tablename__ = "sync_peers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    peer_install_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, default="Another device")
+    device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    """The paired credential this peer uses, when it reached us over the network."""
+    received_through: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    sent_through: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SyncConflict(Base):
+    """Two devices changed the same thing, and this is the version that did not win.
+
+    Sync has to pick one, but it does not have to throw the other away. The losing side is
+    kept whole here so the user can look at it and put it back. Silently discarding a
+    person's writing because two clocks disagreed is not a trade-off this program makes.
+    """
+
+    __tablename__ = "sync_conflicts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    entity: Mapped[str] = mapped_column(String(32), nullable=False)
+    uid: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    kept: Mapped[str] = mapped_column(String(16), nullable=False)
+    """``local`` or ``remote``: which side is in the table now."""
+    losing_payload: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False, default=dict)
+    losing_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    losing_origin: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    losing_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

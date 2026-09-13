@@ -28,6 +28,7 @@ from myai_core.api.routes import (
     skills,
     status,
     storage,
+    sync,
 )
 from myai_core.api.routes import (
     jobs as jobs_routes,
@@ -48,6 +49,7 @@ from myai_core.security.storage_checks import repair_secret_storage
 from myai_core.skills.jobs import JobManager
 from myai_core.skills.trainer import TrainingService
 from myai_core.status.service import InternetMonitor, StatusService
+from myai_core.sync import install_change_tracking
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +72,9 @@ def create_app(
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         engine = make_engine(paths.database_file)
         upgrade_to_head(engine)
+        # Every change to a synced row is stamped by a session listener rather than by the
+        # services themselves, so a new feature cannot forget to do it (spec §16, §72).
+        install_change_tracking()
         resolved_token = token or load_or_create_token(paths.token_file)
         for change in repair_secret_storage(paths):
             log.warning("tightened permissions on a secret that others could read: %s", change)
@@ -150,6 +155,7 @@ def create_app(
         chat,
         memory,
         knowledge,
+        sync,
     ):
         protected.include_router(module.router)
     app.include_router(protected)

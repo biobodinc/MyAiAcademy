@@ -449,6 +449,41 @@
         "title": "CategoryUsage",
         "type": "object"
       },
+      "ChangeBatch": {
+        "description": "A page of changes, and the cursor to ask with next time.",
+        "properties": {
+          "changes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "cursor": {
+            "description": "Pass this back as `since` to continue where this ended.",
+            "title": "Cursor",
+            "type": "integer"
+          },
+          "install_id": {
+            "title": "Install Id",
+            "type": "string"
+          },
+          "more": {
+            "description": "True when the batch was truncated and another is waiting.",
+            "title": "More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "install_id",
+          "changes",
+          "cursor",
+          "more"
+        ],
+        "title": "ChangeBatch",
+        "type": "object"
+      },
       "CleanupCandidate": {
         "properties": {
           "category": {
@@ -675,6 +710,89 @@
         ],
         "title": "ComputePreset",
         "type": "string"
+      },
+      "ConflictRead": {
+        "properties": {
+          "detected_at": {
+            "format": "date-time",
+            "title": "Detected At",
+            "type": "string"
+          },
+          "entity": {
+            "title": "Entity",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kept": {
+            "title": "Kept",
+            "type": "string"
+          },
+          "losing_origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Losing Origin"
+          },
+          "losing_payload": {
+            "additionalProperties": true,
+            "title": "Losing Payload",
+            "type": "object"
+          },
+          "losing_updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Losing Updated At"
+          },
+          "losing_version": {
+            "title": "Losing Version",
+            "type": "integer"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "uid": {
+            "title": "Uid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity",
+          "uid",
+          "kept",
+          "losing_payload",
+          "losing_version",
+          "losing_origin",
+          "losing_updated_at",
+          "detected_at",
+          "resolved_at"
+        ],
+        "title": "ConflictRead",
+        "type": "object"
       },
       "ConversationCreate": {
         "properties": {
@@ -3342,6 +3460,59 @@
         "title": "ParsedCommand",
         "type": "object"
       },
+      "PeerRead": {
+        "properties": {
+          "device_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "last_synced_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Synced At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "peer_install_id": {
+            "title": "Peer Install Id",
+            "type": "string"
+          },
+          "received_through": {
+            "title": "Received Through",
+            "type": "integer"
+          },
+          "sent_through": {
+            "title": "Sent Through",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "peer_install_id",
+          "name",
+          "device_id",
+          "received_through",
+          "sent_through",
+          "last_synced_at"
+        ],
+        "title": "PeerRead",
+        "type": "object"
+      },
       "Preferences": {
         "properties": {
           "chat_max_tokens": {
@@ -3955,6 +4126,69 @@
           "detail"
         ],
         "title": "ProviderInfo",
+        "type": "object"
+      },
+      "PushRequest": {
+        "properties": {
+          "changes": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "install_id": {
+            "description": "Who these changes are from.",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Install Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "install_id"
+        ],
+        "title": "PushRequest",
+        "type": "object"
+      },
+      "PushResult": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "integer"
+          },
+          "conflicts": {
+            "title": "Conflicts",
+            "type": "integer"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "received_through": {
+            "title": "Received Through",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "applied",
+          "skipped",
+          "conflicts",
+          "received_through",
+          "detail"
+        ],
+        "title": "PushResult",
         "type": "object"
       },
       "RegisterClient": {
@@ -4839,6 +5073,83 @@
           "label"
         ],
         "title": "StorageVolume",
+        "type": "object"
+      },
+      "SyncOverview": {
+        "description": "What syncing is, and what this installation has done so far.",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "install_id": {
+            "title": "Install Id",
+            "type": "string"
+          },
+          "next_seq": {
+            "description": "This installation's logical clock.",
+            "title": "Next Seq",
+            "type": "integer"
+          },
+          "peers": {
+            "items": {
+              "$ref": "#/components/schemas/PeerRead"
+            },
+            "title": "Peers",
+            "type": "array"
+          },
+          "stays_local": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Every table that never leaves, and why not.",
+            "title": "Stays Local",
+            "type": "object"
+          },
+          "syncs": {
+            "items": {
+              "$ref": "#/components/schemas/SyncedKind"
+            },
+            "title": "Syncs",
+            "type": "array"
+          },
+          "unresolved_conflicts": {
+            "title": "Unresolved Conflicts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "install_id",
+          "next_seq",
+          "peers",
+          "unresolved_conflicts",
+          "syncs",
+          "stays_local",
+          "detail"
+        ],
+        "title": "SyncOverview",
+        "type": "object"
+      },
+      "SyncedKind": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "travels": {
+            "description": "The columns that leave this machine.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Travels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "travels"
+        ],
+        "title": "SyncedKind",
         "type": "object"
       },
       "SystemMetrics": {
@@ -8591,6 +8902,217 @@
         "summary": "Configure Root",
         "tags": [
           "storage"
+        ]
+      }
+    },
+    "/api/sync": {
+      "get": {
+        "operationId": "read_overview_api_sync_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Overview",
+        "tags": [
+          "sync"
+        ]
+      }
+    },
+    "/api/sync/changes": {
+      "get": {
+        "description": "Everything this installation has changed after `since`, oldest first.",
+        "operationId": "read_changes_api_sync_changes_get",
+        "parameters": [
+          {
+            "description": "The last number you already have.",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "The last number you already have.",
+              "minimum": 0,
+              "title": "Since",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeBatch"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Changes",
+        "tags": [
+          "sync"
+        ]
+      },
+      "post": {
+        "description": "Accept a batch from another of the user's installations.",
+        "operationId": "write_changes_api_sync_changes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Write Changes",
+        "tags": [
+          "sync"
+        ]
+      }
+    },
+    "/api/sync/conflicts": {
+      "get": {
+        "description": "What was overwritten when two devices changed the same thing. Nothing is thrown away.",
+        "operationId": "list_conflicts_api_sync_conflicts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_resolved",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Resolved",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConflictRead"
+                  },
+                  "title": "Response List Conflicts Api Sync Conflicts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Conflicts",
+        "tags": [
+          "sync"
+        ]
+      }
+    },
+    "/api/sync/conflicts/{conflict_id}/dismiss": {
+      "post": {
+        "description": "Mark a conflict as seen. The record stays; only the prompt goes away.",
+        "operationId": "dismiss_conflict_api_sync_conflicts__conflict_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conflict_id",
+            "required": true,
+            "schema": {
+              "title": "Conflict Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Conflict",
+        "tags": [
+          "sync"
         ]
       }
     }

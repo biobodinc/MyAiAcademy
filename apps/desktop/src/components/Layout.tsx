@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Settings,
   KeyRound,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Terminal,
@@ -35,6 +36,7 @@ const nav = [
   { to: "/storage", label: "Storage", icon: HardDrive },
   { to: "/privacy", label: "Privacy Center", icon: ShieldCheck },
   { to: "/security", label: "Security", icon: KeyRound },
+  { to: "/sync", label: "Sync", icon: RefreshCw },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ];

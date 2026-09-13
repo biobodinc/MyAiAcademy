@@ -237,6 +237,11 @@ export const securityKeys = {
   erasePreview: ["privacy", "erase-preview"] as const,
 };
 
+export const syncKeys = {
+  overview: ["sync"] as const,
+  conflicts: ["sync", "conflicts"] as const,
+};
+
 function invalidateSecurity(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: securityKeys.overview });
   void qc.invalidateQueries({ queryKey: securityKeys.devices });
@@ -381,6 +386,36 @@ export function useDevices() {
   return useQuery({
     queryKey: securityKeys.devices,
     queryFn: () => unwrap(api.GET("/api/security/devices")),
+  });
+}
+
+export function useSyncOverview() {
+  return useQuery({
+    queryKey: syncKeys.overview,
+    queryFn: () => unwrap(api.GET("/api/sync")),
+  });
+}
+
+export function useSyncConflicts() {
+  return useQuery({
+    queryKey: syncKeys.conflicts,
+    queryFn: () => unwrap(api.GET("/api/sync/conflicts")),
+  });
+}
+
+export function useDismissConflict() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      unwrap(
+        api.POST("/api/sync/conflicts/{conflict_id}/dismiss", {
+          params: { path: { conflict_id: id } },
+        }),
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: syncKeys.conflicts });
+      void qc.invalidateQueries({ queryKey: syncKeys.overview });
+    },
   });
 }
 

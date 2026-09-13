@@ -15,6 +15,7 @@ import { ModelsPage } from "./features/models/ModelsPage";
 import { OnboardingWizard } from "./features/onboarding/OnboardingWizard";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { SecurityPage } from "./features/security/SecurityPage";
+import { SyncPage } from "./features/sync/SyncPage";
 import { ProfilePage } from "./features/profile/ProfilePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { SkillsPage } from "./features/skills/SkillsPage";
@@ -62,6 +63,7 @@ function ThemedRoutes() {
           <Route path="storage" element={<StoragePage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="security" element={<SecurityPage />} />
+          <Route path="sync" element={<SyncPage />} />
           <Route path="activity" element={<AuditPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
