@@ -896,25 +896,50 @@ def security_clients(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> N
     table.add_column("Kind")
     table.add_column("Last seen")
     table.add_column("State")
+    table.add_column("May")
     for d in data:
+        allowed = d.get("capabilities") or []
         table.add_row(
             d["id"],
             d["name"],
             d["kind"],
             (d["last_seen_at"] or "never")[:19].replace("T", " "),
             "revoked" if d["revoked_at"] else "active",
+            ", ".join(allowed) if allowed else "nothing",
         )
     console.print(table)
+    console.print("`myai security grant <id> --can <capability>` changes what a client may do.")
 
 
 @security_app.command("pairing-code")
 def security_pairing_code(
     label: Annotated[str, typer.Option(help="What you are pairing, for the log.")] = "",
+    capability: Annotated[
+        list[str] | None,
+        typer.Option("--can", help="A capability to allow. Repeat for several."),
+    ] = None,
+    preset: Annotated[
+        str, typer.Option(help="'default', 'mobile' or 'full' instead of listing them.")
+    ] = "",
     data_dir: DataDirOpt = None,
 ) -> None:
-    """Create a single-use code so a client can get its own credential."""
-    data = _call(_service(data_dir).post, "/security/pairing-codes", {"label": label})
+    """Create a single-use code so a client can get its own credential.
+
+    What the client will be allowed to do is decided here, by you. Without --can or
+    --preset it gets the default grant, which includes nothing you have written.
+    """
+    body: dict[str, Any] = {"label": label}
+    if preset:
+        body["preset"] = preset
+    if capability:
+        body["capabilities"] = list(capability)
+    data = _call(_service(data_dir).post, "/security/pairing-codes", body)
     console.print(Panel(f"[bold]{data['code']}[/bold]", title="Pairing code"))
+    allowed = data.get("capabilities") or []
+    console.print(
+        "The client redeeming this will be allowed to: "
+        + (", ".join(allowed) if allowed else "nothing at all.")
+    )
     console.print(f"Expires in {data['expires_in_seconds'] // 60} minutes. {data['note']}")
 
 
@@ -1136,6 +1161,74 @@ def sync_dismiss(conflict_id: int, data_dir: DataDirOpt = None) -> None:
     """Stop showing a conflict. It stays in the record."""
     _call(_service(data_dir).post, f"/sync/conflicts/{conflict_id}/dismiss", {})
     console.print(f"Conflict {conflict_id} marked as seen. It is still in the record.")
+
+
+@security_app.command("capabilities")
+def security_capabilities(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Everything a client can be granted, and what each one actually means."""
+    data = _call(_service(data_dir).get, "/security/capabilities")
+    if as_json:
+        return _emit_json(data)
+    table = Table("Capability", "What it allows", "Your content?")
+    for row in data:
+        table.add_row(
+            row["capability"],
+            f"{row['title']} — {row['detail']}",
+            "yes" if row["sensitive"] else "no",
+        )
+    console.print(table)
+    console.print(
+        "Anything marked 'yes' lets a program read or change something you wrote. "
+        "A client is given only what you approve when you make its pairing code."
+    )
+
+
+@security_app.command("grant")
+def security_grant(
+    device_id: str,
+    capability: Annotated[
+        list[str] | None,
+        typer.Option("--can", help="A capability to allow. Repeat for several."),
+    ] = None,
+    preset: Annotated[
+        str, typer.Option(help="'default', 'mobile' or 'full' instead of listing them.")
+    ] = "",
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Replace what a client may do. What you do not list is taken away."""
+    svc = _service(data_dir)
+    if preset:
+        known = {
+            "default": ["status:read", "skills:read", "models:read"],
+            "mobile": [
+                "status:read",
+                "skills:read",
+                "models:read",
+                "chat:read",
+                "chat:write",
+                "memory:read",
+                "sync",
+            ],
+            "full": [row["capability"] for row in _call(svc.get, "/security/capabilities")],
+        }
+        wanted = known.get(preset.lower())
+        if wanted is None:
+            err_console.print(
+                f"[red]Unknown preset '{preset}'. One of: default, mobile, full.[/red]"
+            )
+            raise typer.Exit(code=2)
+    else:
+        wanted = list(capability or [])
+    data = _call(
+        svc.request,
+        "PUT",
+        f"/security/devices/{device_id}/capabilities",
+        json={"capabilities": wanted},
+    )
+    allowed = data["capabilities"]
+    console.print(
+        f"{data['name']} may now: " + (", ".join(allowed) if allowed else "nothing at all.")
+    )
 
 
 @portable_app.command("write")

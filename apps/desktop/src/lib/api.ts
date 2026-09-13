@@ -385,6 +385,33 @@ export function useSecurityOverview() {
   });
 }
 
+/** Everything a client can be granted, with what each one means. Rarely changes. */
+export function useCapabilityCatalog() {
+  return useQuery({
+    queryKey: ["security", "capabilities"] as const,
+    queryFn: () => unwrap(api.GET("/api/security/capabilities")),
+    staleTime: Infinity,
+  });
+}
+
+/** Replace what a client may do. Anything omitted is taken away. */
+export function useSetCapabilities() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { deviceId: string; capabilities: string[] }) =>
+      unwrap(
+        api.PUT("/api/security/devices/{device_id}/capabilities", {
+          params: { path: { device_id: input.deviceId } },
+          body: { capabilities: input.capabilities },
+        }),
+      ),
+    onSuccess: () => {
+      invalidateSecurity(qc);
+      void qc.invalidateQueries({ queryKey: keys.audit });
+    },
+  });
+}
+
 export function useDevices() {
   return useQuery({
     queryKey: securityKeys.devices,
@@ -425,8 +452,12 @@ export function useDismissConflict() {
 export function useCreatePairingCode() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (label: string) =>
-      unwrap(api.POST("/api/security/pairing-codes", { body: { label } })),
+    mutationFn: (input: { label: string; capabilities: string[] }) =>
+      unwrap(
+        api.POST("/api/security/pairing-codes", {
+          body: { label: input.label, preset: "", capabilities: input.capabilities },
+        }),
+      ),
     onSuccess: () => {
       invalidateSecurity(qc);
     },
@@ -464,8 +495,13 @@ export function useSetNetworkAccess() {
 export function useCreatePairingInvite() {
   const qc = useQueryClient();
   return useMutation({
+    // A phone is a controller: it needs chat, memory and sync, and not the knowledge files.
     mutationFn: (label: string) =>
-      unwrap(api.POST("/api/security/pairing-invite", { body: { label } })),
+      unwrap(
+        api.POST("/api/security/pairing-invite", {
+          body: { label, preset: "mobile", capabilities: [] },
+        }),
+      ),
     onSuccess: () => {
       invalidateSecurity(qc);
     },

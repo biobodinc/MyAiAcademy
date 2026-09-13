@@ -253,6 +253,8 @@ class Device(Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revoked_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    capabilities: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    """What this client may do (spec §53). An empty list grants nothing but pairing itself."""
 
 
 class PairingCode(Base):
@@ -273,6 +275,8 @@ class PairingCode(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    capabilities: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    """What the owner approved when they made this code. The client cannot widen it."""
 
 
 class HardwareBenchmark(Base):

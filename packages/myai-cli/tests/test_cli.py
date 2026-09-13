@@ -259,3 +259,46 @@ def test_portable_inspect_rejects_something_that_is_not_a_package(
     stranger.write_bytes(b"definitely not a zip")
     code, out = _run("portable", "inspect", str(stranger), data_dir=running_service)
     assert code == 1 and "not a MyAI package" in out
+
+
+def test_a_pairing_code_carries_only_what_the_owner_approved(running_service: Path) -> None:
+    code, out = _run("security", "capabilities", data_dir=running_service)
+    assert code == 0
+    listed = _unwrapped(out)
+    assert "memory:read" in listed and "chat:write" in listed
+
+    # No grant named: the default, which includes nothing the user has written.
+    code, out = _run("security", "pairing-code", "--label", "plain", data_dir=running_service)
+    assert code == 0
+    plain = _unwrapped(out)
+    assert "status:read" in plain and "memory:read" not in plain
+
+    code, out = _run("security", "pairing-code", "--can", "memory:read", data_dir=running_service)
+    assert code == 0 and "memory:read" in _unwrapped(out)
+
+    code, out = _run("security", "pairing-code", "--preset", "mobile", data_dir=running_service)
+    assert code == 0 and "sync" in _unwrapped(out)
+
+
+def test_granting_and_narrowing_a_client_from_the_cli(running_service: Path) -> None:
+    code, out = _run("security", "pairing-code", "--preset", "full", data_dir=running_service)
+    assert code == 0
+    pairing = re.search(r"\b(\d{8})\b", out)
+    assert pairing, out
+    code, out = _run(
+        "security", "pair", pairing.group(1), "--name", "Scoped tool", data_dir=running_service
+    )
+    assert code == 0
+
+    code, raw = _run("security", "clients", "--json", data_dir=running_service)
+    client = next(c for c in json.loads(raw) if c["name"] == "Scoped tool")
+    assert "memory:write" in client["capabilities"]
+
+    code, out = _run(
+        "security", "grant", client["id"], "--can", "status:read", data_dir=running_service
+    )
+    assert code == 0 and "may now: status:read" in out
+
+    code, raw = _run("security", "clients", "--json", data_dir=running_service)
+    narrowed = next(c for c in json.loads(raw) if c["id"] == client["id"])
+    assert narrowed["capabilities"] == ["status:read"], "what was not listed must be taken away"

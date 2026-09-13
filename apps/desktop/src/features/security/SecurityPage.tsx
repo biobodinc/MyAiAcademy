@@ -6,6 +6,7 @@
  */
 import {
   formatBytes,
+  type CapabilityInfo,
   type DeviceRead,
   type NetworkAccess,
   type PairingInvite,
@@ -26,6 +27,7 @@ import {
 } from "../../components/ui";
 import {
   describeError,
+  useCapabilityCatalog,
   useCreatePairingCode,
   useCreatePairingInvite,
   useDevices,
@@ -34,6 +36,7 @@ import {
   useExportData,
   useRevokeDevice,
   useSecurityOverview,
+  useSetCapabilities,
   useSetNetworkAccess,
 } from "../../lib/api";
 
@@ -221,84 +224,207 @@ function InviteCard({ invite }: { invite: PairingInvite }) {
 function ClientsCard({ devices, canManage }: { devices: DeviceRead[]; canManage: boolean }) {
   const createCode = useCreatePairingCode();
   const revoke = useRevokeDevice();
-  const [issued, setIssued] = useState<string | null>(null);
+  const catalog = useCapabilityCatalog();
+  const [issued, setIssued] = useState<{ code: string; granted: string[] } | null>(null);
+  const [wanted, setWanted] = useState<string[]>(["status:read", "skills:read", "models:read"]);
+  const [editing, setEditing] = useState<string | null>(null);
+
+  const all = catalog.data ?? [];
 
   return (
-    <Card
-      title="Clients that can act as your AI"
-      action={
-        canManage ? (
+    <Card title="Clients that can act as your AI">
+      <p className="text-sm text-fg-muted">
+        A pairing code grants exactly what you tick here, and nothing else. The program redeeming it
+        cannot ask for more.
+      </p>
+
+      {canManage && (
+        <div className="mt-4 space-y-3 rounded-xl border border-border p-3">
+          <p className="text-sm font-medium">What should the next client be allowed to do?</p>
+          {catalog.isPending ? (
+            <Spinner />
+          ) : (
+            <ul className="space-y-1">
+              {all.map((info) => (
+                <li key={info.capability}>
+                  <label className="flex items-start gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={wanted.includes(info.capability)}
+                      onChange={(e) => {
+                        setWanted((current) =>
+                          e.target.checked
+                            ? [...current, info.capability]
+                            : current.filter((c) => c !== info.capability),
+                        );
+                      }}
+                    />
+                    <span className="min-w-0">
+                      <span className="font-medium">{info.title}</span>
+                      {info.sensitive && (
+                        <span className="ml-2">
+                          <StatusPill tone="warning">your content</StatusPill>
+                        </span>
+                      )}
+                      <span className="block text-xs text-fg-muted">{info.detail}</span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
           <Button
             size="sm"
             disabled={createCode.isPending}
             onClick={() => {
-              createCode.mutate("", {
-                onSuccess: (code) => {
-                  setIssued(code.code);
+              createCode.mutate(
+                { label: "", capabilities: wanted },
+                {
+                  onSuccess: (code) => {
+                    setIssued({ code: code.code, granted: code.capabilities });
+                  },
                 },
-              });
+              );
             }}
           >
-            <KeyRound className="h-4 w-4" aria-hidden /> Pairing code
+            <KeyRound className="h-4 w-4" aria-hidden /> Make a pairing code
           </Button>
-        ) : undefined
-      }
-    >
+        </div>
+      )}
+
       {issued && (
-        <Alert tone="info" title="Pairing code">
-          <p className="font-mono text-lg tracking-widest">{issued}</p>
-          <p className="mt-1 text-xs">
-            Single use, and only for the next few minutes. Type it into the client you are pairing;
-            anyone who has it can obtain a credential, so treat it like a password.
-          </p>
-        </Alert>
+        <div className="mt-3">
+          <Alert tone="info" title="Pairing code">
+            <p className="font-mono text-lg tracking-widest">{issued.code}</p>
+            <p className="mt-1 text-xs">
+              Grants: {issued.granted.length ? issued.granted.join(", ") : "nothing at all"}.
+            </p>
+            <p className="mt-1 text-xs">
+              Single use, and only for the next few minutes. Anyone who has it can obtain a
+              credential, so treat it like a password.
+            </p>
+          </Alert>
+        </div>
       )}
       {createCode.isError && <Alert tone="danger">{describeError(createCode.error)}</Alert>}
+
       {devices.length === 0 ? (
-        <p className="text-sm text-fg-muted">
+        <p className="mt-3 text-sm text-fg-muted">
           No paired clients. Only this installation&rsquo;s own token can be used, and only from
           this machine.
         </p>
       ) : (
         <ul className="mt-3 space-y-2 text-sm">
           {devices.map((device) => (
-            <li
-              key={device.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{device.name}</span>
-                  <StatusPill tone={device.revoked_at ? "muted" : "success"}>
-                    {device.revoked_at ? "revoked" : device.kind}
-                  </StatusPill>
+            <li key={device.id} className="rounded-xl border border-border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{device.name}</span>
+                    <StatusPill tone={device.revoked_at ? "muted" : "success"}>
+                      {device.revoked_at ? "revoked" : device.kind}
+                    </StatusPill>
+                  </div>
+                  <p className="text-xs text-fg-muted">
+                    Added {new Date(device.created_at).toLocaleDateString()} ·{" "}
+                    {device.last_seen_at
+                      ? `last used ${new Date(device.last_seen_at).toLocaleString()}`
+                      : "never used"}
+                    {device.revoked_reason ? ` · ${device.revoked_reason}` : ""}
+                  </p>
+                  <p className="mt-1 text-xs">
+                    May:{" "}
+                    {device.capabilities.length ? (
+                      <span className="font-mono">{device.capabilities.join(", ")}</span>
+                    ) : (
+                      <span className="text-fg-muted">nothing</span>
+                    )}
+                  </p>
                 </div>
-                <p className="text-xs text-fg-muted">
-                  Added {new Date(device.created_at).toLocaleDateString()} ·{" "}
-                  {device.last_seen_at
-                    ? `last used ${new Date(device.last_seen_at).toLocaleString()}`
-                    : "never used"}
-                  {device.revoked_reason ? ` · ${device.revoked_reason}` : ""}
-                </p>
+                {canManage && !device.revoked_at && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditing(editing === device.id ? null : device.id);
+                      }}
+                    >
+                      {editing === device.id ? "Done" : "Change"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      disabled={revoke.isPending}
+                      onClick={() => {
+                        revoke.mutate({ device_id: device.id, reason: "Revoked from the app" });
+                      }}
+                    >
+                      Revoke
+                    </Button>
+                  </div>
+                )}
               </div>
-              {canManage && !device.revoked_at && (
-                <Button
-                  size="sm"
-                  variant="danger"
-                  disabled={revoke.isPending}
-                  onClick={() => {
-                    revoke.mutate({ device_id: device.id, reason: "Revoked from the app" });
-                  }}
-                >
-                  Revoke
-                </Button>
-              )}
+              {editing === device.id && <GrantEditor device={device} catalog={all} />}
             </li>
           ))}
         </ul>
       )}
       {revoke.isError && <Alert tone="danger">{describeError(revoke.error)}</Alert>}
     </Card>
+  );
+}
+
+/** Change what one client may do. Unticking is how permission is taken away. */
+function GrantEditor({ device, catalog }: { device: DeviceRead; catalog: CapabilityInfo[] }) {
+  const setCapabilities = useSetCapabilities();
+  const [chosen, setChosen] = useState<string[]>(device.capabilities);
+
+  return (
+    <div className="mt-3 space-y-2 border-t border-border pt-3">
+      <ul className="space-y-1">
+        {catalog.map((info) => (
+          <li key={info.capability}>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={chosen.includes(info.capability)}
+                onChange={(e) => {
+                  setChosen((current) =>
+                    e.target.checked
+                      ? [...current, info.capability]
+                      : current.filter((c) => c !== info.capability),
+                  );
+                }}
+              />
+              <span className="min-w-0">
+                <span className="font-medium">{info.title}</span>
+                {info.sensitive && (
+                  <span className="ml-2">
+                    <StatusPill tone="warning">your content</StatusPill>
+                  </span>
+                )}
+                <span className="block text-xs text-fg-muted">{info.detail}</span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <Button
+        size="sm"
+        disabled={setCapabilities.isPending}
+        onClick={() => {
+          setCapabilities.mutate({ deviceId: device.id, capabilities: chosen });
+        }}
+      >
+        Save — takes effect on its next request
+      </Button>
+      {setCapabilities.isError && (
+        <Alert tone="danger">{describeError(setCapabilities.error)}</Alert>
+      )}
+    </div>
   );
 }
 
