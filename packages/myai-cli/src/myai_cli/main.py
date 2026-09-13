@@ -958,7 +958,9 @@ def security_network(
         lines += [
             f"Reachable at: {where}",
             f"Certificate: {data['certificate_fingerprint_groups']}",
-            "A device pins that fingerprint when it pairs and then accepts only this computer.",
+            f"Key pin: {data['public_key_pin']}",
+            "A device pins those when it pairs and then accepts only this computer. Compare "
+            "the certificate line by eye; the key pin is the form pinning libraries take.",
         ]
     console.print(Panel("\n".join(lines), title="Devices on your network"))
 

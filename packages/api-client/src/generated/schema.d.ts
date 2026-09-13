@@ -2362,6 +2362,11 @@ export interface components {
             host: string | null;
             /** Port */
             port: number | null;
+            /**
+             * Public Key Pin
+             * @description The public key pin in the form every pinning library uses, 'sha256/<base64>'. The fingerprint above identifies the certificate; this identifies the key inside it, which is what Android's and iOS's pinning APIs actually check.
+             */
+            public_key_pin: string | null;
         };
         /** NetworkAccessRequest */
         NetworkAccessRequest: {
@@ -2468,6 +2473,8 @@ export interface components {
             payload: string;
             /** Port */
             port: number;
+            /** Public Key Pin */
+            public_key_pin: string;
         };
         /** PairRequest */
         PairRequest: {

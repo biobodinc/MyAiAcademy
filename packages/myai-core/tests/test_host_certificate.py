@@ -92,6 +92,43 @@ def test_the_fingerprint_is_shown_in_groups_a_person_can_compare(tmp_path: Path)
     assert "".join(groups).lower() == certificate.fingerprint_sha256
 
 
+def test_the_public_key_pin_is_the_form_pinning_libraries_actually_take(tmp_path: Path) -> None:
+    """OkHttp, TrustKit and HPKP all pin the SPKI hash, written 'sha256/<base64>'.
+
+    Computed here the way those libraries compute it — SHA-256 over the DER-encoded
+    SubjectPublicKeyInfo — rather than trusting our own helper to agree with itself.
+    """
+    import base64
+    import hashlib
+
+    from cryptography.hazmat.primitives import serialization
+
+    certificate = hc.load_or_create(tmp_path, addresses=["127.0.0.1"])
+    parsed = x509.load_pem_x509_certificate(certificate.cert_path.read_bytes())
+    spki = parsed.public_key().public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    expected = base64.b64encode(hashlib.sha256(spki).digest()).decode()
+
+    assert certificate.public_key_sha256 == expected
+    assert certificate.public_key_pin == f"sha256/{expected}"
+    assert hc.public_key_sha256_of_pem(certificate.cert_path.read_bytes()) == expected
+
+
+def test_the_key_pin_and_the_certificate_fingerprint_are_different_things(tmp_path: Path) -> None:
+    """Two pins with two readers: one for a person's eyes, one for a pinning library.
+
+    A new certificate over a new key changes both, which is what 'reset it' has to mean.
+    """
+    first = hc.load_or_create(tmp_path, addresses=["127.0.0.1"])
+    assert first.public_key_sha256 != first.fingerprint_sha256
+
+    second = hc.regenerate(tmp_path, addresses=["127.0.0.1"])
+    assert second.fingerprint_sha256 != first.fingerprint_sha256
+    assert second.public_key_sha256 != first.public_key_sha256
+
+
 def test_local_addresses_always_include_loopback() -> None:
     addresses = hc.local_addresses()
     assert addresses and addresses[0] == "127.0.0.1"

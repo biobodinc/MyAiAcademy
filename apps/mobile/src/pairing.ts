@@ -6,8 +6,14 @@
  * written to reject anything malformed loudly rather than to be generous: a QR code is
  * data from outside, and a "helpful" parser here would be a way in.
  *
- * The fingerprint is the part that matters. Once pinned, the phone accepts exactly one
- * certificate — this host's — and no certificate authority can change that.
+ * The pins are the part that matters. Once pinned, the phone accepts exactly one host — this
+ * one — and no certificate authority can change that.
+ *
+ * There are two of them, because they have two different readers. `certificateFingerprint`
+ * is the SHA-256 of the certificate: it is shown in groups of four on both screens and is
+ * what a *person* compares. `publicKeyPin` is the SHA-256 of the DER SubjectPublicKeyInfo in
+ * base64, written `sha256/…`, which is the only form Android's `CertificatePinner` and iOS's
+ * TrustKit accept. An invite without both is not one we can use safely, so it is refused.
  */
 
 /** How long a scanned invite is worth trying, regardless of what it claims. */
@@ -18,7 +24,10 @@ export interface PairingInvite {
   hostName: string;
   addresses: string[];
   port: number;
+  /** SHA-256 of the certificate, lower-case hex. What a person compares by eye. */
   certificateFingerprint: string;
+  /** `sha256/<base64>` over the DER SubjectPublicKeyInfo. What a pinning library checks. */
+  publicKeyPin: string;
   code: string;
   expiresAt: Date;
 }
@@ -26,6 +35,8 @@ export interface PairingInvite {
 export class InvalidInvite extends Error {}
 
 const FINGERPRINT = /^[0-9a-f]{64}$/;
+/** base64 of a 32-byte digest is always 43 characters and one '='. */
+const PUBLIC_KEY_PIN = /^sha256\/[A-Za-z0-9+/]{43}=$/;
 const CODE = /^\d{6,12}$/;
 
 /** Parse the JSON payload from a scanned QR code. Throws {@link InvalidInvite}. */
@@ -49,6 +60,10 @@ export function parseInvite(raw: string, now: Date = new Date()): PairingInvite 
   const fingerprint = typeof body.fp === "string" ? body.fp.toLowerCase() : "";
   if (!FINGERPRINT.test(fingerprint)) {
     throw new InvalidInvite("That pairing code is missing the certificate to trust.");
+  }
+  const publicKeyPin = typeof body.spki === "string" ? body.spki.trim() : "";
+  if (!PUBLIC_KEY_PIN.test(publicKeyPin)) {
+    throw new InvalidInvite("That pairing code is missing the key to pin.");
   }
   const code = typeof body.code === "string" ? body.code.trim() : "";
   if (!CODE.test(code)) {
@@ -82,9 +97,15 @@ export function parseInvite(raw: string, now: Date = new Date()): PairingInvite 
     addresses,
     port,
     certificateFingerprint: fingerprint,
+    publicKeyPin,
     code,
     expiresAt,
   };
+}
+
+/** The fingerprint in groups of four, exactly as the desktop shows it, to compare by eye. */
+export function fingerprintGroups(fingerprint: string): string {
+  return (fingerprint.match(/.{1,4}/g) ?? []).join(" ").toUpperCase();
 }
 
 /** The addresses to try, in order: a phone is usually on the same network as the host. */

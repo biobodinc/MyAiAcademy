@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   candidateUrls,
+  fingerprintGroups,
   fingerprintMatches,
   InvalidInvite,
   parseInvite,
@@ -13,6 +14,8 @@ import {
 } from "../src/pairing";
 
 const FINGERPRINT = "a".repeat(64);
+/** base64 of a 32-byte digest: 43 characters and one '='. */
+const KEY_PIN = `sha256/${"B".repeat(43)}=`;
 const NOW = new Date("2026-09-12T12:00:00Z");
 
 function payload(overrides: Record<string, unknown> = {}): string {
@@ -22,6 +25,7 @@ function payload(overrides: Record<string, unknown> = {}): string {
     addresses: ["192.168.1.24"],
     port: 41338,
     fp: FINGERPRINT,
+    spki: KEY_PIN,
     code: "12345678",
     exp: new Date(NOW.getTime() + 5 * 60 * 1000).toISOString(),
     ...overrides,
@@ -37,6 +41,7 @@ describe("parseInvite", () => {
       port: 41338,
       code: "12345678",
       certificateFingerprint: FINGERPRINT,
+      publicKeyPin: KEY_PIN,
     });
     expect(invite.addresses).toEqual(["192.168.1.24"]);
     expect(invite.expiresAt.getTime()).toBeGreaterThan(NOW.getTime());
@@ -55,6 +60,10 @@ describe("parseInvite", () => {
     ["no fingerprint", payload({ fp: undefined })],
     ["a fingerprint that is the wrong length", payload({ fp: "abc" })],
     ["a fingerprint that is not hexadecimal", payload({ fp: "z".repeat(64) })],
+    ["no key pin", payload({ spki: undefined })],
+    ["a key pin under another hash", payload({ spki: `sha1/${"B".repeat(43)}=` })],
+    ["a key pin of the wrong length", payload({ spki: `sha256/${"B".repeat(20)}=` })],
+    ["a bare key pin with no algorithm", payload({ spki: `${"B".repeat(43)}=` })],
     ["no code", payload({ code: undefined })],
     ["a code that is not digits", payload({ code: "letmein" })],
     ["no address", payload({ addresses: [] })],
@@ -93,6 +102,15 @@ describe("candidateUrls", () => {
   it("brackets an IPv6 address so the port is still readable", () => {
     const invite = parseInvite(payload({ addresses: ["fe80::1"] }), NOW);
     expect(candidateUrls(invite)).toEqual(["https://[fe80::1]:41338/api"]);
+  });
+});
+
+describe("fingerprintGroups", () => {
+  it("groups the fingerprint exactly as the desktop shows it, so the two can be compared", () => {
+    const groups = fingerprintGroups(FINGERPRINT).split(" ");
+    expect(groups).toHaveLength(16);
+    expect(groups.every((g) => g.length === 4)).toBe(true);
+    expect(groups.join("").toLowerCase()).toBe(FINGERPRINT);
   });
 });
 

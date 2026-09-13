@@ -31,7 +31,16 @@
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
-    "plugins": [],
+    "web": { "bundler": "metro", "output": "single" },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Used only to scan the pairing code shown by your computer. No image is recorded or sent.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ],
     "extra": { "eas": { "projectId": "" } }
   }
 }

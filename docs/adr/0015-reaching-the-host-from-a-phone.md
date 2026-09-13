@@ -29,12 +29,19 @@ address changes with the network.
   allow-list. Network access is a _separate_ listener the user turns on, and turning it on
   and off is written to the audit log.
 - The host mints its own certificate (P-256, `cryptography`), keeps the key owner-only, and
-  never sends it anywhere. The pairing QR carries the certificate's SHA-256 fingerprint
-  next to the code, so the two travel together over the air gap of someone looking at their
-  own screen. The device then accepts exactly one certificate — this host's — and rejects
-  every other, _including_ a genuine one from a real authority. Here that is stronger than
-  the web's model, because there is no authority that could be persuaded to issue a
-  certificate for this host to somebody else.
+  never sends it anywhere. The pairing QR carries the pins next to the code, so they travel
+  together over the air gap of someone looking at their own screen. The device then accepts
+  exactly one host — this one — and rejects every other, _including_ one holding a genuine
+  certificate from a real authority. Here that is stronger than the web's model, because
+  there is no authority that could be persuaded to issue a certificate for this host to
+  somebody else.
+- **Two pins travel, because they have two different readers.** The certificate's SHA-256
+  fingerprint is what a _person_ compares, shown in groups of four on both screens. Every
+  pinning implementation a phone can actually use — OkHttp's `CertificatePinner`, TrustKit,
+  and the HPKP syntax both inherit — pins something else: the SHA-256 of the DER
+  SubjectPublicKeyInfo, base64, written `sha256/…`. Publishing only the first would have
+  meant the pin in the QR code could not be handed to any real pinning library, which is a
+  thing better discovered now than after a device build exists.
 - **The installation token is refused over the network.** The master key stays on the
   machine that owns it. A device pairs, gets a credential of its own, and that credential
   can be revoked on its own. Attempting to use the owner token from the network is a 403
@@ -53,17 +60,35 @@ address changes with the network.
 
 ## What is built, and what is not
 
-Built and tested against a real TLS socket: the listener, the certificate, the pin, the
-refusal of the owner token, the pairing invite and its QR payload, and the desktop and CLI
-surfaces for all of it. The mobile app has the pairing-invite parser and the fingerprint
-comparison, tested, including the malformed and expired payloads it must refuse.
+Built and tested against a real TLS socket, on both sides.
 
-**Not built: the phone actually connecting.** React Native's networking uses the platform
-TLS stack, which will reject a self-signed certificate, and pinning requires a native
-module and therefore a development build. That is not something that can be written
-honestly without a device to run it on: it would be code that has never once made a
-connection. The phone app therefore still reports itself as unpaired, and the mobile
-disclosure says exactly this rather than implying a working app is a build away.
+On the host: the listener, the certificate, both pins, the refusal of the owner token, the
+pairing invite and its QR payload, and the desktop and CLI surfaces for all of it.
+
+In the phone app: the invite parser, the fingerprint comparison, the pairing exchange, the
+authenticated calls, revocation, and the credential in the Keychain — driven end to end in
+`tests/client.test.ts` against a real HTTPS server with a real self-signed P-256
+certificate, through a transport that verifies the pins by hand exactly as a native module
+must. The tests hold it to the properties that matter: an impostor's certificate is refused
+_before the pairing code is sent_, and the installation's owner token is never what the
+phone uses.
+
+**Not built: the connection from a real phone.** The reason is sharper than "React Native
+rejects self-signed certificates", and worth recording because it disqualifies the obvious
+fix. Pinning does not help: pinning is applied _after_ chain validation, so a certificate
+the TrustManager already rejected never reaches the pinner. OkHttp says so outright —
+"CertificatePinner cannot be used to pin self-signed certificates if such certificates are
+not accepted by TrustManager" — and TrustKit is the same on iOS. Reaching this host
+therefore needs a module that trusts this one certificate _and_ verifies it is this one
+certificate, together. No off-the-shelf library does both; the runtime-configurable ones do
+only the second. A module means a development build, which means a device.
+
+So the app refuses to connect when it cannot pin, and says so on screen in words, with the
+Connect button disabled rather than offered and then failed. `src/transport.ts` is the one
+seam: a native module registers itself at startup and every screen begins working, with
+nothing else to change. Refusing is the designed behaviour, not a gap — an unpinned
+fallback would hand the device credential and every message to whatever answered on that
+address.
 
 ## Consequences
 

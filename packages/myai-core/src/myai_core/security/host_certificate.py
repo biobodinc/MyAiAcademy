@@ -19,10 +19,24 @@ that could be persuaded to issue a certificate for this host to somebody else.
 
 The private key never leaves the machine, is written owner-only, and is regenerated (with a
 new fingerprint, invalidating pinned copies) whenever the user asks.
+
+Two pins, for two different readers
+-----------------------------------
+
+The certificate's SHA-256 fingerprint is what a *person* compares: it is shown in groups of
+four on both screens, and it identifies this exact certificate.
+
+Every pinning implementation a phone can actually use — OkHttp's ``CertificatePinner`` on
+Android, TrustKit on iOS, and the HPKP-style syntax both inherit — pins something else: the
+SHA-256 of the DER-encoded *Subject Public Key Info*, base64-encoded, written
+``sha256/AAAA...``. So the host publishes that too. Pinning the key rather than the
+certificate also means a renewal that keeps the same key does not force every device to
+pair again, which is the behaviour those libraries were designed around.
 """
 
 from __future__ import annotations
 
+import base64
 import datetime as dt
 import ipaddress
 import re
@@ -52,7 +66,9 @@ class HostCertificate:
     cert_path: Path
     key_path: Path
     fingerprint_sha256: str
-    """Lower-case hex, no separators. This is what a phone pins."""
+    """Lower-case hex, no separators. This is the certificate, and what a person compares."""
+    public_key_sha256: str
+    """Base64 SHA-256 of the DER SubjectPublicKeyInfo: what a pinning library consumes."""
     not_after: dt.datetime
     subject_names: tuple[str, ...]
 
@@ -63,6 +79,11 @@ class HostCertificate:
             self.fingerprint_sha256[i : i + 4].upper()
             for i in range(0, len(self.fingerprint_sha256), 4)
         )
+
+    @property
+    def public_key_pin(self) -> str:
+        """The public key pin as OkHttp, TrustKit and HPKP all spell it."""
+        return f"sha256/{self.public_key_sha256}"
 
 
 def local_addresses() -> list[str]:
@@ -154,6 +175,21 @@ def fingerprint_of_pem(pem: bytes) -> str:
     return x509.load_pem_x509_certificate(pem).fingerprint(hashes.SHA256()).hex()
 
 
+def public_key_sha256_of_pem(pem: bytes) -> str:
+    """The base64 SPKI pin for a PEM certificate, as a pinning library would compute it."""
+    return _public_key_sha256(x509.load_pem_x509_certificate(pem))
+
+
+def _public_key_sha256(certificate: x509.Certificate) -> str:
+    spki = certificate.public_key().public_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(spki)
+    return base64.b64encode(digest.finalize()).decode("ascii")
+
+
 def _read(cert_path: Path, key_path: Path) -> HostCertificate | None:
     if not (cert_path.is_file() and key_path.is_file()):
         return None
@@ -174,6 +210,7 @@ def _describe(certificate: x509.Certificate, cert_path: Path, key_path: Path) ->
         cert_path=cert_path,
         key_path=key_path,
         fingerprint_sha256=certificate.fingerprint(hashes.SHA256()).hex(),
+        public_key_sha256=_public_key_sha256(certificate),
         not_after=certificate.not_valid_after_utc,
         subject_names=names,
     )
