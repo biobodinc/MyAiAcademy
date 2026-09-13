@@ -232,3 +232,30 @@ def test_sync_says_what_travels_and_what_never_does(running_service: Path) -> No
 def test_sync_reports_no_conflicts_on_a_lone_installation(running_service: Path) -> None:
     code, out = _run("sync", "conflicts", data_dir=running_service)
     assert code == 0 and "Your devices agree" in out
+
+
+def test_portable_write_and_inspect_round_trip(running_service: Path, tmp_path: Path) -> None:
+    target = tmp_path / "carried"
+    code, out = _run("portable", "write", "--to", str(target), data_dir=running_service)
+    assert code == 0, out
+    written = target.with_suffix(".myai")
+    assert written.is_file()
+    text = _unwrapped(out)
+    assert "not encrypted" in text
+    assert "Credentials are never included" in text
+
+    code, out = _run("portable", "inspect", str(written), data_dir=running_service)
+    assert code == 0 and "not encrypted" in out
+
+    code, out = _run("portable", "preview", str(written), data_dir=running_service)
+    assert code == 0
+    assert "REPLACE" in _unwrapped(out)
+
+
+def test_portable_inspect_rejects_something_that_is_not_a_package(
+    running_service: Path, tmp_path: Path
+) -> None:
+    stranger = tmp_path / "holiday-photos.myai"
+    stranger.write_bytes(b"definitely not a zip")
+    code, out = _run("portable", "inspect", str(stranger), data_dir=running_service)
+    assert code == 1 and "not a MyAI package" in out

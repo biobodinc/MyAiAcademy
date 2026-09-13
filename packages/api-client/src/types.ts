@@ -66,6 +66,19 @@ export type ExportResult = Schemas["ExportResult"];
 export type EraseRequest = Schemas["EraseRequest"];
 export type ErasePlan = Schemas["ErasePlan"];
 export type EraseResult = Schemas["EraseResult"];
+
+// Phase 7: sync between the user's own devices.
+export type SyncOverview = Schemas["SyncOverview"];
+export type SyncConflict = Schemas["ConflictRead"];
+
+// Phase 8: the portable `.myai` package.
+export type PackageRequest = Schemas["PackageRequest"];
+export type PackageWritten = Schemas["PackageWritten"];
+export type PreviewRequest = Schemas["PreviewRequest"];
+export type ImportPreviewRead = Schemas["ImportPreviewRead"];
+export type RestoreRequest = Schemas["RestoreRequest"];
+export type ImportDone = Schemas["ImportDone"];
+export type CapabilityRead = Schemas["CapabilityRead"];
 export type DegreeStatus = Schemas["DegreeStatus"];
 export type AchievementStatus = Schemas["AchievementStatus"];
 export type SkillPackageInfo = Schemas["SkillPackageInfo"];

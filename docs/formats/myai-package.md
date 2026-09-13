@@ -1,34 +1,65 @@
-# The `.myai` portable package format (draft, Phase 8)
+# The `.myai` portable package format
 
-Status: **design draft**. Nothing in Phase 1 reads or writes this format. It is documented
-now because the storage layout created in Phase 1 is intentionally the same shape, so
-export becomes "copy plus manifest" rather than a migration.
+Status: **implemented** (Phase 8). `myai_core.portable` writes and reads this; the tests in
+`packages/myai-core/tests/test_portable.py` are the specification in executable form.
 
 ## Goals
 
-- A user can carry their AI (identity, personality, skills, memory, knowledge, adapters,
-  checkpoints, projects) to another compatible machine or keep it as a backup (spec §23–§27).
+- A user can carry their AI (identity, personality, skills, memory, conversations,
+  knowledge) to another machine, or keep it as a backup (spec §23–§27).
 - The format is documented enough for the owner to understand what is inside.
 - Integrity is verifiable; encryption is optional and strong.
-- The reference implementation is the official app; third-party editing is discouraged.
+- A package that has been damaged is refused, not partly applied.
 
 ## Layout
 
+A `.myai` file is a ZIP archive:
+
 ```
-<name>.myai/                 (a directory; optionally packed as a single archive)
-├── manifest.myai            JSON, UTF-8
-├── identity/                ai_id, name, personality, preferences
-├── model/                   base model references and any locally permitted weights
-├── skills/                  per-skill packages, levels, evaluation records
-├── memory/
-├── knowledge/
-├── training/
-├── checkpoints/
-├── projects/
-└── settings/
+<name>.myai
+├── myai.json                        plain: format version and how the package is locked
+├── manifest.myai                    the manifest (encrypted when a password is set)
+├── identity/profile.json
+├── skills/state.json
+├── memory/memories.json
+├── conversations/conversations.json
+├── conversations/messages.json
+├── knowledge/documents.json         metadata; the files themselves are not carried yet
+├── settings/preferences.json
+└── models/models.json               references, never weights
 ```
 
-## `manifest.myai`
+### `myai.json` — the only plaintext
+
+```json
+{
+  "format": "myai-package",
+  "format_version": 1,
+  "encryption": {
+    "enabled": true,
+    "cipher": "aes-256-gcm",
+    "kdf": {
+      "algorithm": "argon2id",
+      "salt": "…",
+      "memory_kib": 262144,
+      "iterations": 3,
+      "lanes": 4
+    }
+  },
+  "manifest_sha256": null
+}
+```
+
+**This differs from the Phase 1 draft, deliberately.** The draft kept the whole manifest in
+the clear and signed it. That would tell anyone who found the drive the AI's name, every
+skill it has and how good it is at each — which is most of what a person would want to keep
+private about it. Only what is needed to _attempt_ opening the file stays outside the
+encryption, and none of it says anything about the owner.
+
+`manifest_sha256` is present only for an unencrypted package; when locked, the AEAD tag is
+the stronger check and a separate digest would add nothing.
+
+### `manifest.myai`
 
 ```json
 {
@@ -36,38 +67,75 @@ export becomes "copy plus manifest" rather than a migration.
   "ai": { "id": "myai_01H…", "name": "Nova", "created_at": "…" },
   "exported_at": "…",
   "exported_by": { "app_version": "0.1.0", "device_id": "dev_…" },
-  "models": [{ "id": "…", "license": "…", "included": false, "size_bytes": 0 }],
-  "skills": [{ "id": "coding", "level": 12, "last_evaluation": "…" }],
-  "requirements": { "min_ram_bytes": 0, "min_vram_bytes": 0, "backends": ["cuda"] },
-  "encryption": { "enabled": false },
+  "models": [{ "id": "…", "license": "…", "included": false, "size_bytes": 0, "reason": "…" }],
+  "skills": [{ "id": "coding", "level": 12, "status": "learned" }],
+  "requirements": { "min_ram_bytes": 0, "backends": ["cpu"] },
+  "counts": { "memory/memories.json": 14 },
   "integrity": { "algorithm": "sha256", "files": { "identity/profile.json": "…" } }
 }
 ```
 
 ## Integrity
 
-Every file is listed with a SHA-256 digest. The manifest itself is signed with a key
-derived from the package password when encryption is enabled; otherwise a detached
-digest of the manifest is stored alongside it.
+Every entry is listed with the SHA-256 of **the bytes stored in the archive** — after
+encryption, not before. That ordering matters: a package corrupted on a drive is detected
+without needing the password, so "this file has rotted" and "you typed the wrong password"
+are different messages.
 
-## Encryption (when enabled)
+`open_package` verifies the whole archive before returning, and refuses:
 
-- Key derivation: Argon2id with parameters recorded in the manifest.
-- Content encryption: XChaCha20-Poly1305 (or AES-256-GCM where hardware acceleration
-  dictates), per-file, with the file path bound as associated data.
-- Libraries: audited implementations only (`cryptography` / libsodium). No custom
-  cryptography.
-- The password is never stored. Hardware-backed key storage is used where available to
-  cache an unlocked key for the session.
+- an entry whose digest does not match;
+- an entry listed in the manifest but missing from the archive;
+- an entry present in the archive that the manifest does not list — an archive assembled by
+  something other than this program is not opened.
 
-## Compatibility checks on import (spec §77)
+## Encryption (when a password is set)
 
-The importer compares `requirements` and each model's backend needs with the local
-hardware report and presents a per-capability verdict (Supported / Stored but cannot run
-here / Missing). Unsupported models are never executed.
+- **Key derivation: Argon2id**, parameters recorded in the header so a package written today
+  still opens when the defaults are raised. A password is short and human, so the defence
+  against offline guessing has to be memory-hard; PBKDF2 and scrypt at ordinary settings are
+  far cheaper to attack with a GPU.
+- **Content: AES-256-GCM**, one nonce per entry, prepended. GCM authenticates as well as
+  encrypts, so an altered package fails to open rather than opening subtly wrong.
+- **The entry's path is bound in as associated data.** A file cannot be swapped for another
+  from the same package: `memory/memories.json` will not decrypt in the place of
+  `identity/profile.json` even though both were sealed with the same key.
+- The password is never stored, and the derived key is never written anywhere.
 
-## Licensing
+## What is deliberately not in a package
 
-Model files are only included when their licence permits redistribution to the same
-user; otherwise the manifest records a reference and the importer re-downloads with the
-licence shown.
+- **Credentials.** The installation token and every paired device's key are access grants,
+  not data. A package containing them would be a key left under the mat.
+- **Model weights.** Large, publicly downloadable, and their licences generally do not permit
+  passing them on. The manifest records what to fetch and the importer re-downloads with the
+  licence shown.
+- **Knowledge file contents.** Only document metadata travels today. Carrying the files needs
+  a size budget and a story for large archives, and is not done.
+- **Sync state.** A restored installation gets a _new_ sync identity — see below.
+
+## Import
+
+`preview_import` reports a verdict per capability against the local hardware report, and
+says it before anything is changed:
+
+| Verdict       | Meaning                                                                           |
+| ------------- | --------------------------------------------------------------------------------- |
+| `supported`   | Works here. Records — memories, conversations, levels — always do.                |
+| `stored_only` | Comes across, but will not run on this machine (e.g. a model larger than memory). |
+| `missing`     | Referenced but not present; it is downloaded again, with its licence shown.       |
+
+Importing **replaces** the AI on this machine. Restoring a backup and merging two machines
+are different operations with different right answers, and quietly doing the second when the
+user asked for the first would lose the thing they were restoring. The API requires the
+phrase `REPLACE MY AI` typed exactly, as the Privacy Center's erase does.
+
+### A restored installation is a new device
+
+This closes the gap ADR-0016 recorded. A sync identity is a counter plus an id, and peers
+remember how far through that counter they have read. A database restored from a backup has
+a _lower_ counter than its peers remember, so every change it went on to make would be
+silently skipped — exactly the class of failure sync is built to avoid.
+
+So an import clears the sync identity, the peer cursors, the tombstones and the conflict
+records, and a fresh identity is generated. The restored copy looks like a new device to the
+others, because that is what it is, and it has to be paired with them again.

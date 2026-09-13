@@ -658,6 +658,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Write
+         * @description Write a `.myai` package of this AI.
+         */
+        post: operations["write_api_portable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portable/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore
+         * @description Replace this installation's AI with the one in a package.
+         */
+        post: operations["restore_api_portable_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portable/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inspect
+         * @description Whether a file is a package at all, and whether it needs a password. No password used.
+         */
+        get: operations["inspect_api_portable_inspect_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portable/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview
+         * @description Read a package and say what importing it would do. Nothing is changed.
+         */
+        post: operations["preview_api_portable_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/preferences": {
         parameters: {
             query?: never;
@@ -1463,6 +1543,14 @@ export interface components {
              */
             ran_at: string;
         };
+        /** CapabilityRead */
+        CapabilityRead: {
+            /** Detail */
+            detail: string;
+            /** Name */
+            name: string;
+            verdict: components["schemas"]["Verdict"];
+        };
         /** CatalogModel */
         CatalogModel: {
             /** Approx Size Bytes */
@@ -2103,6 +2191,51 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** ImportDone */
+        ImportDone: {
+            /** Capabilities */
+            capabilities: components["schemas"]["CapabilityRead"][];
+            /** New Install Id */
+            new_install_id: string;
+            /** Notes */
+            notes: string[];
+            /** Rows Written */
+            rows_written: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ImportPreviewRead
+         * @description What a package holds, and what of it will work here.
+         */
+        ImportPreviewRead: {
+            /** Ai Name */
+            ai_name: string;
+            /** Capabilities */
+            capabilities: components["schemas"]["CapabilityRead"][];
+            /**
+             * Confirmation Phrase
+             * @default REPLACE MY AI
+             */
+            confirmation_phrase: string;
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Encrypted */
+            encrypted: boolean;
+            /** Exported At */
+            exported_at: string | null;
+            /** Exported By */
+            exported_by: string;
+            /**
+             * Replaces Ai
+             * @description The AI on this machine that importing would replace.
+             */
+            replaces_ai: string | null;
+            /** Warnings */
+            warnings: string[];
+        };
         /** ImportRequest */
         ImportRequest: {
             /** Name */
@@ -2258,6 +2391,34 @@ export interface components {
          * @enum {string}
          */
         LevelBand: "unlearned" | "beginner" | "developing" | "capable" | "advanced" | "expert";
+        /** ManifestRead */
+        ManifestRead: {
+            /** Ai Name */
+            ai_name: string;
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /** Encrypted */
+            encrypted: boolean;
+            /**
+             * Exported At
+             * Format: date-time
+             */
+            exported_at: string;
+            /** Exported By */
+            exported_by: string;
+            /** Format Version */
+            format_version: number;
+            /** Models */
+            models: {
+                [key: string]: unknown;
+            }[];
+            /** Skills */
+            skills: {
+                [key: string]: unknown;
+            }[];
+        };
         /**
          * MemoryCategory
          * @enum {string}
@@ -2539,6 +2700,33 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** PackageRequest */
+        PackageRequest: {
+            /**
+             * Destination
+             * @description Where to write it. Blank uses the cache.
+             * @default
+             */
+            destination: string;
+            /**
+             * Password
+             * @description Locks the package. Without one, anyone who finds the file can read it.
+             * @default
+             */
+            password: string;
+        };
+        /** PackageWritten */
+        PackageWritten: {
+            /** Encrypted */
+            encrypted: boolean;
+            manifest: components["schemas"]["ManifestRead"];
+            /** Notes */
+            notes: string[];
+            /** Path */
+            path: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
         /**
          * PairingCodeRead
          * @description A pairing code, returned once, with the moment it stops working.
@@ -2731,6 +2919,16 @@ export interface components {
             /** Time Limit Minutes */
             time_limit_minutes?: number | null;
         };
+        /** PreviewRequest */
+        PreviewRequest: {
+            /**
+             * Password
+             * @default
+             */
+            password: string;
+            /** Path */
+            path: string;
+        };
         /**
          * PrivacyMode
          * @description Only ``private`` exists. Contributor mode (spec §9) is an additional opt-in flag,
@@ -2916,6 +3114,21 @@ export interface components {
             kind: string;
             /** Name */
             name: string;
+        };
+        /** RestoreRequest */
+        RestoreRequest: {
+            /**
+             * Confirm
+             * @description Must be exactly 'REPLACE MY AI'.
+             */
+            confirm: string;
+            /**
+             * Password
+             * @default
+             */
+            password: string;
+            /** Path */
+            path: string;
         };
         /** RetrievedChunk */
         RetrievedChunk: {
@@ -3489,6 +3702,11 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * Verdict
+         * @enum {string}
+         */
+        Verdict: "supported" | "stored_only" | "missing";
     };
     responses: never;
     parameters: never;
@@ -3504,6 +3722,7 @@ export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
 export type SchemaAvailability = components['schemas']['Availability'];
 export type SchemaBatteryMetrics = components['schemas']['BatteryMetrics'];
 export type SchemaBenchmarkResult = components['schemas']['BenchmarkResult'];
+export type SchemaCapabilityRead = components['schemas']['CapabilityRead'];
 export type SchemaCatalogModel = components['schemas']['CatalogModel'];
 export type SchemaCategoryOverrideRequest = components['schemas']['CategoryOverrideRequest'];
 export type SchemaCategoryUsage = components['schemas']['CategoryUsage'];
@@ -3548,6 +3767,8 @@ export type SchemaHardwareFit = components['schemas']['HardwareFit'];
 export type SchemaHardwareReport = components['schemas']['HardwareReport'];
 export type SchemaHardwareTier = components['schemas']['HardwareTier'];
 export type SchemaHttpValidationError = components['schemas']['HTTPValidationError'];
+export type SchemaImportDone = components['schemas']['ImportDone'];
+export type SchemaImportPreviewRead = components['schemas']['ImportPreviewRead'];
 export type SchemaImportRequest = components['schemas']['ImportRequest'];
 export type SchemaInferenceBenchmark = components['schemas']['InferenceBenchmark'];
 export type SchemaIssuedCredential = components['schemas']['IssuedCredential'];
@@ -3556,6 +3777,7 @@ export type SchemaJobSummary = components['schemas']['JobSummary'];
 export type SchemaKnowledgeOverview = components['schemas']['KnowledgeOverview'];
 export type SchemaLearnPreview = components['schemas']['LearnPreview'];
 export type SchemaLevelBand = components['schemas']['LevelBand'];
+export type SchemaManifestRead = components['schemas']['ManifestRead'];
 export type SchemaMemoryCategory = components['schemas']['MemoryCategory'];
 export type SchemaMemoryCreate = components['schemas']['MemoryCreate'];
 export type SchemaMemoryInfo = components['schemas']['MemoryInfo'];
@@ -3572,6 +3794,8 @@ export type SchemaNetworkAccessRequest = components['schemas']['NetworkAccessReq
 export type SchemaOnboardingStep = components['schemas']['OnboardingStep'];
 export type SchemaOsInfo = components['schemas']['OsInfo'];
 export type SchemaPackageInfo = components['schemas']['PackageInfo'];
+export type SchemaPackageRequest = components['schemas']['PackageRequest'];
+export type SchemaPackageWritten = components['schemas']['PackageWritten'];
 export type SchemaPairingCodeRead = components['schemas']['PairingCodeRead'];
 export type SchemaPairingCodeRequest = components['schemas']['PairingCodeRequest'];
 export type SchemaPairingInvite = components['schemas']['PairingInvite'];
@@ -3580,6 +3804,7 @@ export type SchemaParsedCommand = components['schemas']['ParsedCommand'];
 export type SchemaPeerRead = components['schemas']['PeerRead'];
 export type SchemaPreferences = components['schemas']['Preferences'];
 export type SchemaPreferencesUpdate = components['schemas']['PreferencesUpdate'];
+export type SchemaPreviewRequest = components['schemas']['PreviewRequest'];
 export type SchemaPrivacyMode = components['schemas']['PrivacyMode'];
 export type SchemaPrivacySummary = components['schemas']['PrivacySummary'];
 export type SchemaProfileCreate = components['schemas']['ProfileCreate'];
@@ -3589,6 +3814,7 @@ export type SchemaProviderInfo = components['schemas']['ProviderInfo'];
 export type SchemaPushRequest = components['schemas']['PushRequest'];
 export type SchemaPushResult = components['schemas']['PushResult'];
 export type SchemaRegisterClient = components['schemas']['RegisterClient'];
+export type SchemaRestoreRequest = components['schemas']['RestoreRequest'];
 export type SchemaRetrievedChunk = components['schemas']['RetrievedChunk'];
 export type SchemaRevokeRequest = components['schemas']['RevokeRequest'];
 export type SchemaSecretStorageReport = components['schemas']['SecretStorageReport'];
@@ -3616,6 +3842,7 @@ export type SchemaTrainRequest = components['schemas']['TrainRequest'];
 export type SchemaTrainRoundRead = components['schemas']['TrainRoundRead'];
 export type SchemaTrainTarget = components['schemas']['TrainTarget'];
 export type SchemaValidationError = components['schemas']['ValidationError'];
+export type SchemaVerdict = components['schemas']['Verdict'];
 export type $defs = Record<string, never>;
 export interface operations {
     read_audit_api_audit_get: {
@@ -4847,6 +5074,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ModelsOverview"];
+                };
+            };
+        };
+    };
+    write_api_portable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PackageWritten"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_api_portable_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDone"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inspect_api_portable_inspect_get: {
+        parameters: {
+            query: {
+                path: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_portable_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreviewRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
