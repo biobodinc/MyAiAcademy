@@ -206,3 +206,29 @@ def test_network_access_is_off_and_says_so(running_service: Path) -> None:
     # Nothing can be invited while nothing can reach the machine.
     code, out = _run("security", "invite", data_dir=running_service)
     assert code == 1 and "Turn on network access first" in out
+
+
+def _unwrapped(out: str) -> str:
+    """Rich wraps inside a panel and draws borders, so text is matched without either."""
+    stripped = "".join(ch for ch in out if ch not in "│╭╮╰╯─")
+    return " ".join(stripped.split())
+
+
+def test_sync_says_what_travels_and_what_never_does(running_service: Path) -> None:
+    code, out = _run("sync", "status", data_dir=running_service)
+    assert code == 0
+    text = _unwrapped(out)
+    assert "nothing is uploaded anywhere" in text
+    assert "No other device has synced with this one yet" in text
+    assert "Travels between your devices" in text and "memory" in text
+
+    code, out = _run("sync", "stays-local", data_dir=running_service)
+    assert code == 0
+    # The exclusion that matters most, with its reason attached rather than just a list.
+    listed = _unwrapped(out)
+    assert "devices" in listed and "revoking it meaningless" in listed
+
+
+def test_sync_reports_no_conflicts_on_a_lone_installation(running_service: Path) -> None:
+    code, out = _run("sync", "conflicts", data_dir=running_service)
+    assert code == 0 and "Your devices agree" in out

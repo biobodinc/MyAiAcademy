@@ -30,6 +30,10 @@ jobs_app = typer.Typer(help="Background jobs: learning and benchmark runs.", no_
 security_app = typer.Typer(
     help="Who may act as your AI, and taking your data out.", no_args_is_help=True
 )
+sync_app = typer.Typer(
+    help="Keeping your own devices in step, and what never leaves this one.",
+    no_args_is_help=True,
+)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
 app.add_typer(settings_app, name="settings")
@@ -38,6 +42,7 @@ app.add_typer(models_app, name="models")
 app.add_typer(memory_app, name="memory")
 app.add_typer(knowledge_app, name="knowledge")
 app.add_typer(security_app, name="security")
+app.add_typer(sync_app, name="sync")
 app.command(name="chat")(chat)
 
 console = Console()
@@ -1058,6 +1063,75 @@ def security_erase(
     )
     for note in data["notes"]:
         console.print(f"  • {note}")
+
+
+@sync_app.command("status")
+def sync_status(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """What syncing is, which of your devices are in it, and what never leaves."""
+    data = _call(_service(data_dir).get, "/sync")
+    if as_json:
+        return _emit_json(data)
+
+    lines = [data["detail"], "", f"This installation: {data['install_id']}"]
+    if data["peers"]:
+        lines.append("")
+        lines.append("Your other devices:")
+        for peer in data["peers"]:
+            seen = peer["last_synced_at"] or "never"
+            lines.append(f"  • {peer['name']} — last synced {seen}")
+    else:
+        lines += ["", "No other device has synced with this one yet."]
+    if data["unresolved_conflicts"]:
+        lines += [
+            "",
+            f"{data['unresolved_conflicts']} change(s) were replaced by another device. "
+            "`myai sync conflicts` shows what was overwritten; nothing was thrown away.",
+        ]
+    lines += ["", "Travels between your devices: " + ", ".join(k["name"] for k in data["syncs"])]
+    lines.append(f"Never leaves this machine: {len(data['stays_local'])} kinds of record.")
+    console.print(Panel("\n".join(lines), title="Sync"))
+
+
+@sync_app.command("stays-local")
+def sync_stays_local(data_dir: DataDirOpt = None, as_json: JsonOpt = False) -> None:
+    """Everything that never leaves this machine, and why not."""
+    data = _call(_service(data_dir).get, "/sync")["stays_local"]
+    if as_json:
+        return _emit_json(data)
+    table = Table("Record", "Why it stays here")
+    for name, reason in sorted(data.items()):
+        table.add_row(name, reason)
+    console.print(table)
+
+
+@sync_app.command("conflicts")
+def sync_conflicts(
+    all_of_them: Annotated[
+        bool, typer.Option("--all", help="Include ones you have already looked at.")
+    ] = False,
+    data_dir: DataDirOpt = None,
+    as_json: JsonOpt = False,
+) -> None:
+    """Changes that two devices made at once. The version that lost is kept, not deleted."""
+    data = _call(_service(data_dir).get, "/sync/conflicts", include_resolved=all_of_them)
+    if as_json:
+        return _emit_json(data)
+    if not data:
+        console.print("No conflicts. Your devices agree.")
+        return
+    table = Table("id", "What", "Kept", "What was replaced")
+    for row in data:
+        replaced = row["losing_payload"].get("title") or row["losing_payload"].get("content") or ""
+        table.add_row(str(row["id"]), f"{row['entity']} {row['uid'][:12]}", row["kept"], replaced)
+    console.print(table)
+    console.print("`myai sync dismiss <id>` marks one as seen. The record is kept either way.")
+
+
+@sync_app.command("dismiss")
+def sync_dismiss(conflict_id: int, data_dir: DataDirOpt = None) -> None:
+    """Stop showing a conflict. It stays in the record."""
+    _call(_service(data_dir).post, f"/sync/conflicts/{conflict_id}/dismiss", {})
+    console.print(f"Conflict {conflict_id} marked as seen. It is still in the record.")
 
 
 def entrypoint() -> None:

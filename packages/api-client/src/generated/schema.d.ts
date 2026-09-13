@@ -1265,6 +1265,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Overview */
+        get: operations["read_overview_api_sync_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Changes
+         * @description Everything this installation has changed after `since`, oldest first.
+         */
+        get: operations["read_changes_api_sync_changes_get"];
+        put?: never;
+        /**
+         * Write Changes
+         * @description Accept a batch from another of the user's installations.
+         */
+        post: operations["write_changes_api_sync_changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Conflicts
+         * @description What was overwritten when two devices changed the same thing. Nothing is thrown away.
+         */
+        get: operations["list_conflicts_api_sync_conflicts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sync/conflicts/{conflict_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dismiss Conflict
+         * @description Mark a conflict as seen. The record stays; only the prompt goes away.
+         */
+        post: operations["dismiss_conflict_api_sync_conflicts__conflict_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1441,6 +1522,28 @@ export interface components {
              */
             protected: boolean;
         };
+        /**
+         * ChangeBatch
+         * @description A page of changes, and the cursor to ask with next time.
+         */
+        ChangeBatch: {
+            /** Changes */
+            changes: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Cursor
+             * @description Pass this back as `since` to continue where this ended.
+             */
+            cursor: number;
+            /** Install Id */
+            install_id: string;
+            /**
+             * More
+             * @description True when the batch was truncated and another is waiting.
+             */
+            more: boolean;
+        };
         /** CleanupCandidate */
         CleanupCandidate: {
             category: components["schemas"]["StorageCategory"];
@@ -1533,6 +1636,34 @@ export interface components {
          * @enum {string}
          */
         ComputePreset: "low" | "balanced" | "high" | "maximum";
+        /** ConflictRead */
+        ConflictRead: {
+            /**
+             * Detected At
+             * Format: date-time
+             */
+            detected_at: string;
+            /** Entity */
+            entity: string;
+            /** Id */
+            id: number;
+            /** Kept */
+            kept: string;
+            /** Losing Origin */
+            losing_origin: string | null;
+            /** Losing Payload */
+            losing_payload: {
+                [key: string]: unknown;
+            };
+            /** Losing Updated At */
+            losing_updated_at: string | null;
+            /** Losing Version */
+            losing_version: number;
+            /** Resolved At */
+            resolved_at: string | null;
+            /** Uid */
+            uid: string;
+        };
         /** ConversationCreate */
         ConversationCreate: {
             /** Title */
@@ -2513,6 +2644,21 @@ export interface components {
             skill_text: string | null;
             train: components["schemas"]["TrainTarget"] | null;
         };
+        /** PeerRead */
+        PeerRead: {
+            /** Device Id */
+            device_id: string | null;
+            /** Last Synced At */
+            last_synced_at: string | null;
+            /** Name */
+            name: string;
+            /** Peer Install Id */
+            peer_install_id: string;
+            /** Received Through */
+            received_through: number;
+            /** Sent Through */
+            sent_through: number;
+        };
         /** Preferences */
         Preferences: {
             /**
@@ -2729,6 +2875,36 @@ export interface components {
              * @enum {string}
              */
             status: "available" | "unavailable" | "planned";
+        };
+        /** PushRequest */
+        PushRequest: {
+            /** Changes */
+            changes?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Install Id
+             * @description Who these changes are from.
+             */
+            install_id: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+        };
+        /** PushResult */
+        PushResult: {
+            /** Applied */
+            applied: number;
+            /** Conflicts */
+            conflicts: number;
+            /** Detail */
+            detail: string;
+            /** Received Through */
+            received_through: number;
+            /** Skipped */
+            skipped: number;
         };
         /** RegisterClient */
         RegisterClient: {
@@ -3042,6 +3218,44 @@ export interface components {
             /** Total Bytes */
             total_bytes: number | null;
         };
+        /** SyncedKind */
+        SyncedKind: {
+            /** Name */
+            name: string;
+            /**
+             * Travels
+             * @description The columns that leave this machine.
+             */
+            travels: string[];
+        };
+        /**
+         * SyncOverview
+         * @description What syncing is, and what this installation has done so far.
+         */
+        SyncOverview: {
+            /** Detail */
+            detail: string;
+            /** Install Id */
+            install_id: string;
+            /**
+             * Next Seq
+             * @description This installation's logical clock.
+             */
+            next_seq: number;
+            /** Peers */
+            peers: components["schemas"]["PeerRead"][];
+            /**
+             * Stays Local
+             * @description Every table that never leaves, and why not.
+             */
+            stays_local: {
+                [key: string]: string;
+            };
+            /** Syncs */
+            syncs: components["schemas"]["SyncedKind"][];
+            /** Unresolved Conflicts */
+            unresolved_conflicts: number;
+        };
         /** SystemMetrics */
         SystemMetrics: {
             battery: components["schemas"]["BatteryMetrics"] | null;
@@ -3293,6 +3507,7 @@ export type SchemaBenchmarkResult = components['schemas']['BenchmarkResult'];
 export type SchemaCatalogModel = components['schemas']['CatalogModel'];
 export type SchemaCategoryOverrideRequest = components['schemas']['CategoryOverrideRequest'];
 export type SchemaCategoryUsage = components['schemas']['CategoryUsage'];
+export type SchemaChangeBatch = components['schemas']['ChangeBatch'];
 export type SchemaCleanupCandidate = components['schemas']['CleanupCandidate'];
 export type SchemaCleanupKind = components['schemas']['CleanupKind'];
 export type SchemaCleanupPlan = components['schemas']['CleanupPlan'];
@@ -3303,6 +3518,7 @@ export type SchemaCommandOutcome = components['schemas']['CommandOutcome'];
 export type SchemaCommandRequest = components['schemas']['CommandRequest'];
 export type SchemaCommandResult = components['schemas']['CommandResult'];
 export type SchemaComputePreset = components['schemas']['ComputePreset'];
+export type SchemaConflictRead = components['schemas']['ConflictRead'];
 export type SchemaConversationCreate = components['schemas']['ConversationCreate'];
 export type SchemaConversationRead = components['schemas']['ConversationRead'];
 export type SchemaConversationUpdate = components['schemas']['ConversationUpdate'];
@@ -3361,6 +3577,7 @@ export type SchemaPairingCodeRequest = components['schemas']['PairingCodeRequest
 export type SchemaPairingInvite = components['schemas']['PairingInvite'];
 export type SchemaPairRequest = components['schemas']['PairRequest'];
 export type SchemaParsedCommand = components['schemas']['ParsedCommand'];
+export type SchemaPeerRead = components['schemas']['PeerRead'];
 export type SchemaPreferences = components['schemas']['Preferences'];
 export type SchemaPreferencesUpdate = components['schemas']['PreferencesUpdate'];
 export type SchemaPrivacyMode = components['schemas']['PrivacyMode'];
@@ -3369,6 +3586,8 @@ export type SchemaProfileCreate = components['schemas']['ProfileCreate'];
 export type SchemaProfileRead = components['schemas']['ProfileRead'];
 export type SchemaProfileUpdate = components['schemas']['ProfileUpdate'];
 export type SchemaProviderInfo = components['schemas']['ProviderInfo'];
+export type SchemaPushRequest = components['schemas']['PushRequest'];
+export type SchemaPushResult = components['schemas']['PushResult'];
 export type SchemaRegisterClient = components['schemas']['RegisterClient'];
 export type SchemaRetrievedChunk = components['schemas']['RetrievedChunk'];
 export type SchemaRevokeRequest = components['schemas']['RevokeRequest'];
@@ -3386,6 +3605,8 @@ export type SchemaStorageLocationCheck = components['schemas']['StorageLocationC
 export type SchemaStorageOverview = components['schemas']['StorageOverview'];
 export type SchemaStorageSetupRequest = components['schemas']['StorageSetupRequest'];
 export type SchemaStorageVolume = components['schemas']['StorageVolume'];
+export type SchemaSyncedKind = components['schemas']['SyncedKind'];
+export type SchemaSyncOverview = components['schemas']['SyncOverview'];
 export type SchemaSystemMetrics = components['schemas']['SystemMetrics'];
 export type SchemaTheme = components['schemas']['Theme'];
 export type SchemaTierEstimate = components['schemas']['TierEstimate'];
@@ -5672,6 +5893,154 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorageOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_overview_api_sync_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncOverview"];
+                };
+            };
+        };
+    };
+    read_changes_api_sync_changes_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description The last number you already have. */
+                since?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeBatch"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_changes_api_sync_changes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_conflicts_api_sync_conflicts_get: {
+        parameters: {
+            query?: {
+                include_resolved?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConflictRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_conflict_api_sync_conflicts__conflict_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conflict_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConflictRead"];
                 };
             };
             /** @description Validation Error */

@@ -46,6 +46,10 @@ from myai_core.db.models import (
     PairingCode,
     SkillEvaluation,
     SkillState,
+    SyncConflict,
+    SyncIdentity,
+    SyncPeer,
+    SyncTombstone,
     TrainingRun,
 )
 from myai_core.paths import AppPaths
@@ -116,6 +120,13 @@ class EraseResult(ApiModel):
 
 # Tables whose contents are the user's data, in the order they are safe to delete.
 _ERASABLE = (
+    # Sync first. `sync_conflicts` holds whole copies of rows that were overwritten — the
+    # text of a memory, the title of a conversation — so an erase that skipped it would
+    # leave the user's words behind in the one table nobody thinks to look in.
+    ("sync_conflicts", SyncConflict),
+    ("sync_tombstones", SyncTombstone),
+    ("sync_peers", SyncPeer),
+    ("sync_identity", SyncIdentity),
     ("messages", Message),
     ("conversations", Conversation),
     ("memories", Memory),
