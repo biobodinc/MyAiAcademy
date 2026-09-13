@@ -65,6 +65,14 @@ class NetworkAccess(ApiModel):
     certificate_fingerprint_groups: str | None = Field(
         default=None, description="The same fingerprint in readable groups, to compare by eye."
     )
+    public_key_pin: str | None = Field(
+        default=None,
+        description=(
+            "The public key pin in the form every pinning library uses, 'sha256/<base64>'. "
+            "The fingerprint above identifies the certificate; this identifies the key inside "
+            "it, which is what Android's and iOS's pinning APIs actually check."
+        ),
+    )
     certificate_expires_at: datetime | None = None
     detail: str
 
@@ -85,6 +93,7 @@ class PairingInvite(ApiModel):
     port: int
     certificate_fingerprint: str
     certificate_fingerprint_groups: str
+    public_key_pin: str
     payload: str = Field(description="Compact JSON for a QR code; the same fields, encoded.")
     note: str
 
@@ -138,9 +147,9 @@ def read_overview(state: StateDep, session: SessionDep, caller: CallerDep) -> Se
         network=describe_network(state),
         account=AccountState(),
         notes=[
-            "The local API is bound to 127.0.0.1, so nothing on your network can reach it. "
-            "Pairing a client grants access to programs on this machine, not to other "
-            "machines; that arrives with the mobile app.",
+            "The local API is bound to 127.0.0.1. Nothing on your network can reach it "
+            "unless you turn on network access, which is off until you do and is recorded "
+            "in the audit log both ways.",
             "Credentials are stored as SHA-256 hashes. A credential is shown once when it "
             "is issued and cannot be recovered afterwards, only replaced.",
             "Only this installation's own token may issue or revoke access. A paired "
@@ -272,6 +281,9 @@ def create_pairing_invite(
         "addresses": addresses,
         "port": state.network.port,
         "fp": certificate.fingerprint_sha256,
+        # The key pin as OkHttp and TrustKit spell it. A device needs this one to configure
+        # a pinning library; the fingerprint above is the one a person compares on screen.
+        "spki": certificate.public_key_pin,
         "code": code.code,
         "exp": code.expires_at.isoformat(),
     }
@@ -284,6 +296,7 @@ def create_pairing_invite(
         port=state.network.port,
         certificate_fingerprint=certificate.fingerprint_sha256,
         certificate_fingerprint_groups=certificate.fingerprint_groups,
+        public_key_pin=certificate.public_key_pin,
         payload=json.dumps(payload, separators=(",", ":")),
         note=(
             "Scan this on the device you are pairing. It carries the certificate to trust as "
@@ -311,6 +324,7 @@ def describe_network(state: StateDep) -> NetworkAccess:
         addresses=local_addresses(),
         certificate_fingerprint=certificate.fingerprint_sha256,
         certificate_fingerprint_groups=certificate.fingerprint_groups,
+        public_key_pin=certificate.public_key_pin,
         certificate_expires_at=certificate.not_after,
         detail=(
             "On. Devices you have paired can reach this AI over HTTPS on this network. They "

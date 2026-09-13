@@ -2958,6 +2958,18 @@
               }
             ],
             "title": "Port"
+          },
+          "public_key_pin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The public key pin in the form every pinning library uses, 'sha256/<base64>'. The fingerprint above identifies the certificate; this identifies the key inside it, which is what Android's and iOS's pinning APIs actually check.",
+            "title": "Public Key Pin"
           }
         },
         "required": [
@@ -2967,6 +2979,7 @@
           "addresses",
           "certificate_fingerprint",
           "certificate_fingerprint_groups",
+          "public_key_pin",
           "certificate_expires_at",
           "detail"
         ],
@@ -3238,6 +3251,10 @@
           "port": {
             "title": "Port",
             "type": "integer"
+          },
+          "public_key_pin": {
+            "title": "Public Key Pin",
+            "type": "string"
           }
         },
         "required": [
@@ -3249,6 +3266,7 @@
           "port",
           "certificate_fingerprint",
           "certificate_fingerprint_groups",
+          "public_key_pin",
           "payload",
           "note"
         ],
