@@ -142,7 +142,7 @@ def test_learn_is_honest_without_a_model(running_service: Path) -> None:
     code, out = _run("learn", "science", "--yes", data_dir=running_service)  # locked by the tree
     assert code == 1 and "cannot be learned yet" in out and "Research" in out
     code, out = _run("learn", "video", "--yes", data_dir=running_service)
-    assert code == 1 and "no measurable benchmark" in out
+    assert code == 1 and "provider is installed" in _unwrapped(out)
     code, out = _run("history", data_dir=running_service)
     assert code == 0 and "No benchmark runs yet" in out
     code, out = _run("jobs", "list", data_dir=running_service)

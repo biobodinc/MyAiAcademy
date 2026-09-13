@@ -193,7 +193,11 @@ def test_learn_flow_end_to_end(client: TestClient, tmp_path: Path) -> None:
     assert client.post("/api/skills/science/learn").status_code == 409
     # Creative skills have no package and say so.
     video = client.get("/api/skills/video/learn-preview").json()
-    assert video["package"] is None and "no measurable benchmark" in video["blockers"][0]
+    # Video is not waiting on a benchmark, it is waiting on something that can make a
+    # video, and the blocker says so rather than naming a phase number (Phase 10).
+    assert video["package"] is None
+    assert "no video provider is installed" in video["blockers"][0].lower()
+    assert "online service" in video["blockers"][0]
     # Locked by the tree.
     science_locked = client.get("/api/skills/science").json()
     assert science_locked["locked"] and "Research" in science_locked["locked_reason"]

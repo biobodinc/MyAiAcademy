@@ -1,0 +1,110 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 220,
+  "tactics": [
+    "Count the bullets or words before replying, and adjust until the count matches the brief.",
+    "State a mechanic as verb, then the rule for when it is allowed, then the consequence.",
+    "When a question contains numbers, do the arithmetic and answer with the number alone.",
+    "Introduce one new demand per level, and give the player somewhere to practise it first.",
+    "Reply with the requested text only: no heading, no preamble, no quotation marks."
+  ],
+  "tasks": [
+    {
+      "id": "two-mechanics",
+      "area": "mechanics",
+      "prompt": "List exactly two mechanics for a game about tending a greenhouse. One per line, each starting with '- '. No heading, no commentary.",
+      "checks": [{ "type": "bullets", "expected": 2 }]
+    },
+    {
+      "id": "lose-condition-short",
+      "area": "mechanics",
+      "prompt": "State the lose condition of a game where the player keeps a fire burning through the night. Ten words or fewer. Output the condition only.",
+      "checks": [
+        { "type": "word_count", "max": 10 },
+        { "type": "contains_any", "terms": ["fire", "flame", "out", "dies"] }
+      ]
+    },
+    {
+      "id": "arrow-arithmetic",
+      "area": "mechanics",
+      "prompt": "An arrow does 7 damage. A target has 63 health and no armour. How many arrows are needed? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 9 }]
+    },
+    {
+      "id": "stamina-arithmetic",
+      "area": "mechanics",
+      "prompt": "The player has 20 stamina. A dash costs 4 and a jump costs 2. How much stamina remains after three dashes and two jumps? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 4 }]
+    },
+    {
+      "id": "core-verb",
+      "area": "mechanics",
+      "prompt": "Name the single core verb of a game about climbing a mountain. One word only.",
+      "checks": [
+        { "type": "word_count", "max": 1 },
+        { "type": "contains_any", "terms": ["climb", "climbing", "ascend", "ascending"] }
+      ]
+    },
+    {
+      "id": "spec-as-json-two",
+      "area": "mechanics",
+      "prompt": "Output a JSON object describing a game, with exactly the keys \"name\", \"genre\" and \"players\". Use the name Greenhouse, the genre simulation, and 2 players. All values as strings. Output the JSON and nothing else.",
+      "checks": [
+        {
+          "type": "json_object",
+          "expected": { "name": "Greenhouse", "genre": "simulation", "players": "2" }
+        }
+      ]
+    },
+    {
+      "id": "curve-three-levels",
+      "area": "level design",
+      "prompt": "Describe the difficulty curve of a three-level tutorial as exactly three bullets, one per level. One per line, each starting with '- '. No heading.",
+      "checks": [{ "type": "bullets", "expected": 3 }]
+    },
+    {
+      "id": "one-new-demand-two",
+      "area": "level design",
+      "prompt": "Level 1 teaches swimming. Level 2 should teach exactly one new thing. Name it in three words or fewer, and do not mention swimming.",
+      "checks": [
+        { "type": "word_count", "max": 3 },
+        { "type": "contains_none", "terms": ["swim", "swimming"] }
+      ]
+    },
+    {
+      "id": "practice-before-block",
+      "area": "level design",
+      "prompt": "Before a boss that requires blocking, what should the level immediately before it contain? One sentence of twenty words or fewer, using the word 'block' or 'blocking'.",
+      "checks": [
+        { "type": "word_count", "max": 20 },
+        { "type": "contains_any", "terms": ["block", "blocking"] }
+      ]
+    },
+    {
+      "id": "room-count-arithmetic",
+      "area": "level design",
+      "prompt": "A dungeon has 4 floors with 6 rooms each, plus 2 secret rooms per floor. How many rooms in total? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 32 }]
+    },
+    {
+      "id": "hook-greenhouse",
+      "area": "narrative",
+      "prompt": "Write a one-line hook for a game set in an overgrown greenhouse. Fifteen words or fewer, mentioning the greenhouse. Output the line only.",
+      "checks": [
+        { "type": "word_count", "max": 15 },
+        { "type": "line_count", "expected": 1 },
+        { "type": "contains_any", "terms": ["greenhouse"] }
+      ]
+    },
+    {
+      "id": "remove-the-word-amazing",
+      "area": "narrative",
+      "prompt": "Rewrite this so it says the same thing without the word 'amazing': 'An amazing game with amazing puzzles in an amazing garden.' Output the rewritten sentence only.",
+      "checks": [
+        { "type": "contains_none", "terms": ["amazing"] },
+        { "type": "contains_any", "terms": ["garden"] },
+        { "type": "word_count", "max": 25 }
+      ]
+    }
+  ]
+}

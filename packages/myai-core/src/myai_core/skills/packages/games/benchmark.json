@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "default_max_tokens": 220,
+  "tasks": [
+    {
+      "id": "three-mechanics",
+      "area": "mechanics",
+      "prompt": "List exactly three mechanics for a game about a lighthouse keeper. One per line, each starting with '- '. No heading, no commentary.",
+      "checks": [{ "type": "bullets", "expected": 3 }]
+    },
+    {
+      "id": "win-condition-short",
+      "area": "mechanics",
+      "prompt": "State the win condition of a game where the player must keep a lamp lit until dawn. Twelve words or fewer. Output the condition only.",
+      "checks": [
+        { "type": "word_count", "max": 12 },
+        { "type": "contains_any", "terms": ["dawn", "sunrise", "morning"] }
+      ]
+    },
+    {
+      "id": "damage-arithmetic",
+      "area": "mechanics",
+      "prompt": "A sword does 12 damage per hit. A boss has 96 health and no armour. How many hits are needed to defeat it? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 8 }]
+    },
+    {
+      "id": "lives-arithmetic",
+      "area": "mechanics",
+      "prompt": "The player starts with 3 lives, loses one per hit, and gains one life at each of 2 checkpoints they will reach. How many hits can they survive in total before game over? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 5 }]
+    },
+    {
+      "id": "mechanic-as-verb",
+      "area": "mechanics",
+      "prompt": "Name the single core verb of a game about rowing a boat between islands. One word only.",
+      "checks": [
+        { "type": "word_count", "max": 1 },
+        { "type": "contains_any", "terms": ["row", "rowing", "sail", "sailing", "paddle"] }
+      ]
+    },
+    {
+      "id": "spec-as-json",
+      "area": "mechanics",
+      "prompt": "Output a JSON object describing a game, with exactly the keys \"name\", \"genre\" and \"players\". Use the name Tidewatch, the genre puzzle, and 1 player. All values as strings. Output the JSON and nothing else.",
+      "checks": [
+        {
+          "type": "json_object",
+          "expected": { "name": "Tidewatch", "genre": "puzzle", "players": "1" }
+        }
+      ]
+    },
+    {
+      "id": "difficulty-curve",
+      "area": "level design",
+      "prompt": "Describe the difficulty curve of a four-level tutorial as exactly four bullets, one per level. One per line, each starting with '- '. No heading.",
+      "checks": [{ "type": "bullets", "expected": 4 }]
+    },
+    {
+      "id": "one-new-demand",
+      "area": "level design",
+      "prompt": "Level 1 teaches jumping. Level 2 should teach exactly one new thing. Name it in three words or fewer, and do not mention jumping.",
+      "checks": [
+        { "type": "word_count", "max": 3 },
+        { "type": "contains_none", "terms": ["jump", "jumping"] }
+      ]
+    },
+    {
+      "id": "safe-practice-room",
+      "area": "level design",
+      "prompt": "Before a boss that requires dodging, what should the level immediately before it contain? Answer in one sentence of twenty words or fewer, and use the word 'dodge' or 'dodging'.",
+      "checks": [
+        { "type": "word_count", "max": 20 },
+        { "type": "contains_any", "terms": ["dodge", "dodging"] }
+      ]
+    },
+    {
+      "id": "level-count-arithmetic",
+      "area": "level design",
+      "prompt": "A game has 5 worlds with 8 levels each, plus 1 boss level per world. How many levels are there in total? Answer with the number only.",
+      "checks": [{ "type": "numeric", "expected": 45 }]
+    },
+    {
+      "id": "narrative-hook",
+      "area": "narrative",
+      "prompt": "Write a one-line hook for a game set in an abandoned lighthouse. Fifteen words or fewer, mentioning the lighthouse. Output the line only.",
+      "checks": [
+        { "type": "word_count", "max": 15 },
+        { "type": "line_count", "expected": 1 },
+        { "type": "contains_any", "terms": ["lighthouse"] }
+      ]
+    },
+    {
+      "id": "remove-the-word-fun",
+      "area": "narrative",
+      "prompt": "Rewrite this so it says the same thing without the word 'fun': 'A fun game where you have fun repairing a fun little boat.' Output the rewritten sentence only.",
+      "checks": [
+        { "type": "contains_none", "terms": ["fun"] },
+        { "type": "contains_any", "terms": ["boat"] },
+        { "type": "word_count", "max": 25 }
+      ]
+    }
+  ]
+}

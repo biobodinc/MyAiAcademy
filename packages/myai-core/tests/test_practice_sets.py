@@ -91,6 +91,34 @@ REFERENCE_ANSWERS: dict[str, dict[str, str]] = {
         "not-stated-phone": "Not stated.",
         "order-years": "1962, 1985, 2009",
     },
+    "games": {
+        "two-mechanics": (
+            "- Water a plant: costs one canful, and the plant grows a stage\n"
+            "- Open a vent: allowed in daylight, and the greenhouse cools by five degrees"
+        ),
+        "lose-condition-short": "You lose when the fire goes out before sunrise.",
+        "arrow-arithmetic": "9",
+        "stamina-arithmetic": "4",
+        "core-verb": "Climb",
+        "spec-as-json-two": ('{"name": "Greenhouse", "genre": "simulation", "players": "2"}'),
+        "curve-three-levels": (
+            "- Level one teaches the basic move in a safe room\n"
+            "- Level two adds a single hazard to avoid\n"
+            "- Level three combines the move and the hazard under time pressure"
+        ),
+        "one-new-demand-two": "Diving underwater",
+        "practice-before-block": (
+            "A short corridor of slow enemies whose attacks the player can block without "
+            "risk of dying."
+        ),
+        "room-count-arithmetic": "32",
+        "hook-greenhouse": (
+            "The greenhouse has been growing without you, and something in it is waiting."
+        ),
+        "remove-the-word-amazing": (
+            "A remarkable game with inventive puzzles in a beautiful garden."
+        ),
+    },
     "coding": {
         "multiply-fn": "```python\ndef multiply(a, b):\n    return a * b\n```",
         "is-even": "```python\ndef is_even(n):\n    return n % 2 == 0\n```",
