@@ -299,6 +299,35 @@
         "title": "BenchmarkResult",
         "type": "object"
       },
+      "CapabilityInfoRead": {
+        "description": "One capability, described so the person granting it knows what they are agreeing to.",
+        "properties": {
+          "capability": {
+            "title": "Capability",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "sensitive": {
+            "title": "Sensitive",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capability",
+          "title",
+          "detail",
+          "sensitive"
+        ],
+        "title": "CapabilityInfoRead",
+        "type": "object"
+      },
       "CapabilityRead": {
         "properties": {
           "detail": {
@@ -1009,6 +1038,14 @@
       },
       "DeviceRead": {
         "properties": {
+          "capabilities": {
+            "description": "What this client may do. Empty means nothing.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -1081,7 +1118,8 @@
           "created_at",
           "last_seen_at",
           "revoked_at",
-          "revoked_reason"
+          "revoked_reason",
+          "capabilities"
         ],
         "title": "DeviceRead",
         "type": "object"
@@ -1792,6 +1830,23 @@
         ],
         "title": "GpuVendor",
         "type": "string"
+      },
+      "GrantRequest": {
+        "properties": {
+          "capabilities": {
+            "description": "The complete new set for this client. Anything omitted is taken away.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "capabilities"
+        ],
+        "title": "GrantRequest",
+        "type": "object"
       },
       "GuideAnswer": {
         "properties": {
@@ -3529,6 +3584,14 @@
       "PairingCodeRead": {
         "description": "A pairing code, returned once, with the moment it stops working.",
         "properties": {
+          "capabilities": {
+            "description": "What the client that redeems this will be allowed to do.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
           "code": {
             "title": "Code",
             "type": "string"
@@ -3557,6 +3620,7 @@
           "label",
           "expires_at",
           "expires_in_seconds",
+          "capabilities",
           "note"
         ],
         "title": "PairingCodeRead",
@@ -3564,10 +3628,24 @@
       },
       "PairingCodeRequest": {
         "properties": {
+          "capabilities": {
+            "description": "What the client redeeming this code will be allowed to do. The client cannot ask for more; whatever is approved here is what it gets. Empty means the default grant, which includes nothing you have written.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
           "label": {
             "default": "",
             "maxLength": 120,
             "title": "Label",
+            "type": "string"
+          },
+          "preset": {
+            "default": "",
+            "description": "'default', 'mobile' or 'full' instead of listing capabilities by hand.",
+            "title": "Preset",
             "type": "string"
           }
         },
@@ -4463,6 +4541,13 @@
       },
       "RegisterClient": {
         "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
           "kind": {
             "default": "integration",
             "description": "One of: desktop, cli, mobile, integration, unknown",
@@ -8344,6 +8429,32 @@
         ]
       }
     },
+    "/api/security/capabilities": {
+      "get": {
+        "description": "Everything a client can be granted, with what each one actually means.",
+        "operationId": "list_capabilities_api_security_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CapabilityInfoRead"
+                  },
+                  "title": "Response List Capabilities Api Security Capabilities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Capabilities",
+        "tags": [
+          "security"
+        ]
+      }
+    },
     "/api/security/devices": {
       "get": {
         "operationId": "list_devices_api_security_devices_get",
@@ -8404,6 +8515,59 @@
           }
         },
         "summary": "Register Device",
+        "tags": [
+          "security"
+        ]
+      }
+    },
+    "/api/security/devices/{device_id}/capabilities": {
+      "put": {
+        "description": "Replace what a client is allowed to do. Owner only, and narrowing takes effect at once.",
+        "operationId": "set_capabilities_api_security_devices__device_id__capabilities_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Capabilities",
         "tags": [
           "security"
         ]
@@ -8548,7 +8712,7 @@
     },
     "/api/security/pairing-codes": {
       "post": {
-        "description": "Create a single-use code a client can exchange for its own credential. Owner only.",
+        "description": "Create a single-use code a client can exchange for its own credential. Owner only.\n\nThe grant is decided *here*, by the owner, and carried by the code. A client that could\nname its own permissions when redeeming would make the whole thing decorative.",
         "operationId": "create_pairing_code_api_security_pairing_codes_post",
         "requestBody": {
           "content": {

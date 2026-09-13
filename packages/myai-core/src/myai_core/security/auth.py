@@ -19,12 +19,14 @@ layer on top of this rather than replace it.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 
+from myai_core.security.capabilities import BY_NAME, Capability
+from myai_core.security.capabilities import parse as parse_capabilities
 from myai_core.security.devices import OWNER_CALLER, Caller, DeviceService
 from myai_core.security.local_token import tokens_match
 
@@ -144,7 +146,12 @@ def _paired_caller(request: Request, presented: str | None) -> Caller | None:
         device = DeviceService(session).resolve(presented)
         if device is None:
             return None
-        caller = Caller(device_id=device.id, name=device.name, is_owner=False)
+        caller = Caller(
+            device_id=device.id,
+            name=device.name,
+            is_owner=False,
+            capabilities=parse_capabilities(device.capabilities),
+        )
         session.commit()  # resolve() records that the client was seen
         return caller
 
@@ -160,3 +167,32 @@ def get_caller(request: Request) -> Caller:
 CallerDep = Annotated[Caller, Depends(get_caller)]
 LocalAuth = Depends(require_local_auth)
 LocalOrigin = Depends(require_local_origin)
+
+
+def needs(read: Capability, write: Capability | None = None) -> Callable[[Request], None]:
+    """A dependency that refuses a client which was not granted this capability.
+
+    ``read`` covers GET and HEAD; ``write`` covers everything else, defaulting to ``read``
+    where a router has no meaningful read/write split. The distinction is the point: a tool
+    that summarises your notes needs to read them and almost never needs to rewrite them,
+    and that difference is exactly what a person wants to be asked about.
+
+    The owner is never scoped. A capability is a limit on programs the owner has let in, not
+    a limit on the owner.
+    """
+    write_capability = write or read
+
+    def check(request: Request) -> None:
+        caller = get_caller(request)
+        wanted = read if request.method in ("GET", "HEAD") else write_capability
+        if caller.may(wanted):
+            return
+        info = BY_NAME.get(wanted)
+        title = info.title.lower() if info else wanted.value
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            f"{caller.name} was not given permission to {title}. Grant "
+            f"'{wanted.value}' on the Security page if you want it to.",
+        )
+
+    return check

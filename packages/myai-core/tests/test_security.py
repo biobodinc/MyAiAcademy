@@ -42,9 +42,22 @@ def _as(client: TestClient, token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def _pair(client: TestClient, name: str = "My CLI", kind: str = "cli") -> tuple[str, str]:
-    """Owner creates a code; a client with no credential redeems it. Returns (id, token)."""
-    code = client.post("/api/security/pairing-codes", json={"label": name}).json()["code"]
+def _pair(
+    client: TestClient,
+    name: str = "My CLI",
+    kind: str = "cli",
+    *,
+    preset: str = "full",
+) -> tuple[str, str]:
+    """Owner creates a code; a client with no credential redeems it. Returns (id, token).
+
+    These tests are about credentials rather than scope, so the code carries a full client
+    grant by default — what a paired client could do before Phase 9 narrowed it. Scope is
+    tested on its own in `test_capabilities.py`.
+    """
+    code = client.post(
+        "/api/security/pairing-codes", json={"label": name, "preset": preset}
+    ).json()["code"]
     issued = client.post("/api/security/pair", json={"code": code, "name": name, "kind": kind})
     assert issued.status_code == 201, issued.text
     body = issued.json()

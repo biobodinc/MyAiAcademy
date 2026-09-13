@@ -67,6 +67,10 @@ export type EraseRequest = Schemas["EraseRequest"];
 export type ErasePlan = Schemas["ErasePlan"];
 export type EraseResult = Schemas["EraseResult"];
 
+// Phase 9: what a paired client is allowed to do.
+export type CapabilityInfo = Schemas["CapabilityInfoRead"];
+export type GrantRequest = Schemas["GrantRequest"];
+
 // Phase 7: sync between the user's own devices.
 export type SyncOverview = Schemas["SyncOverview"];
 export type SyncConflict = Schemas["ConflictRead"];

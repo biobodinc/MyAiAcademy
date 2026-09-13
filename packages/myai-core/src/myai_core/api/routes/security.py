@@ -21,6 +21,14 @@ from myai_core.audit.service import AuditCategory, AuditService
 from myai_core.network import start_listener
 from myai_core.schemas import ApiModel
 from myai_core.security.auth import CallerDep, LocalOrigin
+from myai_core.security.capabilities import (
+    CAPABILITIES,
+    DEFAULT_GRANT,
+    FULL_GRANT,
+    MOBILE_GRANT,
+    Capability,
+)
+from myai_core.security.capabilities import parse as parse_capabilities
 from myai_core.security.devices import (
     DEVICE_KINDS,
     Caller,
@@ -116,6 +124,7 @@ class SecurityOverview(ApiModel):
 
 class RegisterClient(ApiModel):
     name: str = Field(min_length=1, max_length=120)
+    capabilities: list[str] = Field(default_factory=list)
     kind: str = Field(default="integration", description=f"One of: {', '.join(DEVICE_KINDS)}")
 
 
@@ -131,6 +140,33 @@ class RevokeRequest(ApiModel):
 
 class PairingCodeRequest(ApiModel):
     label: str = Field(default="", max_length=120)
+    capabilities: list[str] = Field(
+        default_factory=list,
+        description=(
+            "What the client redeeming this code will be allowed to do. The client cannot "
+            "ask for more; whatever is approved here is what it gets. Empty means the "
+            "default grant, which includes nothing you have written."
+        ),
+    )
+    preset: str = Field(
+        default="",
+        description="'default', 'mobile' or 'full' instead of listing capabilities by hand.",
+    )
+
+
+class CapabilityInfoRead(ApiModel):
+    """One capability, described so the person granting it knows what they are agreeing to."""
+
+    capability: str
+    title: str
+    detail: str
+    sensitive: bool
+
+
+class GrantRequest(ApiModel):
+    capabilities: list[str] = Field(
+        description="The complete new set for this client. Anything omitted is taken away."
+    )
 
 
 @router.get("", response_model=SecurityOverview)
@@ -171,7 +207,10 @@ def register_device(
     _require_owner(caller)
     try:
         device, token = DeviceService(session).register(
-            name=request.name, kind=request.kind, actor=caller.device_id
+            name=request.name,
+            kind=request.kind,
+            actor=caller.device_id,
+            capabilities=parse_capabilities(request.capabilities) if request.capabilities else None,
         )
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
@@ -197,9 +236,78 @@ def revoke_device(
 def create_pairing_code(
     request: PairingCodeRequest, session: SessionDep, caller: CallerDep
 ) -> PairingCodeRead:
-    """Create a single-use code a client can exchange for its own credential. Owner only."""
+    """Create a single-use code a client can exchange for its own credential. Owner only.
+
+    The grant is decided *here*, by the owner, and carried by the code. A client that could
+    name its own permissions when redeeming would make the whole thing decorative.
+    """
     _require_owner(caller)
-    return DeviceService(session).create_pairing_code(label=request.label, actor=caller.device_id)
+    return DeviceService(session).create_pairing_code(
+        label=request.label,
+        actor=caller.device_id,
+        capabilities=_requested_grant(request),
+    )
+
+
+def _requested_grant(request: PairingCodeRequest) -> frozenset[Capability] | None:
+    presets = {"default": DEFAULT_GRANT, "mobile": MOBILE_GRANT, "full": FULL_GRANT}
+    if request.preset:
+        chosen = presets.get(request.preset.lower())
+        if chosen is None:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"Unknown preset {request.preset!r}. One of: {', '.join(sorted(presets))}.",
+            )
+        return chosen
+    return parse_capabilities(request.capabilities) if request.capabilities else None
+
+
+@router.get("/capabilities", response_model=list[CapabilityInfoRead])
+def list_capabilities(caller: CallerDep) -> list[CapabilityInfoRead]:
+    """Everything a client can be granted, with what each one actually means."""
+    return [
+        CapabilityInfoRead(
+            capability=info.capability.value,
+            title=info.title,
+            detail=info.detail,
+            sensitive=info.sensitive,
+        )
+        for info in CAPABILITIES
+    ]
+
+
+@router.put("/devices/{device_id}/capabilities", response_model=DeviceRead)
+def set_capabilities(
+    device_id: str, request: GrantRequest, session: SessionDep, caller: CallerDep
+) -> DeviceRead:
+    """Replace what a client is allowed to do. Owner only, and narrowing takes effect at once."""
+    _require_owner(caller)
+    device = DeviceService(session).get(device_id)
+    if device is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No such client.")
+    if device.revoked_at is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "That client is revoked. Granting it permissions would not un-revoke it; pair it "
+            "again if you want it back.",
+        )
+
+    granted = parse_capabilities(request.capabilities)
+    was = set(device.capabilities or [])
+    device.capabilities = sorted(c.value for c in granted)
+    AuditService(session).record(
+        AuditCategory.SECURITY,
+        "device_capabilities_changed",
+        f"What {device.name} may do was changed.",
+        {
+            "device_id": device.id,
+            "added": sorted(set(device.capabilities) - was),
+            "removed": sorted(was - set(device.capabilities)),
+        },
+        device_id=caller.device_id,
+    )
+    session.commit()
+    return DeviceRead.model_validate(device)
 
 
 @router.get("/account", response_model=AccountState)

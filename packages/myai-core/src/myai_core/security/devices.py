@@ -39,6 +39,8 @@ from ulid import ULID
 from myai_core.audit.service import AuditCategory, AuditService
 from myai_core.db.models import Device, PairingCode
 from myai_core.schemas import ApiModel
+from myai_core.security.capabilities import DEFAULT_GRANT, FULL_GRANT, Capability
+from myai_core.security.capabilities import parse as parse_capabilities
 
 TOKEN_BYTES = 32
 CODE_DIGITS = 8
@@ -60,6 +62,9 @@ class DeviceRead(ApiModel):
     last_seen_at: datetime | None
     revoked_at: datetime | None
     revoked_reason: str | None
+    capabilities: list[str] = Field(
+        default_factory=list, description="What this client may do. Empty means nothing."
+    )
 
     model_config = ConfigDict(
         from_attributes=True, json_schema_serialization_defaults_required=True
@@ -85,6 +90,9 @@ class PairingCodeRead(ApiModel):
     label: str
     expires_at: datetime
     expires_in_seconds: int
+    capabilities: list[str] = Field(
+        default_factory=list, description="What the client that redeems this will be allowed to do."
+    )
     note: str = (
         "Single use, and only until it expires. Type it into the client you are pairing; "
         "anyone who has it can obtain a credential, so treat it like a password."
@@ -102,9 +110,20 @@ class Caller:
     device_id: str
     name: str
     is_owner: bool
+    capabilities: frozenset[Capability] = frozenset()
+    """What this client may do. Meaningless for the owner, who is not scoped."""
+
+    def may(self, capability: Capability) -> bool:
+        """The owner may do anything a client may. A client may do what it was granted."""
+        return self.is_owner or capability in self.capabilities
 
 
-OWNER_CALLER = Caller(device_id=OWNER_DEVICE_ID, name="This installation", is_owner=True)
+OWNER_CALLER = Caller(
+    device_id=OWNER_DEVICE_ID,
+    name="This installation",
+    is_owner=True,
+    capabilities=FULL_GRANT,
+)
 
 
 def hash_secret(secret: str) -> str:
@@ -160,10 +179,12 @@ class DeviceService:
         kind: str = "unknown",
         platform_name: str | None = None,
         actor: str | None = None,
+        capabilities: frozenset[Capability] | None = None,
     ) -> tuple[Device, str]:
         """Create a client and return it with its one-time credential."""
         if kind not in DEVICE_KINDS:
             raise ValueError(f"Unknown client kind '{kind}'. One of: {', '.join(DEVICE_KINDS)}.")
+        granted = DEFAULT_GRANT if capabilities is None else capabilities
         token = generate_token()
         device = Device(
             id=f"dev_{ULID()}",
@@ -171,6 +192,7 @@ class DeviceService:
             kind=kind,
             platform=platform_name or platform.platform(),
             token_hash=hash_secret(token),
+            capabilities=sorted(c.value for c in granted),
         )
         self._session.add(device)
         self._session.flush()
@@ -178,14 +200,32 @@ class DeviceService:
             AuditCategory.SECURITY,
             "device_authorised",
             f"{device.name} was authorised to act as your AI",
-            {"device_id": device.id, "kind": device.kind},
+            {
+                "device_id": device.id,
+                "kind": device.kind,
+                # Recorded at the moment of the grant: what was approved has to be
+                # answerable later, not inferred from what the row says today.
+                "capabilities": sorted(c.value for c in granted),
+            },
             device_id=actor,
         )
         return device, token
 
     # --- pairing ----------------------------------------------------------------------------
 
-    def create_pairing_code(self, *, label: str = "", actor: str | None = None) -> PairingCodeRead:
+    def create_pairing_code(
+        self,
+        *,
+        label: str = "",
+        actor: str | None = None,
+        capabilities: frozenset[Capability] | None = None,
+    ) -> PairingCodeRead:
+        """Create a code carrying the grant the owner approved.
+
+        The grant is fixed here, not asked for by the client redeeming it. A program that
+        could name its own permissions would make the consent meaningless.
+        """
+        granted = DEFAULT_GRANT if capabilities is None else capabilities
         code = generate_code()
         expires_at = datetime.now(tz=UTC) + CODE_TTL
         self._session.add(
@@ -193,6 +233,7 @@ class DeviceService:
                 code_hash=hash_secret(code),
                 label=label.strip()[:120],
                 expires_at=expires_at,
+                capabilities=sorted(c.value for c in granted),
             )
         )
         self._session.flush()
@@ -200,7 +241,11 @@ class DeviceService:
             AuditCategory.SECURITY,
             "pairing_code_created",
             "A pairing code was created" + (f" for {label}" if label else ""),
-            {"expires_at": expires_at.isoformat(), "ttl_seconds": int(CODE_TTL.total_seconds())},
+            {
+                "expires_at": expires_at.isoformat(),
+                "ttl_seconds": int(CODE_TTL.total_seconds()),
+                "capabilities": sorted(c.value for c in granted),
+            },
             device_id=actor,
         )
         return PairingCodeRead(
@@ -208,6 +253,7 @@ class DeviceService:
             label=label,
             expires_at=expires_at,
             expires_in_seconds=int(CODE_TTL.total_seconds()),
+            capabilities=sorted(c.value for c in granted),
         )
 
     def redeem_pairing_code(
@@ -232,7 +278,13 @@ class DeviceService:
         if row.attempts >= MAX_CODE_ATTEMPTS:
             raise PairingError("That pairing code was tried too many times. Create another.")
 
-        device, token = self.register(name=name, kind=kind, platform_name=platform_name)
+        device, token = self.register(
+            name=name,
+            kind=kind,
+            platform_name=platform_name,
+            # Whatever the owner approved when they made the code, and nothing more.
+            capabilities=parse_capabilities(row.capabilities),
+        )
         row.used_at = now
         row.device_id = device.id
         self._session.flush()

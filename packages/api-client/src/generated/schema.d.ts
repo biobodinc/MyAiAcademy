@@ -888,6 +888,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/security/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Capabilities
+         * @description Everything a client can be granted, with what each one actually means.
+         */
+        get: operations["list_capabilities_api_security_capabilities_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/security/devices": {
         parameters: {
             query?: never;
@@ -903,6 +923,26 @@ export interface paths {
          * @description Issue a credential directly. Owner only; the secret is returned once.
          */
         post: operations["register_device_api_security_devices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/security/devices/{device_id}/capabilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Capabilities
+         * @description Replace what a client is allowed to do. Owner only, and narrowing takes effect at once.
+         */
+        put: operations["set_capabilities_api_security_devices__device_id__capabilities_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -989,6 +1029,9 @@ export interface paths {
         /**
          * Create Pairing Code
          * @description Create a single-use code a client can exchange for its own credential. Owner only.
+         *
+         *     The grant is decided *here*, by the owner, and carried by the code. A client that could
+         *     name its own permissions when redeeming would make the whole thing decorative.
          */
         post: operations["create_pairing_code_api_security_pairing_codes_post"];
         delete?: never;
@@ -1543,6 +1586,20 @@ export interface components {
              */
             ran_at: string;
         };
+        /**
+         * CapabilityInfoRead
+         * @description One capability, described so the person granting it knows what they are agreeing to.
+         */
+        CapabilityInfoRead: {
+            /** Capability */
+            capability: string;
+            /** Detail */
+            detail: string;
+            /** Sensitive */
+            sensitive: boolean;
+            /** Title */
+            title: string;
+        };
         /** CapabilityRead */
         CapabilityRead: {
             /** Detail */
@@ -1818,6 +1875,11 @@ export interface components {
         };
         /** DeviceRead */
         DeviceRead: {
+            /**
+             * Capabilities
+             * @description What this client may do. Empty means nothing.
+             */
+            capabilities: string[];
             /**
              * Created At
              * Format: date-time
@@ -2112,6 +2174,14 @@ export interface components {
          * @enum {string}
          */
         GpuVendor: "nvidia" | "amd" | "intel" | "apple" | "unknown";
+        /** GrantRequest */
+        GrantRequest: {
+            /**
+             * Capabilities
+             * @description The complete new set for this client. Anything omitted is taken away.
+             */
+            capabilities: string[];
+        };
         /** GuideAnswer */
         GuideAnswer: {
             /** Answer */
@@ -2732,6 +2802,11 @@ export interface components {
          * @description A pairing code, returned once, with the moment it stops working.
          */
         PairingCodeRead: {
+            /**
+             * Capabilities
+             * @description What the client that redeems this will be allowed to do.
+             */
+            capabilities: string[];
             /** Code */
             code: string;
             /**
@@ -2752,10 +2827,21 @@ export interface components {
         /** PairingCodeRequest */
         PairingCodeRequest: {
             /**
+             * Capabilities
+             * @description What the client redeeming this code will be allowed to do. The client cannot ask for more; whatever is approved here is what it gets. Empty means the default grant, which includes nothing you have written.
+             */
+            capabilities?: string[];
+            /**
              * Label
              * @default
              */
             label: string;
+            /**
+             * Preset
+             * @description 'default', 'mobile' or 'full' instead of listing capabilities by hand.
+             * @default
+             */
+            preset: string;
         };
         /**
          * PairingInvite
@@ -3106,6 +3192,8 @@ export interface components {
         };
         /** RegisterClient */
         RegisterClient: {
+            /** Capabilities */
+            capabilities?: string[];
             /**
              * Kind
              * @description One of: desktop, cli, mobile, integration, unknown
@@ -3722,6 +3810,7 @@ export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
 export type SchemaAvailability = components['schemas']['Availability'];
 export type SchemaBatteryMetrics = components['schemas']['BatteryMetrics'];
 export type SchemaBenchmarkResult = components['schemas']['BenchmarkResult'];
+export type SchemaCapabilityInfoRead = components['schemas']['CapabilityInfoRead'];
 export type SchemaCapabilityRead = components['schemas']['CapabilityRead'];
 export type SchemaCatalogModel = components['schemas']['CatalogModel'];
 export type SchemaCategoryOverrideRequest = components['schemas']['CategoryOverrideRequest'];
@@ -3760,6 +3849,7 @@ export type SchemaGenerationOptions = components['schemas']['GenerationOptions']
 export type SchemaGpuInfo = components['schemas']['GpuInfo'];
 export type SchemaGpuMetrics = components['schemas']['GpuMetrics'];
 export type SchemaGpuVendor = components['schemas']['GpuVendor'];
+export type SchemaGrantRequest = components['schemas']['GrantRequest'];
 export type SchemaGuideAnswer = components['schemas']['GuideAnswer'];
 export type SchemaGuideQuestion = components['schemas']['GuideQuestion'];
 export type SchemaGuideTopicRead = components['schemas']['GuideTopicRead'];
@@ -5495,6 +5585,26 @@ export interface operations {
             };
         };
     };
+    list_capabilities_api_security_capabilities_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CapabilityInfoRead"][];
+                };
+            };
+        };
+    };
     list_devices_api_security_devices_get: {
         parameters: {
             query?: never;
@@ -5535,6 +5645,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IssuedCredential"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_capabilities_api_security_devices__device_id__capabilities_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                device_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceRead"];
                 };
             };
             /** @description Validation Error */

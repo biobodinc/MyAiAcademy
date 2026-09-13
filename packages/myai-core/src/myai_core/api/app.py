@@ -6,6 +6,7 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,7 +45,8 @@ from myai_core.models.llama_cpp_provider import LlamaCppProvider
 from myai_core.models.provider import ModelProvider
 from myai_core.models.runtime import InferenceRuntime
 from myai_core.paths import AppPaths, resolve_app_paths
-from myai_core.security.auth import LocalAuthPolicy, require_local_auth
+from myai_core.security.auth import LocalAuthPolicy, needs, require_local_auth
+from myai_core.security.capabilities import Capability
 from myai_core.security.local_token import load_or_create_token
 from myai_core.security.storage_checks import repair_secret_storage
 from myai_core.skills.jobs import JobManager
@@ -55,6 +57,42 @@ from myai_core.sync import install_change_tracking
 log = logging.getLogger(__name__)
 
 API_PREFIX = "/api"
+
+
+# Which capability each part of the API needs (spec §53, §75).
+#
+# This is the whole access-control surface for a paired client, in one place so it can be
+# read at a glance. Two columns because read and write are different asks: the first applies
+# to GET and HEAD, the second to everything else, and where a router has no meaningful split
+# the two are the same.
+#
+# A router must appear here to be served at all — there is no "unclassified means allowed".
+# `test_capabilities.py` fails if one is missing, so the way this goes wrong is a red test
+# rather than a quietly over-broad grant.
+#
+# Owner-only actions (issuing credentials, exporting, erasing, restoring, turning network
+# access on) are enforced inside their routes as well, and stay owner-only however wide a
+# client's grant is.
+ROUTER_SCOPES: tuple[tuple[Any, Capability, Capability], ...] = (
+    (status, Capability.STATUS_READ, Capability.STATUS_READ),
+    (hardware, Capability.HARDWARE_READ, Capability.HARDWARE_READ),
+    (storage, Capability.HARDWARE_READ, Capability.MODELS_MANAGE),
+    (profile, Capability.STATUS_READ, Capability.MEMORY_WRITE),
+    (preferences, Capability.STATUS_READ, Capability.MODELS_MANAGE),
+    (skills, Capability.SKILLS_READ, Capability.SKILLS_TRAIN),
+    (commands, Capability.STATUS_READ, Capability.CHAT_WRITE),
+    (guide, Capability.STATUS_READ, Capability.STATUS_READ),
+    (jobs_routes, Capability.SKILLS_READ, Capability.SKILLS_TRAIN),
+    (audit, Capability.ACTIVITY_READ, Capability.ACTIVITY_READ),
+    (privacy, Capability.ACTIVITY_READ, Capability.ACTIVITY_READ),
+    (security, Capability.STATUS_READ, Capability.STATUS_READ),
+    (models, Capability.MODELS_READ, Capability.MODELS_MANAGE),
+    (chat, Capability.CHAT_READ, Capability.CHAT_WRITE),
+    (memory, Capability.MEMORY_READ, Capability.MEMORY_WRITE),
+    (knowledge, Capability.KNOWLEDGE_READ, Capability.KNOWLEDGE_WRITE),
+    (sync, Capability.SYNC, Capability.SYNC),
+    (portable, Capability.ACTIVITY_READ, Capability.ACTIVITY_READ),
+)
 
 
 def create_app(
@@ -139,27 +177,8 @@ def create_app(
     )
 
     protected = APIRouter(prefix=API_PREFIX, dependencies=[Depends(require_local_auth)])
-    for module in (
-        status,
-        hardware,
-        storage,
-        profile,
-        preferences,
-        skills,
-        commands,
-        guide,
-        jobs_routes,
-        audit,
-        privacy,
-        security,
-        models,
-        chat,
-        memory,
-        knowledge,
-        sync,
-        portable,
-    ):
-        protected.include_router(module.router)
+    for module, read, write in ROUTER_SCOPES:
+        protected.include_router(module.router, dependencies=[Depends(needs(read, write))])
     app.include_router(protected)
     # Pairing is the one route that cannot require a credential: a client being paired
     # does not have one yet. It keeps the loopback bind and the Host and Origin checks,

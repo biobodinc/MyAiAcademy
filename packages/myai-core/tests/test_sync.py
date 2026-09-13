@@ -469,7 +469,12 @@ def two_installations(tmp_path: Path) -> Iterator[dict[str, object]]:
 def _paired(env: dict[str, object]) -> httpx.Client:
     """B, holding a credential from A, over a connection pinned to A's certificate."""
     a: TestClient = env["a"]  # type: ignore[assignment]
-    code = a.post("/api/security/pairing-codes", json={"label": "Laptop"}).json()["code"]
+    # A device that syncs has to be granted sync: the default grant deliberately does not
+    # include anything the user has written (Phase 9).
+    code = a.post(
+        "/api/security/pairing-codes",
+        json={"label": "Laptop", "capabilities": ["sync", "status:read"]},
+    ).json()["code"]
     context = ssl.create_default_context(cafile=str(env["cert"]))
     client = httpx.Client(verify=context, base_url=str(env["base"]))
     issued = client.post("/security/pair", json={"code": code, "name": "Laptop", "kind": "desktop"})
