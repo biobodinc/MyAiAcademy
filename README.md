@@ -59,17 +59,29 @@ updated.
   Fine-tuning a quantised local model is not something this program can honestly do, so it
   does not claim to (see
   [ADR-0013](docs/adr/0013-training-optimises-instructions-not-weights.md)).
-- **Creative skills cannot be learned or trained yet** (images, video, music, games): there
-  is no measurable benchmark for them in this build, and every surface says so.
+- **Images, video and music cannot be generated at all.** There is no local provider in this
+  build, and a prompt is never sent to an online service instead — that would be the clearest
+  possible break of the claim above. Each says what it would take (a local model of several
+  gigabytes, and in practice a graphics card) rather than naming a future phase. **Games can
+  be learned and trained**: designing mechanics, levels and narrative is prose and arithmetic,
+  so it has a deterministic benchmark like the other text skills
+  ([ADR-0018](docs/adr/0018-creative-skills-and-the-cloud-shortcut.md)).
 - **There are no accounts, and nothing signs in.** There is no account server in this
   build and no code path that would send anything to one. Everything is local to the
   machine it runs on. An account is planned as the way to get installers and to sign in on
   more than one device; until it exists, every surface says there is none.
-- **Pairing grants access to programs on this machine, not to other machines.** The local
-  service listens on 127.0.0.1 only, so nothing on your network can reach it. A paired
+- **Nothing on your network can reach your AI until you turn that on.** The local service
+  listens on 127.0.0.1 only. Network access is a second listener you switch on deliberately:
+  HTTPS with a certificate the host mints and a device pins, recorded in the audit log both
+  ways, and this installation's own token is refused over it. A paired
   client holds its own credential, which you can revoke on its own; only the installation
   itself can grant or revoke access, export or erase
   ([ADR-0014](docs/adr/0014-per-client-credentials-and-erasure.md)).
+- **A paired program only gets what you ticked.** Access is a set of named capabilities you
+  approve when you make the pairing code, described in words rather than identifiers, with
+  reading and writing as separate asks. The default grant contains nothing you have written.
+  A part of the API nobody classified is refused rather than allowed
+  ([ADR-0017](docs/adr/0017-what-a-paired-program-may-do.md)).
 - **Not every model download can be hash-verified.** A download is only failed when it
   disagrees with a hash the publisher actually promises (a hash pinned in our catalog, or
   Hugging Face's `X-Linked-Etag`). A plain `ETag` is an opaque validator, not a content
