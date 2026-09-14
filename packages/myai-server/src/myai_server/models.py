@@ -77,13 +77,9 @@ class Device(Base):
     device_name: Mapped[str] = mapped_column(String(255), default="Unnamed device")
     """User-friendly name (e.g., 'My MacBook', 'iPhone')."""
 
-    last_seen: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     """When this device was cut off. Revoked devices are kept, not deleted, so that the
     audit log still has something to point at and so a name cannot be quietly reused."""
 
@@ -115,9 +111,7 @@ class PairingCode(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     """Code expires after 10 minutes."""
 
-    used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     """When the code was used (None if unused)."""
 
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -184,13 +178,9 @@ class Session(Base):
 
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
-    last_used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    revoked_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     """Set by signing out, or by revoking the device this session belongs to."""
 
     account: Mapped["Account"] = relationship("Account", back_populates="sessions")

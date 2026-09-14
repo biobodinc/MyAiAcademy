@@ -40,8 +40,7 @@ def sign_up(body: SignUpRequest, service: ServiceDep, state: StateDep) -> SignUp
     if service.get_account_by_email(address) is not None:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
-            "An account already uses that email address. Sign in instead, or use another "
-            "address.",
+            "An account already uses that email address. Sign in instead, or use another address.",
         )
 
     account, verification_token = service.sign_up(address, body.password)
@@ -101,9 +100,7 @@ def verify_email(body: VerifyEmailRequest, service: ServiceDep) -> AccountRead:
 
 
 @router.post("/resend-verification", response_model=Message)
-def resend_verification(
-    account: AccountDep, service: ServiceDep, state: StateDep
-) -> Message:
+def resend_verification(account: AccountDep, service: ServiceDep, state: StateDep) -> Message:
     if account.email is None:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "This account has no email address to confirm."

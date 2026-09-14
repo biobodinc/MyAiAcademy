@@ -33,9 +33,7 @@ def list_devices(account: AccountDep, service: ServiceDep) -> list[DeviceRead]:
     return [device_read(d) for d in service.list_devices(account.account_id)]
 
 
-@router.post(
-    "/pairing-codes", response_model=PairingCodeRead, status_code=status.HTTP_201_CREATED
-)
+@router.post("/pairing-codes", response_model=PairingCodeRead, status_code=status.HTTP_201_CREATED)
 def create_pairing_code(account: AccountDep, service: ServiceDep) -> PairingCodeRead:
     """Make a single-use code for adding a device. Shown once, expires in minutes."""
     row = service.issue_pairing_code(account.account_id)

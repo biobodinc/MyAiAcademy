@@ -9,7 +9,7 @@ requires-python = ">=3.11"
 package = false
 
 [tool.uv.workspace]
-members = ["packages/myai-core", "packages/myai-cli"]
+members = ["packages/myai-core", "packages/myai-cli", "packages/myai-server"]
 
 [tool.uv.sources]
 myai-core = { workspace = true }

@@ -55,9 +55,7 @@ def test_sign_up_refuses_a_duplicate_address(client, account):
 
 
 def test_sign_up_normalises_the_address(client):
-    client.post(
-        "/api/accounts/sign-up", json={"email": "Mixed@Example.com", "password": PASSWORD}
-    )
+    client.post("/api/accounts/sign-up", json={"email": "Mixed@Example.com", "password": PASSWORD})
     again = client.post(
         "/api/accounts/sign-up", json={"email": "mixed@example.com", "password": PASSWORD}
     )
@@ -288,9 +286,7 @@ def test_renaming_a_device(client, account, auth):
     code = client.post("/api/devices/pairing-codes", headers=auth).json()["code"]
     pair_device(client, code, name="Old")
 
-    response = client.patch(
-        "/api/devices/inst_abc", headers=auth, json={"device_name": "New name"}
-    )
+    response = client.patch("/api/devices/inst_abc", headers=auth, json={"device_name": "New name"})
 
     assert response.status_code == 200
     assert response.json()["device_name"] == "New name"
@@ -329,9 +325,12 @@ def test_one_account_cannot_touch_another_accounts_device(client, account, auth)
     intruder_auth = {"Authorization": f"Bearer {intruder['token']}"}
 
     assert client.post("/api/devices/inst_abc/revoke", headers=intruder_auth).status_code == 404
-    assert client.patch(
-        "/api/devices/inst_abc", headers=intruder_auth, json={"device_name": "Mine now"}
-    ).status_code == 404
+    assert (
+        client.patch(
+            "/api/devices/inst_abc", headers=intruder_auth, json={"device_name": "Mine now"}
+        ).status_code
+        == 404
+    )
     assert client.get("/api/devices", headers=intruder_auth).json() == []
 
 
@@ -386,9 +385,12 @@ def test_a_failed_request_leaves_nothing_else_behind(client, account, auth):
 
     # The password did not change, and the session that asked is still the live one.
     assert client.get("/api/accounts/me", headers=auth).json() == before
-    assert client.post(
-        "/api/accounts/sign-in", json={"email": "owner@example.com", "password": PASSWORD}
-    ).status_code == 200
+    assert (
+        client.post(
+            "/api/accounts/sign-in", json={"email": "owner@example.com", "password": PASSWORD}
+        ).status_code
+        == 200
+    )
 
 
 def test_activity_is_scoped_to_the_caller(client, account, auth):

@@ -159,9 +159,7 @@ class AccountService:
         """Get account by email."""
         return self.session.query(Account).filter_by(email=email).first()
 
-    def get_account_by_oauth(
-        self, oauth_provider: str, oauth_id: str
-    ) -> Account | None:
+    def get_account_by_oauth(self, oauth_provider: str, oauth_id: str) -> Account | None:
         """Get account by OAuth provider and ID."""
         return (
             self.session.query(Account)
@@ -205,11 +203,7 @@ class AccountService:
 
     def authenticate(self, token: str) -> Session | None:
         """Resolve a bearer token to a live session, or None."""
-        row = (
-            self.session.query(Session)
-            .filter_by(token_hash=tokens.hash_token(token))
-            .first()
-        )
+        row = self.session.query(Session).filter_by(token_hash=tokens.hash_token(token)).first()
         if row is None or row.revoked_at is not None:
             return None
         if datetime.now(UTC) > _aware(row.expires_at):
@@ -221,11 +215,7 @@ class AccountService:
 
     def revoke_session(self, token: str) -> bool:
         """Sign out. Idempotent: an already-dead token is not an error."""
-        row = (
-            self.session.query(Session)
-            .filter_by(token_hash=tokens.hash_token(token))
-            .first()
-        )
+        row = self.session.query(Session).filter_by(token_hash=tokens.hash_token(token)).first()
         return self.revoke_session_row(row)
 
     def revoke_session_row(self, row: Session | None) -> bool:
@@ -239,11 +229,7 @@ class AccountService:
 
     def revoke_all_sessions(self, account_id: str) -> int:
         now = datetime.now(UTC)
-        live = (
-            self.session.query(Session)
-            .filter_by(account_id=account_id, revoked_at=None)
-            .all()
-        )
+        live = self.session.query(Session).filter_by(account_id=account_id, revoked_at=None).all()
         for row in live:
             row.revoked_at = now
         self.session.flush()
@@ -326,9 +312,7 @@ class AccountService:
 
     def rename_device(self, account_id: str, device_id: str, name: str) -> Device | None:
         device = (
-            self.session.query(Device)
-            .filter_by(device_id=device_id, account_id=account_id)
-            .first()
+            self.session.query(Device).filter_by(device_id=device_id, account_id=account_id).first()
         )
         if device is None:
             return None
@@ -344,9 +328,7 @@ class AccountService:
         happened to expire, which is not what anyone means by the word.
         """
         device = (
-            self.session.query(Device)
-            .filter_by(device_id=device_id, account_id=account_id)
-            .first()
+            self.session.query(Device).filter_by(device_id=device_id, account_id=account_id).first()
         )
         if device is None or device.revoked_at is not None:
             return None
