@@ -141,7 +141,12 @@ CATALOG: tuple[SkillDefinition, ...] = (
         description="Design game mechanics, levels and narratives.",
         specializations=["Mechanics", "Level design", "Narrative"],
         requires=["writing", "coding"],
-        availability=SkillAvailability.PLANNED,
+        # Game *design* is prose and arithmetic — rules that hold together, a difficulty
+        # curve that goes somewhere, a hook that fits in a line — so it can be measured the
+        # same way the text skills are. Generating the art, music or video a game needs is a
+        # different problem and needs a provider this build does not have; see
+        # `skills/creative.py`.
+        availability=SkillAvailability.AVAILABLE,
         planned_phase=10,
     ),
 )

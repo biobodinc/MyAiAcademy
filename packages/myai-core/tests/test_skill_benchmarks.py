@@ -111,7 +111,7 @@ def test_python_tests_check_end_to_end() -> None:
 
 def test_bundled_packages_are_valid_and_solvable_by_reference_answers() -> None:
     ids = bundled_skill_ids()
-    assert ids == ["coding", "conversation", "research", "science", "writing"]
+    assert ids == ["coding", "conversation", "games", "research", "science", "writing"]
     for skill_id in ids:
         package = bundled_package(skill_id)
         assert package is not None and package.id == skill_id
@@ -121,6 +121,31 @@ def test_bundled_packages_are_valid_and_solvable_by_reference_answers() -> None:
 
 
 REFERENCE_ANSWERS: dict[str, dict[str, str]] = {
+    "games": {
+        "three-mechanics": (
+            "- Light the lamp: allowed while you hold oil, and the beam sweeps the water\n"
+            "- Haul oil: allowed at the jetty, and your pack grows heavier\n"
+            "- Rest: allowed only in the keeper's room, and an hour passes"
+        ),
+        "win-condition-short": "Keep the lamp lit until dawn.",
+        "damage-arithmetic": "8",
+        "lives-arithmetic": "5",
+        "mechanic-as-verb": "Row",
+        "spec-as-json": '{"name": "Tidewatch", "genre": "puzzle", "players": "1"}',
+        "difficulty-curve": (
+            "- Level one teaches the move with no threat present\n"
+            "- Level two adds a single slow hazard\n"
+            "- Level three speeds the hazard up and adds a second\n"
+            "- Level four combines both under a time limit"
+        ),
+        "one-new-demand": "Climbing ladders",
+        "safe-practice-room": (
+            "A corridor of slow enemies whose attacks the player can dodge without risk."
+        ),
+        "level-count-arithmetic": "45",
+        "narrative-hook": "The lighthouse still turns, and nobody has lived here for years.",
+        "remove-the-word-fun": "An enjoyable game where you repair a small boat.",
+    },
     "science": {
         "multiply": "391",
         "divide": "12",

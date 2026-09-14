@@ -25,6 +25,7 @@ from myai_core.hardware.models import HardwareReport, HardwareTier
 from myai_core.preferences.schemas import ComputePreset
 from myai_core.schemas import ApiModel
 from myai_core.skills.catalog import SkillDefinition, get_skill
+from myai_core.skills.creative import all_statuses as all_creative_statuses
 from myai_core.skills.evaluate import EvaluationOutcome, level_from_score
 from myai_core.skills.packages import (
     INSTRUCTIONS,
@@ -134,10 +135,7 @@ class SkillLearningService:
         package = bundled_package(skill_id)
         blockers: list[str] = []
         if package is None:
-            blockers.append(
-                f"{skill.name} has no skill package yet: there is no measurable benchmark "
-                f"for it in this build (planned for Phase {skill.planned_phase})."
-            )
+            blockers.append(_no_package_reason(skill))
         missing = [r for r in skill.requires if not self.is_learned(r)]
         if missing:
             blockers.append("Requires: " + ", ".join(m.title() for m in missing) + " first.")
@@ -347,3 +345,19 @@ def _read_instructions(installed_path: str | None, skill_id: str) -> str:
                 return text
     package = bundled_package(skill_id)
     return package.instructions if package else ""
+
+
+def _no_package_reason(skill: SkillDefinition) -> str:
+    """Why a skill cannot be learned, naming the actual obstacle rather than a phase number.
+
+    Images, video and music are not waiting on a benchmark; they are waiting on something
+    that can produce a picture or a sound, which this build has none of and will not
+    substitute an online service for. Saying "planned for Phase 10" would hide that.
+    """
+    for status in all_creative_statuses():
+        if status.skill_id == skill.id and not status.available:
+            return f"{skill.name} cannot be learned here. {status.detail} Needs: {status.needs}"
+    return (
+        f"{skill.name} has no skill package yet: there is no measurable benchmark for it in "
+        f"this build (planned for Phase {skill.planned_phase})."
+    )
