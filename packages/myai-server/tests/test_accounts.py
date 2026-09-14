@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from myai_server.db import Base
-from myai_server.models import Account, Device, PairingCode
+from myai_server.models import PairingCode
 from myai_server.services import AccountService, generate_account_id, generate_pairing_code
 
 

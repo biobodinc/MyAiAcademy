@@ -534,4 +534,6 @@ class AccountInfo(Base):
     paired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     """When this device was first paired with the account."""
 
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )

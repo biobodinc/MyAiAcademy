@@ -28,7 +28,7 @@ bundle = ["pyinstaller>=6.11"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["packages/myai-core/src", "packages/myai-cli/src"]
+src = ["packages/myai-core/src", "packages/myai-cli/src", "packages/myai-server/src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "T20", "PTH", "ANN"]
@@ -57,6 +57,10 @@ module = ["cpuinfo", "cpuinfo.*", "pypdf", "pypdf.*", "llama_cpp", "llama_cpp.*"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-testpaths = ["packages/myai-core/tests", "packages/myai-cli/tests"]
+testpaths = [
+  "packages/myai-core/tests",
+  "packages/myai-cli/tests",
+  "packages/myai-server/tests",
+]
 addopts = "-ra -q --import-mode=importlib"
 filterwarnings = ["error::DeprecationWarning:myai_core.*"]

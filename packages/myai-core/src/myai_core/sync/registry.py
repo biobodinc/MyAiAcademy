@@ -113,6 +113,9 @@ NOT_SYNCED: dict[str, str] = {
     "issued it.",
     "audit_events": "Each installation keeps its own account of what was done to it. An audit "
     "log that arrived from elsewhere is not evidence.",
+    "account_info": "Which account this installation was paired to. Each device is added to "
+    "an account deliberately, by someone entering a code on that device; copying the link "
+    "would enrol a machine nobody paired, and revoking one device would not reach it.",
     "sync_identity": "This installation's own name and clock.",
     "sync_peers": "Who this installation syncs with, and how far it has got.",
     "sync_tombstones": "Deletions travel as changes, not as rows of their own.",
