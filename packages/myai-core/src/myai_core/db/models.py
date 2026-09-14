@@ -510,3 +510,28 @@ class SyncConflict(Base):
     )
     detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class AccountInfo(Base):
+    """This device's link to a central account (Phase 5).
+
+    Each device stores its account_id here to know which account on the central server
+    it belongs to. This is a singleton row (id=1) created when the device first joins
+    an account, and updated if the account association changes.
+    """
+
+    __tablename__ = "account_info"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    """Singleton: always id=1."""
+
+    account_id: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    """16-digit account ID from the central server, or None if not yet paired."""
+
+    account_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    """Display name of the account (for reference)."""
+
+    paired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    """When this device was first paired with the account."""
+
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
