@@ -119,8 +119,11 @@ class AccountService:
             self._log_event(pairing.account_id, "pairing_code_reused", details=f"code={code}")
             return None
 
-        # Check if expired
-        if datetime.now(UTC) > pairing.expires_at:
+        # Check if expired (handle both naive and aware datetimes)
+        expires_at = pairing.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if datetime.now(UTC) > expires_at:
             self._log_event(pairing.account_id, "pairing_code_expired", details=f"code={code}")
             return None
 
