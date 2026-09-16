@@ -13,6 +13,7 @@ from myai_core.hardware.benchmark_store import BenchmarkStore
 from myai_core.memory.service import MemoryService
 from myai_core.models.service import ModelService
 from myai_core.preferences.schemas import Preferences
+from myai_core.projects.service import ProjectService
 from myai_core.skills.jobs import JobSummary, summarise
 from myai_core.skills.learning import EvaluationRead, LearnPreview, SkillLearningService
 from myai_core.skills.pipeline import start_skill_job, start_training_job, training_preview
@@ -53,6 +54,12 @@ def build_command_context(
         if ai_id is None:
             return []
         return [m.content for m in MemoryService(session, ai_id).list_all()]
+
+    def projects() -> list[tuple[str, int]]:
+        if ai_id is None:
+            return []
+        service = ProjectService(session, ai_id)
+        return [(p.name, service.contents(p.id).total) for p in service.list()]
 
     def learning() -> SkillLearningService:
         assert ai_id is not None
@@ -125,6 +132,7 @@ def build_command_context(
         preferences=lambda: preferences,
         status=status_labels,
         memories=memories,
+        projects=projects if has_profile else None,
         learn_preview=learn_preview if has_profile else None,
         start_learn=start_learn if has_profile else None,
         current_job=current_job,

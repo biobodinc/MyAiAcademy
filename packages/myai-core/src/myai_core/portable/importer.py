@@ -152,6 +152,8 @@ def preview_import(package: OpenPackage, hardware: HardwareReport | None = None)
 _ORDER: tuple[tuple[str, type[Any], str], ...] = (
     ("identity/profile.json", models.AIProfile, "ai_id"),
     ("skills/state.json", models.SkillState, ""),
+    # Before memories, conversations and documents: they carry a project_id naming it.
+    ("projects/projects.json", models.Project, "id"),
     ("memory/memories.json", models.Memory, "uid"),
     ("conversations/conversations.json", models.Conversation, "id"),
     ("conversations/messages.json", models.Message, "uid"),
@@ -189,6 +191,10 @@ def import_package(
             continue
         for row in rows:
             session.add(model(**_coerce(model, row)))
+        # Flush per section, so `_ORDER` actually *is* the insert order. Adding everything
+        # and flushing once would leave the ordering to the ORM's dependency sort, which
+        # reads well right up until a foreign key it did not infer arrives second.
+        session.flush()
         written[entry] = len(rows)
 
     # A restored database is a new device as far as sync is concerned. See the module

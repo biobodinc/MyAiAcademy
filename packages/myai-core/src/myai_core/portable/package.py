@@ -23,6 +23,7 @@ A `.myai` file is a ZIP. Inside::
     manifest.myai         the real manifest — encrypted when a password is set
     identity/profile.json
     skills/state.json
+    projects/projects.json
     memory/memories.json
     conversations/*.json
     knowledge/documents.json
@@ -215,6 +216,23 @@ def collect_sections(session: Session) -> list[Section]:
             ),
         ),
         Section(
+            "projects/projects.json",
+            _rows(
+                session,
+                models.Project,
+                (
+                    "id",
+                    "ai_id",
+                    "name",
+                    "description",
+                    "created_at",
+                    "updated_at",
+                    "version",
+                    "archived_at",
+                ),
+            ),
+        ),
+        Section(
             "memory/memories.json",
             _rows(
                 session,
@@ -227,6 +245,7 @@ def collect_sections(session: Session) -> list[Section]:
                     "created_at",
                     "updated_at",
                     "version",
+                    "project_id",
                 ),
             ),
         ),
@@ -235,7 +254,7 @@ def collect_sections(session: Session) -> list[Section]:
             _rows(
                 session,
                 models.Conversation,
-                ("id", "ai_id", "title", "created_at", "updated_at", "version"),
+                ("id", "ai_id", "title", "created_at", "updated_at", "version", "project_id"),
             ),
         ),
         Section(

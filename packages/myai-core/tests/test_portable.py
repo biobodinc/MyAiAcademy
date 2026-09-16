@@ -64,8 +64,19 @@ def _populate(session: Session) -> None:
         )
     )
     session.flush()
-    session.add(models.Memory(uid="mem_1", ai_id="myai_source", content="Allergic to penicillin"))
-    session.add(models.Conversation(id="conv_1", ai_id="myai_source", title="Planning"))
+    session.add(models.Project(id="prj_1", ai_id="myai_source", name="Kitchen rebuild"))
+    session.flush()
+    session.add(
+        models.Memory(
+            uid="mem_1",
+            ai_id="myai_source",
+            content="Allergic to penicillin",
+            project_id="prj_1",
+        )
+    )
+    session.add(
+        models.Conversation(id="conv_1", ai_id="myai_source", title="Planning", project_id="prj_1")
+    )
     session.flush()
     session.add(
         models.Message(uid="msg_1", conversation_id="conv_1", role="user", content="Hello there")
@@ -139,6 +150,13 @@ def test_an_ai_survives_a_round_trip_to_another_machine(
     assert destination.scalar(select(models.Conversation)).title == "Planning"
     assert destination.scalar(select(models.Message)).content == "Hello there"
     assert destination.scalar(select(models.SkillState)).level == 42
+
+    # Grouping survives too: a project that arrived with nothing filed under it would be a
+    # package that technically round-tripped and practically lost the user's organisation.
+    project = destination.scalar(select(models.Project))
+    assert project is not None and project.name == "Kitchen rebuild"
+    assert destination.scalar(select(models.Conversation)).project_id == project.id
+    assert destination.scalar(select(models.Memory)).project_id == project.id
 
 
 def test_a_locked_package_needs_its_password_and_nothing_else_opens_it(

@@ -291,3 +291,55 @@ def test_memory_search_still_works_after_the_projects_migration(session):
     assert [m.content for m in service.search("horses")] == [
         "The horse project is a cinematic adventure film"
     ]
+
+
+# --- the /projects command -------------------------------------------------------------------
+
+
+def _console(projects):
+    from myai_core.commands.dispatcher import CommandContext
+
+    return CommandContext(
+        hardware=lambda: None,
+        skills=lambda: None,
+        preferences=lambda: None,
+        status=dict,
+        projects=projects,
+    )
+
+
+def test_the_projects_command_lists_them_with_counts():
+    from myai_core.commands.dispatcher import execute
+
+    result = execute("/projects", _console(lambda: [("Kitchen rebuild", 12), ("Film", 1)]))
+
+    assert result.title == "Projects (2)"
+    assert "Kitchen rebuild — 12 items" in result.message
+    assert "Film — 1 item" in result.message  # singular, not "1 items"
+    assert result.data["navigate"] == "/projects"
+
+
+def test_the_projects_command_says_what_a_project_is_when_there_are_none():
+    from myai_core.commands.dispatcher import execute
+
+    result = execute("/projects", _console(list))
+
+    assert result.title == "Projects (0)"
+    assert "groups the conversations" in result.message
+
+
+def test_the_projects_command_is_unavailable_without_a_profile():
+    """No AI yet means no projects, and saying so beats an empty list that looks like a bug."""
+    from myai_core.commands.dispatcher import execute
+    from myai_core.commands.models import CommandOutcome
+
+    result = execute("/projects", _console(None))
+
+    assert result.outcome is CommandOutcome.UNAVAILABLE
+
+
+def test_the_help_no_longer_calls_projects_a_future_phase():
+    from myai_core.commands.dispatcher import HELP_TEXT
+
+    assert "/projects" in HELP_TEXT
+    assert "Phase 7" not in HELP_TEXT

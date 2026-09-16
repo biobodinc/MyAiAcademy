@@ -38,7 +38,7 @@ HELP_TEXT = """Commands you can use:
 /memory             what I remember
 /history            benchmark history: every level change and why
 /pause /resume /stop  control the running job
-/projects           your projects (Phase 7)
+/projects           list your projects
 /settings           open settings
 /help               this list
 
@@ -61,6 +61,7 @@ class CommandContext:
         preferences: Callable[[], Preferences],
         status: Callable[[], dict[str, object]],
         memories: Callable[[], list[str]] | None = None,
+        projects: Callable[[], list[tuple[str, int]]] | None = None,
         learn_preview: Callable[[str], LearnPreview] | None = None,
         start_learn: Callable[[str], JobSummary] | None = None,
         current_job: Callable[[], JobSummary | None] | None = None,
@@ -74,6 +75,7 @@ class CommandContext:
         self.preferences = preferences
         self.status = status
         self.memories = memories or (lambda: [])
+        self.projects = projects
         self.learn_preview = learn_preview
         self.start_learn = start_learn
         self.current_job = current_job
@@ -224,6 +226,37 @@ def _memory(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
         title=f"Memory ({len(items)})",
         message=message,
         data={"count": len(items), "navigate": "/memory"},
+    )
+
+
+def _projects(cmd: ParsedCommand, ctx: CommandContext) -> CommandResult:
+    """List projects and how much is filed under each.
+
+    Read-only on purpose. Creating a project is harmless, but this console's other
+    destructive verb — deleting one — needs a question about its contents that a single
+    line of text cannot ask safely, so both live where that question can be put properly.
+    """
+    if ctx.projects is None:
+        return _unavailable(cmd, ctx)
+
+    items = ctx.projects()
+    if not items:
+        message = (
+            "No projects yet. A project groups the conversations, memories and files that "
+            "belong to one piece of work. Create one on the Projects page."
+        )
+    else:
+        message = "\n".join(
+            f"• {name} — {count} item{'' if count == 1 else 's'}" for name, count in items[:20]
+        )
+        if len(items) > 20:
+            message += f"\n… and {len(items) - 20} more."
+    return CommandResult(
+        outcome=CommandOutcome.OK,
+        command=cmd,
+        title=f"Projects ({len(items)})",
+        message=message,
+        data={"count": len(items), "navigate": "/projects"},
     )
 
 
@@ -496,6 +529,7 @@ _HANDLERS: dict[CommandName, Callable[[ParsedCommand, CommandContext], CommandRe
     CommandName.SKILLS: _skills,
     CommandName.SETTINGS: _settings,
     CommandName.MEMORY: _memory,
+    CommandName.PROJECTS: _projects,
     CommandName.LEARN: _learn,
     CommandName.TRAIN: _train,
     CommandName.PAUSE: _job_control,

@@ -918,3 +918,69 @@ export function useDeleteDocument() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["knowledge"] }),
   });
 }
+
+// --- projects ---------------------------------------------------------------------------------
+
+export function useProjects(includeArchived = false) {
+  return useQuery({
+    queryKey: ["projects", includeArchived],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/projects", { params: { query: { include_archived: includeArchived } } }),
+      ),
+  });
+}
+
+export function useProjectContents(projectId: string | null) {
+  return useQuery({
+    queryKey: ["projects", "contents", projectId],
+    enabled: projectId !== null,
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/projects/{project_id}/contents", {
+          params: { path: { project_id: projectId as string } },
+        }),
+      ),
+  });
+}
+
+export function useCreateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string; description: string }) =>
+      unwrap(api.POST("/api/projects", { body: input })),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+
+export function useArchiveProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { project_id: string; archived: boolean }) =>
+      unwrap(
+        api.POST("/api/projects/{project_id}/archive", {
+          params: { path: { project_id: input.project_id } },
+          body: { archived: input.archived },
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+
+/**
+ * `contents` is required by the type, not defaulted, so a caller cannot delete someone's
+ * work by forgetting an argument. The UI asks the question before this is ever reached.
+ */
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { project_id: string; contents: "keep" | "delete" }) =>
+      unwrap(
+        api.POST("/api/projects/{project_id}/delete", {
+          params: { path: { project_id: input.project_id } },
+          body: { contents: input.contents },
+        }),
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
