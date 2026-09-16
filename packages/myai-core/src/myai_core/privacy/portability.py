@@ -45,6 +45,7 @@ from myai_core.db.models import (
     ModelDownload,
     ModelLicenseAcceptance,
     PairingCode,
+    Project,
     SkillEvaluation,
     SkillState,
     SyncConflict,
@@ -130,6 +131,8 @@ _ERASABLE = (
     ("sync_identity", SyncIdentity),
     ("messages", Message),
     ("conversations", Conversation),
+    # After the rows that point at it, so the delete order never trips the foreign key.
+    ("projects", Project),
     ("memories", Memory),
     ("chunks", Chunk),
     ("documents", Document),

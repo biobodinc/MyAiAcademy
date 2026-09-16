@@ -337,6 +337,31 @@ class ModelDownload(Base):
     )
 
 
+class Project(SyncedBase):
+    """A named piece of work: the conversations, memories and documents that belong together.
+
+    A project is a *grouping*, not a container. Nothing lives inside it — conversations,
+    memories and documents carry a nullable `project_id` and are perfectly usable with none.
+    That shape is what makes the delete question answerable without losing anything: see
+    `ProjectService.delete`.
+    """
+
+    __tablename__ = "projects"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    ai_id: Mapped[str] = mapped_column(ForeignKey("ai_profile.ai_id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    """Archiving is the reversible way to get a project out of the way. Deleting is the other
+    one, and it asks what should happen to the contents rather than guessing."""
+
+
 class Conversation(SyncedBase):
     __tablename__ = "conversations"
 
@@ -349,6 +374,11 @@ class Conversation(SyncedBase):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     origin_device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    """Which project this belongs to, if any. `SET NULL` rather than `CASCADE`: losing a
+    project must never take a year of conversation with it."""
 
 
 class Message(SyncedBase):
@@ -392,6 +422,9 @@ class Memory(SyncedBase):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     origin_device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
 
 class Document(Base):
@@ -411,6 +444,9 @@ class Document(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    project_id: Mapped[str | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
 
 class Chunk(Base):

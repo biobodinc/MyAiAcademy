@@ -854,6 +854,156 @@ export interface paths {
         patch: operations["update_profile_api_profile_patch"];
         trace?: never;
     };
+    "/api/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Projects */
+        get: operations["list_projects_api_projects_get"];
+        put?: never;
+        /** Create Project */
+        post: operations["create_project_api_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Project */
+        get: operations["read_project_api_projects__project_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Project */
+        patch: operations["update_project_api_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/projects/{project_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive Project
+         * @description Put a project away, or bring it back. Nothing filed under it is touched.
+         */
+        post: operations["archive_project_api_projects__project_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/contents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Contents
+         * @description How much is filed here — so a confirmation can state the cost rather than imply it.
+         */
+        get: operations["read_contents_api_projects__project_id__contents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Delete Project
+         * @description Delete a project. `contents` is required — see `DeleteRequest`.
+         *
+         *     POST rather than DELETE because this carries a body that must not be optional, and a
+         *     DELETE with a required body is a request some proxies and clients quietly strip.
+         */
+        post: operations["delete_project_api_projects__project_id__delete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/items/conversations/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** File Conversation */
+        put: operations["file_conversation_api_projects_items_conversations__conversation_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/items/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** File Document */
+        put: operations["file_document_api_projects_items_documents__document_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/items/memories/{memory_uid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** File Memory */
+        put: operations["file_memory_api_projects_items_memories__memory_uid__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/security": {
         parameters: {
             query?: never;
@@ -1517,6 +1667,11 @@ export interface components {
             /** Requirement */
             requirement: string;
         };
+        /** ArchiveRequest */
+        ArchiveRequest: {
+            /** Archived */
+            archived: boolean;
+        };
         /**
          * AuditCategory
          * @enum {string}
@@ -1809,6 +1964,12 @@ export interface components {
             /** Uid */
             uid: string;
         };
+        /**
+         * ContentsDisposition
+         * @description What happens to a project's contents when the project is deleted.
+         * @enum {string}
+         */
+        ContentsDisposition: "keep" | "delete";
         /** ConversationCreate */
         ConversationCreate: {
             /** Title */
@@ -1872,6 +2033,11 @@ export interface components {
             note: string;
             /** Skills */
             skills: string[];
+        };
+        /** DeleteRequest */
+        DeleteRequest: {
+            /** @description What happens to the conversations, memories and documents filed under this project. 'keep' unfiles them and leaves them alone; 'delete' removes them too and cannot be undone. There is no default: a wrong guess here is unrecoverable. */
+            contents: components["schemas"]["ContentsDisposition"];
         };
         /** DeviceRead */
         DeviceRead: {
@@ -2107,6 +2273,14 @@ export interface components {
             path: string;
             /** Size Bytes */
             size_bytes: number;
+        };
+        /** FileRequest */
+        FileRequest: {
+            /**
+             * Project Id
+             * @description Null takes the item out of every project.
+             */
+            project_id?: string | null;
         };
         /** GenerationOptions */
         GenerationOptions: {
@@ -3138,6 +3312,55 @@ export interface components {
             /** Personality */
             personality?: string | null;
         };
+        /** ProjectContentsRead */
+        ProjectContentsRead: {
+            /** Conversations */
+            conversations: number;
+            /** Documents */
+            documents: number;
+            /** Memories */
+            memories: number;
+            /** Total */
+            total: number;
+        };
+        /** ProjectCreate */
+        ProjectCreate: {
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Name */
+            name: string;
+        };
+        /** ProjectRead */
+        ProjectRead: {
+            /** Archived */
+            archived: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ProjectUpdate */
+        ProjectUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name?: string | null;
+        };
         /**
          * ProviderInfo
          * @description One entry of the provider architecture (spec §46), reported truthfully.
@@ -3805,6 +4028,7 @@ export interface components {
 export type SchemaAcceleratorBackend = components['schemas']['AcceleratorBackend'];
 export type SchemaAccountState = components['schemas']['AccountState'];
 export type SchemaAchievementStatus = components['schemas']['AchievementStatus'];
+export type SchemaArchiveRequest = components['schemas']['ArchiveRequest'];
 export type SchemaAuditCategory = components['schemas']['AuditCategory'];
 export type SchemaAuditEventRead = components['schemas']['AuditEventRead'];
 export type SchemaAvailability = components['schemas']['Availability'];
@@ -3827,11 +4051,13 @@ export type SchemaCommandRequest = components['schemas']['CommandRequest'];
 export type SchemaCommandResult = components['schemas']['CommandResult'];
 export type SchemaComputePreset = components['schemas']['ComputePreset'];
 export type SchemaConflictRead = components['schemas']['ConflictRead'];
+export type SchemaContentsDisposition = components['schemas']['ContentsDisposition'];
 export type SchemaConversationCreate = components['schemas']['ConversationCreate'];
 export type SchemaConversationRead = components['schemas']['ConversationRead'];
 export type SchemaConversationUpdate = components['schemas']['ConversationUpdate'];
 export type SchemaCpuInfo = components['schemas']['CpuInfo'];
 export type SchemaDegreeStatus = components['schemas']['DegreeStatus'];
+export type SchemaDeleteRequest = components['schemas']['DeleteRequest'];
 export type SchemaDeviceRead = components['schemas']['DeviceRead'];
 export type SchemaDocumentAddPath = components['schemas']['DocumentAddPath'];
 export type SchemaDocumentAddText = components['schemas']['DocumentAddText'];
@@ -3845,6 +4071,7 @@ export type SchemaExperienceMode = components['schemas']['ExperienceMode'];
 export type SchemaExportManifest = components['schemas']['ExportManifest'];
 export type SchemaExportRequest = components['schemas']['ExportRequest'];
 export type SchemaExportResult = components['schemas']['ExportResult'];
+export type SchemaFileRequest = components['schemas']['FileRequest'];
 export type SchemaGenerationOptions = components['schemas']['GenerationOptions'];
 export type SchemaGpuInfo = components['schemas']['GpuInfo'];
 export type SchemaGpuMetrics = components['schemas']['GpuMetrics'];
@@ -3900,6 +4127,10 @@ export type SchemaPrivacySummary = components['schemas']['PrivacySummary'];
 export type SchemaProfileCreate = components['schemas']['ProfileCreate'];
 export type SchemaProfileRead = components['schemas']['ProfileRead'];
 export type SchemaProfileUpdate = components['schemas']['ProfileUpdate'];
+export type SchemaProjectContentsRead = components['schemas']['ProjectContentsRead'];
+export type SchemaProjectCreate = components['schemas']['ProjectCreate'];
+export type SchemaProjectRead = components['schemas']['ProjectRead'];
+export type SchemaProjectUpdate = components['schemas']['ProjectUpdate'];
 export type SchemaProviderInfo = components['schemas']['ProviderInfo'];
 export type SchemaPushRequest = components['schemas']['PushRequest'];
 export type SchemaPushResult = components['schemas']['PushResult'];
@@ -5533,6 +5764,336 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProfileRead"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_projects_api_projects_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_project_api_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_project_api_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_project_api_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_project_api_projects__project_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArchiveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_contents_api_projects__project_id__contents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectContentsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_project_api_projects__project_id__delete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectContentsRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_conversation_api_projects_items_conversations__conversation_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_document_api_projects_items_documents__document_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_memory_api_projects_items_memories__memory_uid__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memory_uid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
