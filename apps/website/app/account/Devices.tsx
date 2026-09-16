@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Notice } from "@/components/Form";
+import { PairingInvite } from "@/components/PairingInvite";
 import { ApiError, type Device, api } from "@/lib/account";
 
 function when(value: string | null): string {
@@ -12,7 +13,7 @@ function when(value: string | null): string {
 
 export function Devices({ token }: { token: string }) {
   const [devices, setDevices] = useState<Device[] | null>(null);
-  const [code, setCode] = useState<string | null>(null);
+  const [invite, setInvite] = useState<{ code: string; expiresAt: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -45,7 +46,7 @@ export function Devices({ token }: { token: string }) {
   const addDevice = () =>
     act(async () => {
       const issued = await api.createPairingCode(token);
-      setCode(issued.code);
+      setInvite({ code: issued.code, expiresAt: issued.expires_at });
     });
 
   const rename = (device: Device) => {
@@ -71,16 +72,7 @@ export function Devices({ token }: { token: string }) {
         Add a device
       </button>
 
-      {code ? (
-        <div className="mt-5 border-l-2 border-accent py-1 pl-5">
-          <p className="datum text-accent uppercase">Pairing code</p>
-          <p className="datum mt-2 text-3xl tracking-[0.3em] text-fg">{code}</p>
-          <p className="mt-2 max-w-md text-sm text-fg-muted">
-            Enter this on the device you are adding. It works once and expires in about ten minutes.
-            Anyone who has it could add a device to your account, so do not share it.
-          </p>
-        </div>
-      ) : null}
+      {invite ? <PairingInvite code={invite.code} expiresAt={invite.expiresAt} /> : null}
 
       {error ? (
         <div className="mt-5">
