@@ -25,7 +25,7 @@ export default async function DownloadPage() {
   return (
     <div className="space-y-8 sm:space-y-10">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Download</h1>
+        <h1 className="display text-4xl sm:text-5xl">Download</h1>
         <p className="mt-3 text-fg-muted">
           Installers are published on GitHub Releases and signed checksums accompany every build.
           The desktop app bundles the local AI service; nothing phones home.
@@ -68,7 +68,7 @@ export default async function DownloadPage() {
           return (
             <div
               key={entry.platform}
-              className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6"
+              className="rounded-sharp border border-border bg-bg-elevated p-5 sm:p-6"
             >
               <h2 className="text-lg font-semibold">{entry.title}</h2>
               {entry.note && <p className="mt-1 text-xs text-fg-muted">{entry.note}</p>}

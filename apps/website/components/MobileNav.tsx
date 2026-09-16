@@ -45,7 +45,7 @@ export function MobileNav() {
     <details ref={details} className="relative md:hidden">
       <summary
         aria-label="Menu"
-        className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-border text-fg-muted marker:content-none hover:text-fg focus-visible:outline-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
+        className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-sharp border border-border text-fg-muted marker:content-none hover:text-fg focus-visible:outline-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden"
       >
         <svg
           width="20"
@@ -62,7 +62,7 @@ export function MobileNav() {
       </summary>
       <nav
         aria-label="Main"
-        className="absolute right-0 z-50 mt-2 w-56 rounded-2xl border border-border bg-bg-elevated p-2 shadow-lg"
+        className="absolute right-0 z-50 mt-2 w-56 rounded-sharp border border-border bg-bg-elevated p-2 shadow-lg"
       >
         <ul className="flex flex-col">
           {NAV_LINKS.map((link) => (
@@ -71,7 +71,7 @@ export function MobileNav() {
                 href={link.href}
                 onClick={close}
                 aria-current={pathname === link.href ? "page" : undefined}
-                className="block rounded-xl px-3 py-3 text-fg-muted hover:bg-bg hover:text-fg aria-[current=page]:text-fg"
+                className="block rounded-sharp px-3 py-3 text-fg-muted hover:bg-bg hover:text-fg aria-[current=page]:text-fg"
               >
                 {link.label}
               </Link>
@@ -81,7 +81,7 @@ export function MobileNav() {
             <Link
               href={SIGN_IN.href}
               onClick={close}
-              className="block rounded-xl bg-accent px-3 py-3 text-center font-medium text-accent-fg"
+              className="block rounded-sharp bg-fg px-3 py-3 text-center font-medium text-bg"
             >
               {SIGN_IN.label}
             </Link>

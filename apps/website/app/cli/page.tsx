@@ -42,7 +42,7 @@ const COMMANDS: Array<[string, string]> = [
 export default function CliPage() {
   return (
     <article className="max-w-3xl">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Command line</h1>
+      <h1 className="display text-4xl sm:text-5xl">Command line</h1>
       <p className="mt-4 text-base text-fg-muted sm:text-lg">
         Until installers are published, the supported way to use MyAI Academy is the{" "}
         <code className="rounded bg-bg-elevated px-1">myai</code> command line run from a source
@@ -58,7 +58,7 @@ export default function CliPage() {
         </PhaseNotice>
       </div>
 
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Requirements</h2>
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Requirements</h2>
       <ul className="mt-3 list-disc space-y-1 pl-6">
         <li>
           Python 3.11 or newer and{" "}
@@ -73,8 +73,8 @@ export default function CliPage() {
         <li>Roughly 1 to 5 GB of disk per model you download</li>
       </ul>
 
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Get running</h2>
-      <pre className="mt-3 overflow-x-auto rounded-2xl border border-border bg-bg-elevated p-4 text-xs sm:text-sm">
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Get running</h2>
+      <pre className="mt-3 overflow-x-auto rounded-sharp border border-border bg-bg-elevated p-4 text-xs sm:text-sm">
         {STEPS.join("\n")}
       </pre>
       <p className="mt-3 text-sm text-fg-muted">
@@ -82,7 +82,7 @@ export default function CliPage() {
         listens on 127.0.0.1 only and authenticates every request with a per-install token.
       </p>
 
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Commands</h2>
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Commands</h2>
       {/* A definition list rather than a table: on a phone the command and what it does
           stack, instead of the second column disappearing off the side. */}
       <dl className="mt-3 divide-y divide-border text-sm">

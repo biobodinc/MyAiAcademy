@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Sign in" };
 export default function SignInPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Sign in</h1>
+      <h1 className="display text-4xl sm:text-5xl">Sign in</h1>
       <PhaseNotice phase={5}>
         There is no account to sign in to. Not a form that does nothing, and not a stub: this build
         has no account server and no code path that would send anything to one. When sign-in ships
