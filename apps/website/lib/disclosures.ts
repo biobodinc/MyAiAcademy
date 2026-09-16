@@ -34,8 +34,8 @@ export const DISCLOSURES = [
     body: "The computer side is built and tested: the listener, the certificate, the pairing code and the QR that carries the fingerprint to pin. The phone side is not finished, because pinning a self-signed certificate in React Native needs a native module and a device build, and we will not ship a connection that has never been made on real hardware. The app reports itself unpaired, which is the truth.",
   },
   {
-    title: "There are no accounts, and nothing signs in.",
-    body: "This build has no account server and no code path that would send anything to one. Everything stays on the machine it runs on. An account is planned as the way to get installers and to sign in on more than one device; until it exists, the app, the command line and this site all say there is none rather than implying otherwise.",
+    title: "The account server exists in the repository, but is not running anywhere.",
+    body: "An account server is now written and tested \u2014 sign-up with email confirmation, sign-in, device pairing and revocation \u2014 and this site has pages for it. Nothing is deployed: the published site is built without an account server configured, so those pages say there is none rather than showing a form that posts into the void. The desktop app and the command line still have no account code path at all. When it does run, it will hold an email address, a hashed password, which devices you have added, and a log of account activity \u2014 never your conversations, memories, files or model weights.",
   },
   {
     title: "Pairing grants access to programs on your machine, not to other machines.",

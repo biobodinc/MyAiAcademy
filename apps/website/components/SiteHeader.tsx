@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { MobileNav } from "@/components/MobileNav";
-import { NAV_LINKS, SIGN_IN } from "@/lib/nav";
+import { AccountLink } from "@/components/AccountLink";
+import { NAV_LINKS } from "@/lib/nav";
 import { SITE } from "@/lib/site";
 
 export function SiteHeader() {
@@ -23,12 +24,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href={SIGN_IN.href}
-            className="rounded-sharp bg-fg px-4 py-2 text-sm font-medium text-bg transition-opacity hover:opacity-85"
-          >
-            {SIGN_IN.label}
-          </Link>
+          <AccountLink className="rounded-sharp bg-fg px-4 py-2 text-sm font-medium text-bg transition-opacity hover:opacity-85" />
         </nav>
         <MobileNav />
       </div>

@@ -13,7 +13,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { NAV_LINKS, SIGN_IN } from "@/lib/nav";
+import { AccountLink } from "@/components/AccountLink";
+import { NAV_LINKS } from "@/lib/nav";
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -78,13 +79,10 @@ export function MobileNav() {
             </li>
           ))}
           <li className="mt-1 border-t border-border pt-2">
-            <Link
-              href={SIGN_IN.href}
-              onClick={close}
+            <AccountLink
+              onNavigate={close}
               className="block rounded-sharp bg-fg px-3 py-3 text-center font-medium text-bg"
-            >
-              {SIGN_IN.label}
-            </Link>
+            />
           </li>
         </ul>
       </nav>

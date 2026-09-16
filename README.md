@@ -66,10 +66,14 @@ updated.
   be learned and trained**: designing mechanics, levels and narrative is prose and arithmetic,
   so it has a deterministic benchmark like the other text skills
   ([ADR-0018](docs/adr/0018-creative-skills-and-the-cloud-shortcut.md)).
-- **There are no accounts, and nothing signs in.** There is no account server in this
-  build and no code path that would send anything to one. Everything is local to the
-  machine it runs on. An account is planned as the way to get installers and to sign in on
-  more than one device; until it exists, every surface says there is none.
+- **The account server exists in the repository, but is not running anywhere.** An
+  account server is written and tested — sign-up with email confirmation, sign-in, device
+  pairing and revocation — and the website has pages for it. Nothing is deployed: the
+  published site is built without an account server configured, so those pages say there is
+  none rather than showing a form that posts into the void. The desktop app and the command
+  line still have no account code path at all. When it does run it will hold an email
+  address, a hashed password, which devices you have added, and a log of account activity —
+  never your conversations, memories, files or model weights.
 - **Nothing on your network can reach your AI until you turn that on.** The local service
   listens on 127.0.0.1 only. Network access is a second listener you switch on deliberately:
   HTTPS with a certificate the host mints and a device pins, recorded in the audit log both
