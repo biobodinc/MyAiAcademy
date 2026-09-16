@@ -35,7 +35,7 @@ export const DISCLOSURES = [
   },
   {
     title: "The account server exists in the repository, but is not running anywhere.",
-    body: "An account server is now written and tested \u2014 sign-up with email confirmation, sign-in, device pairing and revocation \u2014 and this site has pages for it. Nothing is deployed: the published site is built without an account server configured, so those pages say there is none rather than showing a form that posts into the void. The desktop app and the command line still have no account code path at all. When it does run, it will hold an email address, a hashed password, which devices you have added, and a log of account activity \u2014 never your conversations, memories, files or model weights.",
+    body: "An account server is now written and tested \u2014 sign-up with email confirmation, sign-in with a password or with Google, Apple or Facebook, device pairing and revocation \u2014 and this site has pages for it. Nothing is deployed: the published site is built without an account server configured, so those pages say there is none rather than showing a form that posts into the void. The desktop app and the command line still have no account code path at all. When it does run, it will hold an email address, a hashed password, which devices you have added, and a log of account activity \u2014 never your conversations, memories, files or model weights.",
   },
   {
     title: "Pairing grants access to programs on your machine, not to other machines.",

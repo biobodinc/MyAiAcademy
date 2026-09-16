@@ -67,8 +67,9 @@ updated.
   so it has a deterministic benchmark like the other text skills
   ([ADR-0018](docs/adr/0018-creative-skills-and-the-cloud-shortcut.md)).
 - **The account server exists in the repository, but is not running anywhere.** An
-  account server is written and tested — sign-up with email confirmation, sign-in, device
-  pairing and revocation — and the website has pages for it. Nothing is deployed: the
+  account server is written and tested — sign-up with email confirmation, sign-in with a
+  password or with Google, Apple or Facebook, device pairing and revocation — and the website
+  has pages for it. No provider credentials are configured, so no provider is offered. Nothing is deployed: the
   published site is built without an account server configured, so those pages say there is
   none rather than showing a form that posts into the void. The desktop app and the command
   line still have no account code path at all. When it does run it will hold an email

@@ -17,12 +17,13 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session as DbSession
 
-from myai_server import passwords, tokens
+from myai_server import oauth, passwords, tokens
 from myai_server.models import (
     Account,
     AuditEvent,
     Device,
     EmailVerification,
+    OAuthFlow,
     PairingCode,
     Session,
 )
@@ -453,6 +454,118 @@ class AccountService:
         self._log_event(account_id, "device_paired", device_id=device.device_id)
         self.session.flush()
         return device, token
+
+    # --- signing in with a provider -----------------------------------------------------
+
+    def start_oauth_flow(self, provider: str, redirect_uri: str) -> tuple[str, str]:
+        """Record a flow and return its `state` and PKCE verifier."""
+        state, verifier = oauth.new_state(), oauth.new_verifier()
+        self.session.add(
+            OAuthFlow(
+                state=state,
+                provider=provider,
+                code_verifier=verifier,
+                redirect_uri=redirect_uri,
+                expires_at=datetime.now(UTC) + timedelta(minutes=oauth.FLOW_LIFETIME_MINUTES),
+            )
+        )
+        self.session.flush()
+        return state, verifier
+
+    def take_oauth_flow(self, state: str) -> OAuthFlow | None:
+        """Look up and spend a flow. A state we did not issue, or one already used, is None."""
+        flow = self.session.query(OAuthFlow).filter_by(state=state).first()
+        if flow is None or flow.used_at is not None:
+            return None
+        if datetime.now(UTC) > _aware(flow.expires_at):
+            return None
+        flow.used_at = datetime.now(UTC)
+        self.session.flush()
+        return flow
+
+    def resolve_oauth_account(
+        self, provider: str, subject: str, email: str | None, email_verified: bool
+    ) -> tuple[Account | None, str | None]:
+        """Find, link or create the account this provider identity belongs to.
+
+        Returns `(account, None)` or `(None, reason)`. The order matters:
+
+        1. A match on (provider, subject) is the same person signing in again. The provider's
+           own id is the key, never the address — an address can be changed at the provider,
+           and at some providers reassigned to somebody else entirely.
+        2. Otherwise an address the provider has *verified* may join an existing account that
+           has no provider linked. Linking on an unverified address would let anyone who put
+           `you@example.com` into a provider profile walk into your account.
+        3. Otherwise a new account. An unverified address is dropped rather than stored,
+           because the address column is unique: keeping it would let a provider identity
+           squat an address its owner could then never register.
+        """
+        existing = self.get_account_by_oauth(provider, subject)
+        if existing is not None:
+            return existing, None
+
+        if email and email_verified:
+            by_email = self.get_account_by_email(email)
+            if by_email is not None:
+                if by_email.oauth_provider and by_email.oauth_id != subject:
+                    return None, (
+                        f"That address already signs in with {by_email.oauth_provider.title()}. "
+                        f"Use that, or sign in with your password."
+                    )
+                by_email.oauth_provider = provider
+                by_email.oauth_id = subject
+                if by_email.email_verified_at is None:
+                    by_email.email_verified_at = datetime.now(UTC)
+                self._log_event(by_email.account_id, "oauth_linked", details=f"provider={provider}")
+                self.session.flush()
+                return by_email, None
+
+        account = self.create_account(
+            email=email if email_verified else None,
+            oauth_provider=provider,
+            oauth_id=subject,
+        )
+        if email and email_verified:
+            account.email_verified_at = datetime.now(UTC)
+        self.session.flush()
+        return account, None
+
+    def issue_handoff(self, flow: OAuthFlow, account_id: str) -> str:
+        """Attach a single-use handoff secret to a finished flow, and return it once.
+
+        This exists so the session token never travels in a URL. The handoff does, but it is
+        worth one POST within two minutes and nothing afterwards.
+        """
+        token, token_hash = tokens.new_token()
+        flow.account_id = account_id
+        flow.handoff_hash = token_hash
+        flow.handoff_expires_at = datetime.now(UTC) + timedelta(
+            seconds=oauth.HANDOFF_LIFETIME_SECONDS
+        )
+        self.session.flush()
+        return token
+
+    def redeem_handoff(self, token: str) -> tuple[Account, str] | None:
+        """Swap a handoff for a real session. Single use."""
+        flow = (
+            self.session.query(OAuthFlow).filter_by(handoff_hash=tokens.hash_token(token)).first()
+        )
+        if flow is None or flow.account_id is None or flow.handoff_expires_at is None:
+            return None
+        if datetime.now(UTC) > _aware(flow.handoff_expires_at):
+            return None
+
+        account = self.get_account(flow.account_id)
+        if account is None:
+            return None
+
+        # Spent on first use, so a handoff left in browser history is worth nothing.
+        flow.handoff_hash = None
+        flow.handoff_expires_at = None
+        session_token = self.create_session(account.account_id, days=WEB_SESSION_DAYS)
+        self._log_event(account.account_id, "sign_in", details=f"provider={flow.provider}")
+        self.session.flush()
+        return account, session_token
 
     # --- audit --------------------------------------------------------------------------
 

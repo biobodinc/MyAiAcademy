@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { NoAccountServer } from "@/components/Form";
+import { OAuthButtons } from "@/components/OAuthButtons";
 import { accountsAvailable } from "@/lib/account";
 
 import { SignUpForm } from "./SignUpForm";
@@ -17,7 +18,14 @@ export default function SignUpPage() {
           else — your AI stays on your own computer.
         </p>
       </div>
-      {accountsAvailable() ? <SignUpForm /> : <NoAccountServer />}
+      {accountsAvailable() ? (
+        <>
+          <OAuthButtons />
+          <SignUpForm />
+        </>
+      ) : (
+        <NoAccountServer />
+      )}
     </div>
   );
 }

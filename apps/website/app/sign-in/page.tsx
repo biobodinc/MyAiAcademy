@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { NoAccountServer } from "@/components/Form";
+import { OAuthButtons } from "@/components/OAuthButtons";
 import { accountsAvailable } from "@/lib/account";
 
 import { SignInForm } from "./SignInForm";
@@ -17,7 +18,14 @@ export default function SignInPage() {
           conversations, memories or documents.
         </p>
       </div>
-      {accountsAvailable() ? <SignInForm /> : <NoAccountServer />}
+      {accountsAvailable() ? (
+        <>
+          <OAuthButtons />
+          <SignInForm />
+        </>
+      ) : (
+        <NoAccountServer />
+      )}
     </div>
   );
 }

@@ -47,6 +47,11 @@ export interface AuditEvent {
   details: string | null;
 }
 
+export interface OAuthProvider {
+  name: string;
+  label: string;
+}
+
 export interface AuthResult {
   token: string;
   account: Account;
@@ -127,7 +132,21 @@ async function request<T>(
   return body as T;
 }
 
+/** Where the browser goes to begin signing in with a provider. A top-level navigation,
+ * not a fetch: the provider's consent screen has to be a real page. */
+export function oauthStartUrl(provider: string): string {
+  return `${ACCOUNT_API}/api/oauth/${encodeURIComponent(provider)}/start`;
+}
+
 export const api = {
+  oauthProviders: () => request<OAuthProvider[]>("/api/oauth/providers"),
+
+  redeemHandoff: (handoff: string) =>
+    request<AuthResult>("/api/oauth/handoff", {
+      method: "POST",
+      body: JSON.stringify({ handoff }),
+    }),
+
   signUp: (email: string, password: string) =>
     request<SignUpResult>("/api/accounts/sign-up", {
       method: "POST",

@@ -1,21 +1,7 @@
 """Tests for account creation, pairing, and device management."""
 
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-from myai_server.db import Base
 from myai_server.models import PairingCode
 from myai_server.services import AccountService, generate_account_id, generate_pairing_code
-
-
-@pytest.fixture
-def in_memory_db():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
-    return session_factory()
 
 
 def test_account_id_generation():

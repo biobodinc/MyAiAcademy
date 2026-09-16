@@ -215,3 +215,47 @@ class EmailVerification(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     account: Mapped["Account"] = relationship("Account", back_populates="email_verifications")
+
+
+class OAuthFlow(Base):
+    """One sign-in-with-a-provider attempt, from the first click to the handoff.
+
+    The row is the `state` parameter: issued here, looked up on the callback, and spent. A
+    callback carrying a state with no row is not a flow this server started.
+
+    After a successful callback it also carries the handoff — a second single-use secret,
+    stored hashed, that the website exchanges for a session. That exists so no session token
+    ever travels in a URL, where it would land in browser history and any referrer.
+    """
+
+    __tablename__ = "oauth_flows"
+
+    state: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    code_verifier: Mapped[str] = mapped_column(String(128), nullable=False)
+    """The PKCE verifier. Never leaves this server; its challenge went to the provider."""
+
+    redirect_uri: Mapped[str] = mapped_column(String(512), nullable=False)
+    """Recorded so the token exchange presents exactly what the authorize call did, which
+    the provider checks."""
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
+
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    handoff_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+
+    handoff_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    account_id: Mapped[str | None] = mapped_column(
+        String(16), ForeignKey("accounts.account_id"), nullable=True
+    )
+    """Filled in once the callback has resolved which account this sign-in belongs to."""

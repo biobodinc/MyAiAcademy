@@ -91,3 +91,9 @@ def account(client) -> dict:
 @pytest.fixture
 def auth(account) -> dict[str, str]:
     return {"Authorization": f"Bearer {account['token']}"}
+
+
+@pytest.fixture
+def in_memory_db(engine):
+    """A session on the throwaway database, for tests that call services directly."""
+    return make_session_factory(engine)()

@@ -18,7 +18,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Engine
 
-from myai_server.api.routes import accounts, devices
+from myai_server.api.routes import accounts, devices, oauth
 from myai_server.config import ServerSettings
 from myai_server.db import create_engine_from_env, init_db, make_session_factory
 from myai_server.email import ConsoleEmailSender, EmailSender
@@ -84,6 +84,7 @@ def create_app(
     api.include_router(accounts.router)
     api.include_router(devices.router)
     api.include_router(devices.pairing_router)
+    api.include_router(oauth.router)
     app.include_router(api)
 
     @app.get("/healthz", include_in_schema=False)
