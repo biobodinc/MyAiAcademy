@@ -1,7 +1,24 @@
 @import "tailwindcss";
 
+/* Design notes, so the next person changing this knows what is deliberate.
+ *
+ * The palette is warm ink on warm paper, with one rust signal colour used sparingly.
+ * It is emphatically not the violet-to-indigo that generated interfaces default to —
+ * that hue is the single clearest tell that nobody chose it. Warm neutrals also suit
+ * what this project actually is: something that runs on your own machine, documented
+ * plainly, rather than a hosted service selling itself.
+ *
+ * Three faces, each with a job. A serif carries display text, because an editorial
+ * voice is the opposite of a template. The body face is a grotesque with some
+ * engineering character. Monospace is reserved for anything factual — versions,
+ * phases, states — so the reader can tell a claim from a measurement at a glance.
+ */
+
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
   --color-bg: var(--bg);
   --color-bg-elevated: var(--bg-elevated);
   --color-fg: var(--fg);
@@ -10,30 +27,34 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-soft: var(--accent-soft);
+
+  /* Squared off. A 2px radius reads as considered; a pill reads as a default. */
+  --radius-sharp: 2px;
 }
 
 :root {
-  --bg: #f6f7fb;
+  --bg: #fbfaf7;
   --bg-elevated: #ffffff;
-  --fg: #14161f;
-  --fg-muted: #5c6275;
-  --border: #e2e5ee;
-  --accent: #6d4aff;
+  --fg: #1a1a17;
+  --fg-muted: #6b6961;
+  --border: #e0ddd4;
+  --accent: #a83e20;
   --accent-fg: #ffffff;
-  --accent-soft: #ece7ff;
+  --accent-soft: #f5e9e3;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1016;
-    --bg-elevated: #161925;
-    --fg: #eef0f6;
-    --fg-muted: #9aa1b8;
-    --border: #262b3c;
-    --accent: #8b6dff;
-    --accent-fg: #0e1016;
-    --accent-soft: #25204a;
+    --bg: #141412;
+    --bg-elevated: #1d1c19;
+    --fg: #edeae2;
+    --fg-muted: #9a968b;
+    --border: #2e2c27;
+    /* Lifted from the light-mode rust: #a83e20 on this ground would sit under 3:1. */
+    --accent: #e2724c;
+    --accent-fg: #141412;
+    --accent-soft: #2e1e17;
   }
 }
 
@@ -46,4 +67,21 @@ body {
   @apply bg-bg text-fg font-sans antialiased;
   /* Long paths and URLs must wrap rather than widen the page on a phone. */
   overflow-wrap: break-word;
+}
+
+/* Display type is set tight and optically aligned. Serifs at large sizes need
+ * negative tracking that would be wrong at body size, so it lives here rather
+ * than being sprinkled per-heading. */
+.display {
+  @apply font-serif font-normal;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+}
+
+/* Factual text: phases, versions, states, counts. */
+.datum {
+  @apply font-mono;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
 }

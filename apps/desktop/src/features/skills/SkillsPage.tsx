@@ -214,8 +214,12 @@ function SkillCard({
           )}
           {skill.package && !skill.learned && (
             <p className="mt-2 text-xs text-fg-muted">
+              {/* The licence is deliberately not shown. Every package here is first-party, so
+                  an SPDX identifier is noise to a reader; when third-party packages exist,
+                  who wrote one will matter more than its licence string, and this line can
+                  say that instead. */}
               Package v{skill.package.version}: {skill.package.task_count} benchmark tasks across{" "}
-              {skill.package.areas.map(titleCase).join(", ")} · {skill.package.license}
+              {skill.package.areas.map(titleCase).join(", ")}
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">
@@ -562,7 +566,7 @@ function TrainingRunsList({ runs }: { runs: TrainingRunRead[] }) {
   return (
     <ul className="mt-3 space-y-2 text-sm">
       {runs.map((run) => (
-        <li key={run.id} className="rounded-xl border border-border p-3">
+        <li key={run.id} className="rounded border border-border p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span>
               {new Date(run.started_at).toLocaleString()} \u00b7 {run.rounds_completed} rounds
@@ -637,7 +641,7 @@ function EvaluationDetail({ evaluation: e }: { evaluation: EvaluationRead }) {
     details: string[];
   }>;
   return (
-    <div className="mt-4 rounded-xl border border-border p-3 text-sm">
+    <div className="mt-4 rounded border border-border p-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>
           {new Date(e.evaluated_at).toLocaleString()} · level {e.level_before} → {e.level_after} ·{" "}

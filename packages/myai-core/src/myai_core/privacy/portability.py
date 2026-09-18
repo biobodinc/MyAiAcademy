@@ -32,6 +32,7 @@ from myai_core import __version__
 from myai_core.audit.service import AuditCategory, AuditService
 from myai_core.db.base import Base
 from myai_core.db.models import (
+    AccountInfo,
     AIProfile,
     AuditEvent,
     Chunk,
@@ -44,6 +45,7 @@ from myai_core.db.models import (
     ModelDownload,
     ModelLicenseAcceptance,
     PairingCode,
+    Project,
     SkillEvaluation,
     SkillState,
     SyncConflict,
@@ -129,6 +131,8 @@ _ERASABLE = (
     ("sync_identity", SyncIdentity),
     ("messages", Message),
     ("conversations", Conversation),
+    # After the rows that point at it, so the delete order never trips the foreign key.
+    ("projects", Project),
     ("memories", Memory),
     ("chunks", Chunk),
     ("documents", Document),
@@ -141,6 +145,9 @@ _ERASABLE = (
     ("devices", Device),
     ("pairing_codes", PairingCode),
     ("audit_events", AuditEvent),
+    # The link to an account is an identifier for the person, not just a setting, so an erase
+    # that left it would leave this machine still pointing at them.
+    ("account_info", AccountInfo),
     ("ai_profile", AIProfile),
 )
 

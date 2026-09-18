@@ -13,6 +13,7 @@ import { KnowledgePage } from "./features/knowledge/KnowledgePage";
 import { MemoryPage } from "./features/memory/MemoryPage";
 import { ModelsPage } from "./features/models/ModelsPage";
 import { OnboardingWizard } from "./features/onboarding/OnboardingWizard";
+import { ProjectsPage } from "./features/projects/ProjectsPage";
 import { PrivacyPage } from "./features/privacy/PrivacyPage";
 import { SecurityPage } from "./features/security/SecurityPage";
 import { PortablePage } from "./features/portable/PortablePage";
@@ -62,6 +63,7 @@ function ThemedRoutes() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="hardware" element={<HardwarePage />} />
           <Route path="storage" element={<StoragePage />} />
+          <Route path="projects" element={<ProjectsPage />} />
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="security" element={<SecurityPage />} />
           <Route path="sync" element={<SyncPage />} />

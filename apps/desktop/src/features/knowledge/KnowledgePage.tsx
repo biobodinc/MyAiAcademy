@@ -134,7 +134,7 @@ export function KnowledgePage() {
             <Field label="Text" htmlFor="k-text">
               <textarea
                 id="k-text"
-                className="min-h-24 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm"
+                className="min-h-24 w-full rounded border border-border bg-bg px-3 py-2 text-sm"
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
@@ -176,7 +176,7 @@ export function KnowledgePage() {
         )}
         <ul className="mt-3 space-y-2">
           {search.data?.map((hit) => (
-            <li key={hit.chunk_id} className="rounded-xl bg-bg-muted p-3 text-sm">
+            <li key={hit.chunk_id} className="rounded bg-bg-muted p-3 text-sm">
               <div className="mb-1 text-xs font-semibold text-fg-muted">
                 {hit.document_title} §{hit.ordinal + 1}
               </div>

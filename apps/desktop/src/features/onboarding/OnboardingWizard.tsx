@@ -424,7 +424,7 @@ function LocalModelStep({ onNext, onBack }: { onNext: () => void; onBack: () => 
       )}
       {(models.isPending || recommended.isPending) && <Spinner />}
       {entry?.catalog && (
-        <div className="rounded-xl border border-border bg-bg p-4">
+        <div className="rounded border border-border bg-bg p-4">
           <div className="font-semibold">{entry.name}</div>
           <div className="text-xs text-fg-muted">
             {entry.catalog.parameters_billion}B · about{" "}

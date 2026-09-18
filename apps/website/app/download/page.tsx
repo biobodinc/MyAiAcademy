@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { PhaseNotice } from "@/components/PhaseNotice";
 import { fetchLatestRelease, formatSize, type Platform } from "@/lib/releases";
-import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Download" };
 
@@ -19,30 +18,17 @@ const ORDER: Array<{ platform: Platform; title: string; note?: string }> = [
 ];
 
 export default async function DownloadPage() {
-  const release = await fetchLatestRelease(SITE.githubRepo);
-  const releasesUrl = `https://github.com/${SITE.githubRepo}/releases`;
+  const release = await fetchLatestRelease();
 
   return (
     <div className="space-y-8 sm:space-y-10">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Download</h1>
+        <h1 className="display text-4xl sm:text-5xl">Download</h1>
         <p className="mt-3 text-fg-muted">
-          Installers are published on GitHub Releases and signed checksums accompany every build.
-          The desktop app bundles the local AI service; nothing phones home.
+          Signed checksums will accompany every build. The desktop app bundles the local AI service;
+          nothing phones home.
         </p>
       </div>
-
-      <PhaseNotice phase={1}>
-        Until signed installers exist, use the{" "}
-        <Link className="underline" href="/cli">
-          command-line interface
-        </Link>{" "}
-        from a source checkout. Read the{" "}
-        <Link className="underline" href="/disclosures">
-          disclosures
-        </Link>{" "}
-        first.
-      </PhaseNotice>
 
       {release ? (
         <p className="text-sm text-fg-muted">
@@ -54,11 +40,16 @@ export default async function DownloadPage() {
         </p>
       ) : (
         <PhaseNotice phase={1}>
-          No public release has been published yet. Builds will appear on the{" "}
-          <a className="underline" href={releasesUrl} rel="noopener noreferrer">
-            GitHub Releases page
-          </a>{" "}
-          as soon as the first installer is signed.
+          No public release has been published yet, and there is no download to link to. Where
+          builds will be hosted is not decided; this page will carry them when it is. The{" "}
+          <Link className="underline" href="/cli">
+            command-line interface
+          </Link>{" "}
+          describes what it will do, and the{" "}
+          <Link className="underline" href="/disclosures">
+            disclosures
+          </Link>{" "}
+          say what else is unfinished.
         </PhaseNotice>
       )}
 
@@ -68,7 +59,7 @@ export default async function DownloadPage() {
           return (
             <div
               key={entry.platform}
-              className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6"
+              className="rounded-sharp border border-border bg-bg-elevated p-5 sm:p-6"
             >
               <h2 className="text-lg font-semibold">{entry.title}</h2>
               {entry.note && <p className="mt-1 text-xs text-fg-muted">{entry.note}</p>}
@@ -100,8 +91,9 @@ export default async function DownloadPage() {
           the App Store here.
         </PhaseNotice>
         <PhaseNotice phase={1}>
-          <strong>Build from source.</strong> The repository includes reproducible build
-          instructions for the desktop app, the CLI and this website.
+          <strong>No source checkout.</strong> Development happens in a private repository, so
+          building it yourself is not an option today. Everything here will arrive as a signed build
+          instead.
         </PhaseNotice>
       </div>
     </div>

@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0e1016"
+      "backgroundColor": "#141412"
     },
     "ios": {
       "bundleIdentifier": "org.myaiacademy.mobile",
@@ -23,7 +23,7 @@
     },
     "android": {
       "package": "org.myaiacademy.mobile",
-      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0e1016" },
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#141412" },
       "permissions": [],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",

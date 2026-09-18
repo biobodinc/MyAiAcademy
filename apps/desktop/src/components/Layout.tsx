@@ -6,6 +6,7 @@ import {
   Boxes,
   Brain,
   Cpu,
+  FolderKanban,
   MessageSquare,
   NotebookPen,
   HardDrive,
@@ -31,6 +32,7 @@ const nav = [
   { to: "/models", label: "Models", icon: Boxes },
   { to: "/memory", label: "Memory", icon: NotebookPen },
   { to: "/knowledge", label: "Knowledge", icon: BookOpen },
+  { to: "/projects", label: "Projects", icon: FolderKanban },
   { to: "/skills", label: "Skills", icon: Sparkles },
   { to: "/profile", label: "My AI", icon: UserRound },
   { to: "/hardware", label: "Hardware", icon: Cpu },
@@ -66,7 +68,7 @@ export function Layout() {
               end={end}
               className={({ isActive }) =>
                 cx(
-                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                  "flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition",
                   isActive
                     ? "bg-accent-soft text-accent"
                     : "text-fg-muted hover:bg-bg-muted hover:text-fg",

@@ -2,6 +2,11 @@ import Link from "next/link";
 
 import { SITE } from "@/lib/site";
 
+/**
+ * Four claims, deliberately not four equal cards. Real features are lopsided — the first
+ * two are what the project *is*, the second two are what it does — so they are set as an
+ * indexed list with rules rather than a grid of identical boxes.
+ */
 const pillars = [
   {
     title: "Your AI",
@@ -21,84 +26,120 @@ const pillars = [
   },
 ];
 
+/**
+ * The most unusual thing on this site is that it says what is not finished. Set as a
+ * spec sheet in monospace, so a state reads as a measurement rather than a promise.
+ */
 const status = [
-  { label: "Desktop app (Windows first)", state: "Phase 1 · done" },
-  { label: "Local chat, memory and knowledge", state: "Phase 2 · done, see disclosures" },
-  { label: "Skills, /learn, benchmarks and levels", state: "Phase 3 · done" },
-  { label: "/train, training jobs and checkpoints", state: "Phase 4 · done" },
-  { label: "Accounts, device pairing, mobile", state: "Phases 5–6" },
-  { label: "Encrypted sync and portable .myai export", state: "Phases 7–8" },
+  { label: "Desktop app (Windows first)", phase: "1", state: "done" },
+  { label: "Local chat, memory and knowledge", phase: "2", state: "done, see disclosures" },
+  { label: "Skills, /learn, benchmarks and levels", phase: "3", state: "done" },
+  { label: "/train, training jobs and checkpoints", phase: "4", state: "done" },
+  { label: "Accounts, device pairing, mobile", phase: "5–6", state: "in progress" },
+  { label: "Encrypted sync and portable .myai export", phase: "7–8", state: "in progress" },
 ];
 
 export default function HomePage() {
   return (
-    <div className="space-y-14 sm:space-y-20">
-      <section className="text-center">
-        <p className="text-xs font-semibold tracking-widest text-accent uppercase sm:text-sm">
-          {SITE.tagline}
-        </p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-          A personal AI you actually own.
-        </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-base text-fg-muted sm:mt-6 sm:text-lg">
-          {SITE.description}
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Link
-            href="/download"
-            className="rounded-full bg-accent px-6 py-3 text-center font-medium text-accent-fg"
-          >
-            Download
-          </Link>
-          <Link
-            href="/privacy"
-            className="rounded-full border border-border px-6 py-3 text-center font-medium"
-          >
-            Read the privacy promise
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
-        {pillars.map((p) => (
-          <div key={p.title} className="rounded-2xl border border-border bg-bg-elevated p-5 sm:p-6">
-            <h2 className="text-lg font-semibold sm:text-xl">{p.title}</h2>
-            <p className="mt-2 text-fg-muted">{p.body}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="rounded-2xl border border-dashed border-border bg-bg-elevated p-5 sm:p-6">
-        <h2 className="text-lg font-semibold sm:text-xl">Read first</h2>
-        <p className="mt-2 text-fg-muted">
-          Installers are not published yet, no catalog model has been run on consumer hardware by
-          the authors, and the mobile app is a skeleton. The full list is on the{" "}
-          <Link href="/disclosures" className="underline">
-            disclosures page
-          </Link>
-          ; the same list is in the repository README.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-bold sm:text-2xl">Where the project is</h2>
-        <p className="mt-2 text-fg-muted">
-          MyAI Academy is built in the open, phase by phase. We say what works today and what does
-          not yet.
-        </p>
-        <ul className="mt-6 divide-y divide-border rounded-2xl border border-border bg-bg-elevated">
-          {status.map((s) => (
-            <li
-              key={s.label}
-              className="flex flex-col gap-0.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-4"
+    <div>
+      {/* Hero. Left-aligned and asymmetric: the claim takes the wide column, the caveat
+          sits beside it rather than under it, so the page opens with both at once. */}
+      <section className="grid gap-10 md:grid-cols-12 md:gap-8">
+        <div className="md:col-span-8">
+          <p className="datum text-accent uppercase">{SITE.tagline}</p>
+          <h1 className="display mt-5 text-[2.75rem] sm:text-6xl md:text-7xl">
+            A personal AI you
+            <br />
+            actually own.
+          </h1>
+          <p className="mt-6 max-w-xl text-lg text-fg-muted">{SITE.description}</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/download"
+              className="rounded-sharp bg-fg px-6 py-3 text-center font-medium text-bg transition-opacity hover:opacity-85"
             >
-              <span>{s.label}</span>
-              <span className="text-sm text-fg-muted sm:text-right sm:whitespace-nowrap">
-                {s.state}
-              </span>
-            </li>
+              Download
+            </Link>
+            <Link
+              href="/privacy"
+              className="rounded-sharp border border-fg px-6 py-3 text-center font-medium transition-colors hover:bg-fg hover:text-bg"
+            >
+              Read the privacy promise
+            </Link>
+          </div>
+        </div>
+
+        <aside className="border-accent border-l-2 pl-5 md:col-span-4 md:pt-2">
+          <p className="datum text-fg-muted uppercase">Read first</p>
+          <p className="mt-3 text-sm text-fg-muted">
+            Installers are not published yet, no catalog model has been run on consumer hardware by
+            the authors, and the mobile app is a skeleton.
+          </p>
+          <Link
+            href="/disclosures"
+            className="mt-3 inline-block text-sm text-accent underline underline-offset-4"
+          >
+            The full list of what is not finished
+          </Link>
+        </aside>
+      </section>
+
+      {/* An indexed list, not a card grid. The rules carry the structure. */}
+      <section className="mt-20 border-t border-border sm:mt-28">
+        <dl>
+          {pillars.map((p, i) => (
+            <div
+              key={p.title}
+              className="grid items-baseline gap-x-6 gap-y-2 border-b border-border py-6 sm:grid-cols-12 sm:py-7"
+            >
+              <dt className="flex items-baseline gap-4 sm:col-span-4">
+                <span className="datum text-fg-muted">{String(i + 1).padStart(2, "0")}</span>
+                <span className="display text-2xl sm:text-3xl">{p.title}</span>
+              </dt>
+              <dd className="text-fg-muted sm:col-span-8 sm:text-lg">{p.body}</dd>
+            </div>
           ))}
-        </ul>
+        </dl>
+      </section>
+
+      <section className="mt-24 sm:mt-32">
+        <div className="max-w-2xl">
+          <h2 className="display text-3xl sm:text-4xl">Where the project is</h2>
+          <p className="mt-4 text-fg-muted">
+            MyAI Academy is built phase by phase. The source is not public, so this page and the app
+            itself are where we say what works today and what does not yet.
+          </p>
+        </div>
+
+        <table className="mt-10 w-full border-collapse text-left">
+          <caption className="sr-only">Build status by phase</caption>
+          <thead>
+            <tr className="border-b border-fg">
+              <th scope="col" className="datum py-2 pr-4 font-medium text-fg-muted uppercase">
+                Phase
+              </th>
+              <th scope="col" className="datum py-2 pr-4 font-medium text-fg-muted uppercase">
+                Capability
+              </th>
+              <th scope="col" className="datum py-2 text-right font-medium text-fg-muted uppercase">
+                State
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {status.map((s) => (
+              <tr key={s.label} className="border-b border-border align-baseline">
+                <td className="datum py-4 pr-4 text-fg-muted whitespace-nowrap">{s.phase}</td>
+                <td className="py-4 pr-4">{s.label}</td>
+                <td className="datum py-4 text-right">
+                  <span className={s.state === "done" ? "text-fg-muted" : "text-accent"}>
+                    {s.state}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </div>
   );

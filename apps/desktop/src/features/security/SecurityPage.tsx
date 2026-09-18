@@ -201,7 +201,7 @@ function InviteCard({ invite }: { invite: PairingInvite }) {
   }, [invite.payload]);
 
   return (
-    <div className="mt-4 flex flex-wrap items-start gap-4 rounded-xl border border-border p-4">
+    <div className="mt-4 flex flex-wrap items-start gap-4 rounded border border-border p-4">
       {qr ? (
         <img src={qr} alt="Pairing QR code" className="h-40 w-40 rounded-lg bg-white p-2" />
       ) : (
@@ -239,7 +239,7 @@ function ClientsCard({ devices, canManage }: { devices: DeviceRead[]; canManage:
       </p>
 
       {canManage && (
-        <div className="mt-4 space-y-3 rounded-xl border border-border p-3">
+        <div className="mt-4 space-y-3 rounded border border-border p-3">
           <p className="text-sm font-medium">What should the next client be allowed to do?</p>
           {catalog.isPending ? (
             <Spinner />
@@ -317,7 +317,7 @@ function ClientsCard({ devices, canManage }: { devices: DeviceRead[]; canManage:
       ) : (
         <ul className="mt-3 space-y-2 text-sm">
           {devices.map((device) => (
-            <li key={device.id} className="rounded-xl border border-border p-3">
+            <li key={device.id} className="rounded border border-border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ function DataCard({ canManage }: { canManage: boolean }) {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-danger/40 p-4">
+      <div className="mt-6 rounded border border-danger/40 p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-danger">
           <Trash2 className="h-4 w-4" aria-hidden /> Erase everything
         </h3>

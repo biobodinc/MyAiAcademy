@@ -18,7 +18,7 @@ in the product as clearly labelled "Planned · Phase N" states; nothing is faked
 | **Desktop app** (Tauri + React, Windows first) | First-run flow, dashboard, hardware assessment, storage location management, AI profile, skill tree, settings, Privacy Center, security activity log, command console (`/help`, `/status`, `/hardware`, `/skills`, `/settings`, natural-language mapping). |
 | **Local service** (`myai-core`, Python)        | Loopback-only authenticated API, SQLite with migrations, hardware detection, storage manager, profile, preferences, audit log.                                                                                                                             |
 | **CLI** (`myai`)                               | Same features from a terminal.                                                                                                                                                                                                                             |
-| **Website** (Next.js, Vercel)                  | Landing, downloads from GitHub Releases, privacy and security pages, sign-in entry point (Phase 5).                                                                                                                                                        |
+| **Website** (Next.js, Vercel)                  | Landing, downloads, privacy and security pages, account pages (Phase 5).                                                                                                                                                                                   |
 | **Mobile** (Expo)                              | Store-ready skeleton with the connection state model; pairing arrives in Phase 6.                                                                                                                                                                          |
 
 ## Disclosures
@@ -35,7 +35,7 @@ updated.
   Face. Any failure is reported in the UI rather than hidden.
 - **No signed installers are published yet.** The release workflow builds Windows, macOS
   and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded
-  to GitHub Releases, Google Play or the App Store. The download page will say
+  anywhere, including Google Play and the App Store. The download page will say
   "Not available yet" until that happens.
 - **Your AI is reachable from your network only if you say so.** The service listens on
   127.0.0.1 until you turn on network access; then it starts a second, HTTPS-only listener
@@ -66,10 +66,15 @@ updated.
   be learned and trained**: designing mechanics, levels and narrative is prose and arithmetic,
   so it has a deterministic benchmark like the other text skills
   ([ADR-0018](docs/adr/0018-creative-skills-and-the-cloud-shortcut.md)).
-- **There are no accounts, and nothing signs in.** There is no account server in this
-  build and no code path that would send anything to one. Everything is local to the
-  machine it runs on. An account is planned as the way to get installers and to sign in on
-  more than one device; until it exists, every surface says there is none.
+- **The account server exists in the repository, but is not running anywhere.** An
+  account server is written and tested — sign-up with email confirmation, sign-in with a
+  password or with Google, Apple or Facebook, device pairing and revocation — and the website
+  has pages for it. No provider credentials are configured, so no provider is offered. Nothing is deployed: the
+  published site is built without an account server configured, so those pages say there is
+  none rather than showing a form that posts into the void. The desktop app and the command
+  line still have no account code path at all. When it does run it will hold an email
+  address, a hashed password, which devices you have added, and a log of account activity —
+  never your conversations, memories, files or model weights.
 - **Nothing on your network can reach your AI until you turn that on.** The local service
   listens on 127.0.0.1 only. Network access is a second listener you switch on deliberately:
   HTTPS with a certificate the host mints and a device pins, recorded in the audit log both
@@ -102,8 +107,7 @@ Until installers are published, the supported way to use MyAI Academy is the `my
 run from a source checkout. It exposes everything the desktop app does today.
 
 ```
-git clone https://github.com/biobodinc/MyAiAcademy.git
-cd MyAiAcademy
+cd MyAiAcademy            # a checkout of this repository
 uv sync --all-packages --all-groups --all-extras   # needs Python 3.11+, uv, CMake and a C++ compiler
 uv run myai serve                                    # terminal 1: the local service (127.0.0.1 only)
 uv run myai status                                   # terminal 2
@@ -153,4 +157,5 @@ in CI secrets and the Vercel/EAS dashboards.
 
 ## Licence
 
-Apache-2.0. See [`LICENSE`](LICENSE).
+Proprietary. All rights reserved — no permission is granted to copy, modify, distribute
+or fork this work. See [`LICENSE`](LICENSE).

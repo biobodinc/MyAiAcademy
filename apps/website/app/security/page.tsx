@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 
-import { SITE } from "@/lib/site";
-
 export const metadata: Metadata = { title: "Security" };
 
 export default function SecurityPage() {
   return (
     <article className="max-w-3xl">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Security</h1>
+      <h1 className="display text-4xl sm:text-5xl">Security</h1>
       <p className="mt-4 text-base text-fg-muted sm:text-lg">
         Whenever convenience conflicts with security, we choose security.
       </p>
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">
         How the desktop app protects itself
       </h2>
       <ul className="mt-3 list-disc space-y-2 pl-6">
@@ -32,7 +30,7 @@ export default function SecurityPage() {
         </li>
         <li>Security-relevant events are recorded in a local activity log you can inspect.</li>
       </ul>
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Planned</h2>
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Planned</h2>
       <ul className="mt-3 list-disc space-y-2 pl-6">
         <li>OAuth 2.0 / OpenID Connect with PKCE for sign-in through this website (Phase 5).</li>
         <li>Per-device identities with revocation and scoped permissions (Phase 5–6).</li>
@@ -44,17 +42,11 @@ export default function SecurityPage() {
           7).
         </li>
       </ul>
-      <h2 className="mt-8 text-xl font-semibold sm:mt-10 sm:text-2xl">Reporting a vulnerability</h2>
+      <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Reporting a vulnerability</h2>
       <p className="mt-3">
-        Please open a private security advisory on{" "}
-        <a
-          className="underline"
-          href={`https://github.com/${SITE.githubRepo}/security/advisories/new`}
-          rel="noopener noreferrer"
-        >
-          GitHub
-        </a>
-        . Do not file public issues for security problems.
+        There is no published channel for reporting one yet, and rather than point you at an address
+        nobody is reading, this says so. A contact route will be published here before there are
+        installers for anyone to attack.
       </p>
     </article>
   );

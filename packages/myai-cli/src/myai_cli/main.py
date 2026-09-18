@@ -37,6 +37,10 @@ sync_app = typer.Typer(
 portable_app = typer.Typer(
     help="Carry your AI to another machine, or keep it as a backup.", no_args_is_help=True
 )
+projects_app = typer.Typer(
+    help="Group the conversations, memories and files that belong together.",
+    no_args_is_help=True,
+)
 app.add_typer(storage_app, name="storage")
 app.add_typer(profile_app, name="profile")
 app.add_typer(settings_app, name="settings")
@@ -47,6 +51,7 @@ app.add_typer(knowledge_app, name="knowledge")
 app.add_typer(security_app, name="security")
 app.add_typer(sync_app, name="sync")
 app.add_typer(portable_app, name="portable")
+app.add_typer(projects_app, name="projects")
 app.command(name="chat")(chat)
 
 console = Console()
@@ -1346,6 +1351,109 @@ def entrypoint() -> None:
     if sys.argv[1:2] == [SANDBOX_FLAG]:
         raise SystemExit(harness_main())
     app()
+
+
+# --- projects ---------------------------------------------------------------------------------
+
+
+@projects_app.command("list")
+def projects_list(
+    data_dir: DataDirOpt = None,
+    as_json: JsonOpt = False,
+    archived: bool = typer.Option(False, "--archived", help="Include archived projects."),
+) -> None:
+    """List your projects and how much is filed under each."""
+    svc = _service(data_dir)
+    items = _call(svc.get, f"/projects?include_archived={'true' if archived else 'false'}")
+    if as_json:
+        return _emit_json(items)
+    if not items:
+        console.print('No projects yet. [dim]myai projects new "Kitchen rebuild"[/dim] makes one.')
+        return
+    table = Table(title="Projects")
+    table.add_column("Name")
+    table.add_column("Items", justify="right")
+    table.add_column("Id", style="dim")
+    for project in items:
+        held = _call(svc.get, f"/projects/{project['id']}/contents")
+        name = (
+            f"{project['name']} [dim](archived)[/dim]" if project["archived"] else project["name"]
+        )
+        table.add_row(name, str(held["total"]), project["id"])
+    console.print(table)
+
+
+@projects_app.command("new")
+def projects_new(
+    name: str,
+    description: str = typer.Option("", "--description", "-d"),
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Create a project."""
+    project = _call(
+        _service(data_dir).post, "/projects", {"name": name, "description": description}
+    )
+    console.print(f"[green]Created {project['name']}[/green] [dim]{project['id']}[/dim]")
+
+
+@projects_app.command("archive")
+def projects_archive(
+    project_id: str,
+    restore: bool = typer.Option(False, "--restore", help="Bring it back instead."),
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Put a project away, or bring it back. Nothing filed under it is touched."""
+    project = _call(
+        _service(data_dir).post, f"/projects/{project_id}/archive", {"archived": not restore}
+    )
+    word = "restored" if restore else "archived"
+    console.print(f"[green]{project['name']} {word}[/green]")
+
+
+@projects_app.command("delete")
+def projects_delete(
+    project_id: str,
+    contents: str = typer.Option(
+        ...,
+        "--contents",
+        help="keep: unfile them and leave them alone. delete: remove them too, permanently.",
+    ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip the confirmation."),
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Delete a project, saying what should happen to what is filed under it.
+
+    `--contents` is required and has no default. This is the one command here that can
+    destroy work, and the difference between the two answers is everything filed under the
+    project, so it is not a flag anybody should be able to leave off and find out later.
+    """
+    if contents not in ("keep", "delete"):
+        err_console.print("--contents must be 'keep' or 'delete'.")
+        raise typer.Exit(code=2)
+
+    svc = _service(data_dir)
+    project = _call(svc.get, f"/projects/{project_id}")
+    held = _call(svc.get, f"/projects/{project_id}/contents")
+
+    if contents == "delete" and held["total"]:
+        console.print(
+            f"[red]This deletes {project['name']} and {held['total']} item(s) with it: "
+            f"{held['conversations']} conversation(s), {held['memories']} memory(ies), "
+            f"{held['documents']} document(s). This cannot be undone.[/red]"
+        )
+    else:
+        console.print(
+            f"Deleting {project['name']}. Its {held['total']} item(s) will be kept and simply "
+            "stop belonging to a project."
+        )
+    if not yes and not typer.confirm("Go ahead?", default=False):
+        raise typer.Exit(code=1)
+
+    removed = _call(svc.post, f"/projects/{project_id}/delete", {"contents": contents})
+    if contents == "delete":
+        console.print(f"[green]Deleted, with {removed['total']} item(s).[/green]")
+    else:
+        console.print(f"[green]Deleted. {removed['total']} item(s) kept.[/green]")
 
 
 if __name__ == "__main__":

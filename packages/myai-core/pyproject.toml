@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "MyAI Academy local AI service: the private, local-first core that runs on the user's own hardware."
 readme = "README.md"
 requires-python = ">=3.11"
-license = "Apache-2.0"
+license = "LicenseRef-Proprietary"
 authors = [{ name = "MyAI Academy" }]
 dependencies = [
   "fastapi>=0.120",

@@ -48,11 +48,29 @@ class SyncedEntity:
     AI rather than carrying a key that means nothing there."""
 
 
+PROJECT = SyncedEntity(
+    name="project",
+    model=models.Project,
+    uid_attr="id",
+    fields=(
+        "id",
+        "ai_id",
+        "name",
+        "description",
+        "created_at",
+        "updated_at",
+        "version",
+        "archived_at",
+    ),
+    rebind_ai=True,
+)
+
 CONVERSATION = SyncedEntity(
     name="conversation",
     model=models.Conversation,
     uid_attr="id",
-    fields=("id", "ai_id", "title", "created_at", "updated_at", "version"),
+    fields=("id", "ai_id", "title", "created_at", "updated_at", "version", "project_id"),
+    parents=("project",),
     rebind_ai=True,
 )
 
@@ -76,7 +94,17 @@ MEMORY = SyncedEntity(
     name="memory",
     model=models.Memory,
     uid_attr="uid",
-    fields=("uid", "ai_id", "content", "category", "created_at", "updated_at", "version"),
+    fields=(
+        "uid",
+        "ai_id",
+        "content",
+        "category",
+        "created_at",
+        "updated_at",
+        "version",
+        "project_id",
+    ),
+    parents=("project",),
     rebind_ai=True,
 )
 
@@ -99,7 +127,7 @@ SKILL_STATE = SyncedEntity(
     rebind_ai=True,
 )
 
-SYNCED: tuple[SyncedEntity, ...] = (CONVERSATION, MESSAGE, MEMORY, SKILL_STATE)
+SYNCED: tuple[SyncedEntity, ...] = (PROJECT, CONVERSATION, MESSAGE, MEMORY, SKILL_STATE)
 """In apply order: a parent is always earlier in this tuple than anything referencing it."""
 
 BY_NAME: dict[str, SyncedEntity] = {entity.name: entity for entity in SYNCED}
@@ -113,6 +141,9 @@ NOT_SYNCED: dict[str, str] = {
     "issued it.",
     "audit_events": "Each installation keeps its own account of what was done to it. An audit "
     "log that arrived from elsewhere is not evidence.",
+    "account_info": "Which account this installation was paired to. Each device is added to "
+    "an account deliberately, by someone entering a code on that device; copying the link "
+    "would enrol a machine nobody paired, and revoking one device would not reach it.",
     "sync_identity": "This installation's own name and clock.",
     "sync_peers": "Who this installation syncs with, and how far it has got.",
     "sync_tombstones": "Deletions travel as changes, not as rows of their own.",

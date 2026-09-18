@@ -32,6 +32,8 @@ class Capability(StrEnum):
     CHAT_WRITE = "chat:write"
     MEMORY_READ = "memory:read"
     MEMORY_WRITE = "memory:write"
+    PROJECTS_READ = "projects:read"
+    PROJECTS_WRITE = "projects:write"
     KNOWLEDGE_READ = "knowledge:read"
     KNOWLEDGE_WRITE = "knowledge:write"
     SKILLS_READ = "skills:read"
@@ -88,6 +90,19 @@ CAPABILITIES: tuple[CapabilityInfo, ...] = (
         "Change what your AI remembers",
         "Add, edit and delete remembered facts. A tool with this can rewrite what your AI "
         "believes about you.",
+        sensitive=True,
+    ),
+    CapabilityInfo(
+        Capability.PROJECTS_READ,
+        "See how your work is grouped",
+        "The names of your projects and how much is filed under each. Not the contents — "
+        "reading those still needs the grant for conversations, memories or files.",
+    ),
+    CapabilityInfo(
+        Capability.PROJECTS_WRITE,
+        "Group and ungroup your work",
+        "Create, rename and delete projects, and move things between them. Deleting a project "
+        "can be asked to delete everything filed under it.",
         sensitive=True,
     ),
     CapabilityInfo(
@@ -151,9 +166,11 @@ MOBILE_GRANT: frozenset[Capability] = DEFAULT_GRANT | {
     Capability.CHAT_READ,
     Capability.CHAT_WRITE,
     Capability.MEMORY_READ,
+    Capability.PROJECTS_READ,
     Capability.SYNC,
 }
-"""A phone acting as a controller. Still not knowledge files, and still not writing memory."""
+"""A phone acting as a controller. It can see how work is grouped, but not regroup it —
+and still not knowledge files, and still not writing memory."""
 
 FULL_GRANT: frozenset[Capability] = frozenset(Capability)
 """Everything a client can hold. Never everything the *owner* can do — issuing credentials,

@@ -81,7 +81,7 @@ export function MemoryPage() {
           <Field label="Category" htmlFor="memory-category">
             <select
               id="memory-category"
-              className="h-10 w-full rounded-xl border border-border bg-bg px-3 text-sm"
+              className="h-10 w-full rounded border border-border bg-bg px-3 text-sm"
               value={category}
               onChange={(e) => {
                 setCategory(e.target.value as MemoryCategory);

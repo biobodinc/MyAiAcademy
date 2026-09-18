@@ -112,8 +112,8 @@ function Segmented<T extends string>({
             }}
             className={
               active
-                ? "rounded-xl border-2 border-accent bg-accent-soft px-4 py-3 text-left"
-                : "rounded-xl border-2 border-border bg-bg px-4 py-3 text-left hover:border-fg-muted"
+                ? "rounded border-2 border-accent bg-accent-soft px-4 py-3 text-left"
+                : "rounded border-2 border-border bg-bg px-4 py-3 text-left hover:border-fg-muted"
             }
           >
             <div className="text-sm font-semibold">{o.label}</div>

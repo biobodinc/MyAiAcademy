@@ -8,8 +8,10 @@ import { cx } from "../lib/cx";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
+// Ink carries the primary action, not the accent. The accent is rust, and a rust "save"
+// sitting beside a red "delete" asks people to tell two warm reds apart at a glance.
 const buttonVariants: Record<Variant, string> = {
-  primary: "bg-accent text-accent-fg hover:brightness-110 shadow-sm",
+  primary: "bg-fg text-bg hover:opacity-85 shadow-sm",
   secondary: "bg-bg-muted text-fg hover:bg-border",
   ghost: "text-fg-muted hover:bg-bg-muted hover:text-fg",
   danger: "bg-danger text-white hover:brightness-110",
@@ -26,7 +28,7 @@ export function Button({
     <button
       type="button"
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition",
+        "inline-flex items-center justify-center gap-2 rounded font-medium transition",
         "disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent",
         buttonVariants[variant],
         sizes[size],
@@ -134,7 +136,7 @@ export function StatusPill({ tone, children }: { tone: Tone; children: ReactNode
     muted: "bg-fg-muted",
   };
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-bg-muted px-3 py-1 text-xs font-medium">
+    <span className="inline-flex items-center gap-2 rounded bg-bg-muted px-3 py-1 text-xs font-medium">
       <span className={cx("h-2 w-2 rounded-full", dot[tone])} aria-hidden />
       {children}
     </span>
@@ -151,7 +153,7 @@ export function Stat({
   hint?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl bg-bg-muted px-4 py-3">
+    <div className="rounded bg-bg-muted px-4 py-3">
       <div className="text-xs font-medium text-fg-muted">{label}</div>
       <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
       {hint && <div className="mt-0.5 text-xs text-fg-muted">{hint}</div>}
@@ -175,7 +177,7 @@ export function Alert({
     success: "border-success/40 bg-success/10",
   };
   return (
-    <div role="alert" className={cx("rounded-xl border px-4 py-3 text-sm", tones[tone])}>
+    <div role="alert" className={cx("rounded border px-4 py-3 text-sm", tones[tone])}>
       {title && <div className="font-semibold">{title}</div>}
       <div className={cx(title && "mt-1", "text-fg")}>{children}</div>
     </div>
@@ -206,7 +208,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cx(
-        "h-10 w-full rounded-xl border border-border bg-bg px-3 text-sm outline-none",
+        "h-10 w-full rounded border border-border bg-bg px-3 text-sm outline-none",
         "focus:border-accent focus:ring-2 focus:ring-accent/30",
         className,
       )}

@@ -3,7 +3,8 @@ name = "myai-academy-desktop"
 version = "0.1.0"
 description = "MyAI Academy desktop application"
 authors = ["MyAI Academy"]
-license = "Apache-2.0"
+license = "LicenseRef-Proprietary"
+publish = false
 edition = "2021"
 rust-version = "1.77"
 

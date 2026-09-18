@@ -2,7 +2,7 @@
   "id": "conversation",
   "version": "1.0.0",
   "name": "Conversation",
-  "license": "Apache-2.0",
+  "license": "LicenseRef-Proprietary",
   "summary": "Follow instructions precisely, keep answers clear, and use what was said earlier in the conversation.",
   "areas": ["instruction_following", "clarity", "context"],
   "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark. No download, no adapter."

@@ -15,27 +15,27 @@ export interface Palette {
 }
 
 export const LIGHT: Palette = {
-  background: "#f6f7fb",
+  background: "#fbfaf7",
   surface: "#ffffff",
-  border: "#e2e5ee",
-  text: "#161925",
-  muted: "#5c6275",
-  accent: "#2f5bea",
+  border: "#e0ddd4",
+  text: "#1a1a17",
+  muted: "#6b6961",
+  accent: "#a83e20",
   accentText: "#ffffff",
-  danger: "#b3261e",
-  warning: "#8a5a00",
+  danger: "#9f1239",
+  warning: "#a16207",
 };
 
 export const DARK: Palette = {
-  background: "#0e1016",
-  surface: "#161925",
-  border: "#262b3c",
-  text: "#eef0f6",
-  muted: "#9aa1b8",
-  accent: "#7d9bff",
-  accentText: "#0e1016",
-  danger: "#ff8a80",
-  warning: "#ffc66d",
+  background: "#141412",
+  surface: "#1d1c19",
+  border: "#2e2c27",
+  text: "#edeae2",
+  muted: "#9a968b",
+  accent: "#e2724c",
+  accentText: "#141412",
+  danger: "#f2708d",
+  warning: "#e0a33c",
 };
 
 export const styles = StyleSheet.create({
