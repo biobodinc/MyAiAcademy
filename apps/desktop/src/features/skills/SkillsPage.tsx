@@ -214,8 +214,12 @@ function SkillCard({
           )}
           {skill.package && !skill.learned && (
             <p className="mt-2 text-xs text-fg-muted">
+              {/* The licence is deliberately not shown. Every package here is first-party, so
+                  an SPDX identifier is noise to a reader; when third-party packages exist,
+                  who wrote one will matter more than its licence string, and this line can
+                  say that instead. */}
               Package v{skill.package.version}: {skill.package.task_count} benchmark tasks across{" "}
-              {skill.package.areas.map(titleCase).join(", ")} · {skill.package.license}
+              {skill.package.areas.map(titleCase).join(", ")}
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-2">

@@ -60,7 +60,10 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor: primary ? palette.accent : "transparent",
+          // Ink carries the action, as it does on the desktop app and the website. Rust is
+          // reserved for signalling state, so the three surfaces follow one rule rather than
+          // each making its own reasonable-looking choice.
+          backgroundColor: primary ? palette.text : "transparent",
           borderWidth: primary ? 0 : 1,
           borderColor: palette.border,
           opacity: inactive ? 0.45 : pressed ? 0.8 : 1,
@@ -68,9 +71,9 @@ export function Button({
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={primary ? palette.accentText : palette.text} />
+        <ActivityIndicator color={primary ? palette.background : palette.text} />
       ) : (
-        <Text style={[styles.buttonLabel, { color: primary ? palette.accentText : palette.text }]}>
+        <Text style={[styles.buttonLabel, { color: primary ? palette.background : palette.text }]}>
           {label}
         </Text>
       )}
