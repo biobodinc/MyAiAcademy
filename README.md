@@ -18,7 +18,7 @@ in the product as clearly labelled "Planned · Phase N" states; nothing is faked
 | **Desktop app** (Tauri + React, Windows first) | First-run flow, dashboard, hardware assessment, storage location management, AI profile, skill tree, settings, Privacy Center, security activity log, command console (`/help`, `/status`, `/hardware`, `/skills`, `/settings`, natural-language mapping). |
 | **Local service** (`myai-core`, Python)        | Loopback-only authenticated API, SQLite with migrations, hardware detection, storage manager, profile, preferences, audit log.                                                                                                                             |
 | **CLI** (`myai`)                               | Same features from a terminal.                                                                                                                                                                                                                             |
-| **Website** (Next.js, Vercel)                  | Landing, downloads from GitHub Releases, privacy and security pages, sign-in entry point (Phase 5).                                                                                                                                                        |
+| **Website** (Next.js, Vercel)                  | Landing, downloads, privacy and security pages, account pages (Phase 5).                                                                                                                                                                                   |
 | **Mobile** (Expo)                              | Store-ready skeleton with the connection state model; pairing arrives in Phase 6.                                                                                                                                                                          |
 
 ## Disclosures
@@ -35,7 +35,7 @@ updated.
   Face. Any failure is reported in the UI rather than hidden.
 - **No signed installers are published yet.** The release workflow builds Windows, macOS
   and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded
-  to GitHub Releases, Google Play or the App Store. The download page will say
+  anywhere, including Google Play and the App Store. The download page will say
   "Not available yet" until that happens.
 - **Your AI is reachable from your network only if you say so.** The service listens on
   127.0.0.1 until you turn on network access; then it starts a second, HTTPS-only listener
@@ -107,8 +107,7 @@ Until installers are published, the supported way to use MyAI Academy is the `my
 run from a source checkout. It exposes everything the desktop app does today.
 
 ```
-git clone https://github.com/biobodinc/MyAiAcademy.git
-cd MyAiAcademy
+cd MyAiAcademy            # a checkout of this repository
 uv sync --all-packages --all-groups --all-extras   # needs Python 3.11+, uv, CMake and a C++ compiler
 uv run myai serve                                    # terminal 1: the local service (127.0.0.1 only)
 uv run myai status                                   # terminal 2

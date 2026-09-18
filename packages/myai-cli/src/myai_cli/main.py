@@ -1353,10 +1353,6 @@ def entrypoint() -> None:
     app()
 
 
-if __name__ == "__main__":
-    entrypoint()
-
-
 # --- projects ---------------------------------------------------------------------------------
 
 
@@ -1458,3 +1454,7 @@ def projects_delete(
         console.print(f"[green]Deleted, with {removed['total']} item(s).[/green]")
     else:
         console.print(f"[green]Deleted. {removed['total']} item(s) kept.[/green]")
+
+
+if __name__ == "__main__":
+    entrypoint()

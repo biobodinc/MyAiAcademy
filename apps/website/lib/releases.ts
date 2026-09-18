@@ -68,20 +68,16 @@ export function toReleaseInfo(release: GitHubRelease): ReleaseInfo {
   };
 }
 
-export async function fetchLatestRelease(repo: string): Promise<ReleaseInfo | null> {
-  try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=5`, {
-      headers: { Accept: "application/vnd.github+json" },
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return null;
-    const releases = (await res.json()) as GitHubRelease[];
-    const stable =
-      releases.find((r) => !r.draft && !r.prerelease) ?? releases.find((r) => !r.draft);
-    return stable ? toReleaseInfo(stable) : null;
-  } catch {
-    return null;
-  }
+/**
+ * Where published builds come from.
+ *
+ * Nowhere, currently. The source repository is private, so there is no public releases feed
+ * to read and this returns null rather than calling one that would only ever 404. The
+ * classification helpers above stay because they describe what a release *is*, and whatever
+ * hosts the first signed installer will need them.
+ */
+export async function fetchLatestRelease(): Promise<ReleaseInfo | null> {
+  return null;
 }
 
 export function formatSize(bytes: number): string {

@@ -28,7 +28,7 @@ function accountApiOrigin(): string | null {
   }
 }
 
-const connectSrc = ["'self'", "https://api.github.com", accountApiOrigin()].filter(Boolean);
+const connectSrc = ["'self'", accountApiOrigin()].filter(Boolean);
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -42,7 +42,7 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https://avatars.githubusercontent.com",
+      "img-src 'self' data:",
       "font-src 'self'",
       `connect-src ${connectSrc.join(" ")}`,
       "frame-ancestors 'none'",

@@ -106,8 +106,8 @@ export default function HomePage() {
         <div className="max-w-2xl">
           <h2 className="display text-3xl sm:text-4xl">Where the project is</h2>
           <p className="mt-4 text-fg-muted">
-            MyAI Academy is built in the open, phase by phase. We say what works today and what does
-            not yet — on this page, in the README, and in the app itself.
+            MyAI Academy is built phase by phase. The source is not public, so this page and the app
+            itself are where we say what works today and what does not yet.
           </p>
         </div>
 

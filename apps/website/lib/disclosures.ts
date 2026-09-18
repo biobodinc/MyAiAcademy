@@ -7,7 +7,7 @@ export const DISCLOSURES = [
   },
   {
     title: "No signed installers are published yet.",
-    body: "The release workflow builds Windows, macOS and Linux packages and CLI archives, but nothing has been signed, notarised or uploaded to GitHub Releases, Google Play or the App Store. Downloads say “Not available yet” until that happens.",
+    body: "The release workflow builds Windows, macOS and Linux packages and CLI archives, but nothing has been signed, notarised or published anywhere — not to a download page, not to Google Play, not to the App Store. Downloads say “Not available yet” until that happens.",
   },
   {
     title: "The mobile app is a skeleton.",

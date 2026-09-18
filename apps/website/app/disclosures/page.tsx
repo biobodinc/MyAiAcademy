@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { DISCLOSURES, DISCLOSURES_UPDATED } from "@/lib/disclosures";
-import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Disclosures" };
 
@@ -28,15 +27,8 @@ export default function DisclosuresPage() {
         ))}
       </ol>
       <p className="mt-8 text-sm text-fg-muted">
-        The same list lives in the repository README so the two cannot drift silently:{" "}
-        <a
-          className="underline"
-          href={`https://github.com/${SITE.githubRepo}#disclosures`}
-          rel="noopener noreferrer"
-        >
-          github.com/{SITE.githubRepo}
-        </a>
-        .
+        The same list is built into the app, so what you read here and what the app tells you cannot
+        drift apart.
       </p>
     </article>
   );

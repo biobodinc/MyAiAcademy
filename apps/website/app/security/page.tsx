@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import { SITE } from "@/lib/site";
-
 export const metadata: Metadata = { title: "Security" };
 
 export default function SecurityPage() {
@@ -46,15 +44,9 @@ export default function SecurityPage() {
       </ul>
       <h2 className="display mt-10 text-2xl sm:mt-12 sm:text-3xl">Reporting a vulnerability</h2>
       <p className="mt-3">
-        Please open a private security advisory on{" "}
-        <a
-          className="underline"
-          href={`https://github.com/${SITE.githubRepo}/security/advisories/new`}
-          rel="noopener noreferrer"
-        >
-          GitHub
-        </a>
-        . Do not file public issues for security problems.
+        There is no published channel for reporting one yet, and rather than point you at an address
+        nobody is reading, this says so. A contact route will be published here before there are
+        installers for anyone to attack.
       </p>
     </article>
   );

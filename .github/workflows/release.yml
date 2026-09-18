@@ -121,16 +121,21 @@ jobs:
           uv build --package myai-core --out-dir dist
           uv build --package myai-cli --out-dir dist
       - name: Build standalone CLI binary
+        # The build lives in scripts/build_cli.py rather than here, so it can be run and
+        # proved on a laptop instead of only being exercised during a release.
+        run: uv run --group bundle python scripts/build_cli.py --out dist/bin
+      - name: Check the binary runs and carries every command
+        # The second line is not ceremony: pointing PyInstaller at a script rather than a
+        # module once shipped a binary whose `myai projects` had no subcommands at all, and
+        # nothing failed at build time to say so.
         shell: bash
         run: |
-          uv run --group bundle python -m PyInstaller --noconfirm --clean --onefile \
-            --name myai --paths packages/myai-core/src --paths packages/myai-cli/src \
-            --add-data "packages/myai-core/src/myai_core/db/migrations$( [ "$RUNNER_OS" = Windows ] && echo ';' || echo ':' )myai_core/db/migrations" \
-            --add-data "packages/myai-core/src/myai_core/skills/packages$( [ "$RUNNER_OS" = Windows ] && echo ';' || echo ':' )myai_core/skills/packages" \
-            --hidden-import myai_core.db.migrations.env \
-            --collect-submodules uvicorn --collect-submodules alembic --collect-submodules sqlalchemy.dialects.sqlite \
-            --collect-all llama_cpp --collect-submodules pypdf \
-            --distpath dist/bin packages/myai-cli/src/myai_cli/main.py
+          BIN=./dist/bin/myai; [ "$RUNNER_OS" = Windows ] && BIN=./dist/bin/myai.exe
+          "$BIN" --version
+          "$BIN" projects --help | grep -q delete
+      - name: Archive
+        shell: bash
+        run: |
           cd dist/bin
           if [ "$RUNNER_OS" = Windows ]; then 7z a ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.zip myai.exe; \
           else tar czf ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.tar.gz myai; fi
