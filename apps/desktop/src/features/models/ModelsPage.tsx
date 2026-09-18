@@ -280,7 +280,7 @@ function ImportCard() {
       <div className="mt-3 flex gap-2">
         <input
           aria-label="Model file path"
-          className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 font-mono text-xs outline-none focus:border-accent"
+          className="h-10 min-w-0 flex-1 rounded border border-border bg-bg px-3 font-mono text-xs outline-none focus:border-accent"
           placeholder="/path/to/model.gguf"
           value={path}
           onChange={(e) => {

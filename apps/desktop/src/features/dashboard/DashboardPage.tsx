@@ -92,7 +92,7 @@ export function DashboardPage() {
             {skills.data?.skills.map((s) => (
               <li
                 key={s.id}
-                className="flex items-center gap-2 rounded-xl bg-bg-muted px-3 py-2 text-sm"
+                className="flex items-center gap-2 rounded bg-bg-muted px-3 py-2 text-sm"
               >
                 <span aria-hidden>{s.icon}</span>
                 <span className="flex-1 truncate">{s.name}</span>
@@ -180,8 +180,8 @@ export function DashboardPage() {
               aria-disabled={!a.ready}
               className={
                 a.ready
-                  ? "rounded-xl border border-border bg-bg p-4 transition hover:border-accent"
-                  : "rounded-xl border border-dashed border-border bg-bg p-4 opacity-70"
+                  ? "rounded border border-border bg-bg p-4 transition hover:border-accent"
+                  : "rounded border border-dashed border-border bg-bg p-4 opacity-70"
               }
             >
               <div className="flex items-center justify-between">

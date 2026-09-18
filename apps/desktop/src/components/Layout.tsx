@@ -68,7 +68,7 @@ export function Layout() {
               end={end}
               className={({ isActive }) =>
                 cx(
-                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                  "flex items-center gap-3 rounded px-3 py-2 text-sm font-medium transition",
                   isActive
                     ? "bg-accent-soft text-accent"
                     : "text-fg-muted hover:bg-bg-muted hover:text-fg",

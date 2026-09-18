@@ -264,7 +264,7 @@ function ConversationItem({
   return (
     <li
       className={cx(
-        "group flex items-center rounded-xl",
+        "group flex items-center rounded",
         active ? "bg-accent-soft" : "hover:bg-bg-muted",
       )}
     >
