@@ -5,7 +5,7 @@ export function SiteFooter() {
         <p className="display text-base text-fg">
           Private by default. Local by design. Sharing by choice.
         </p>
-        <p className="datum">Apache-2.0</p>
+        <p className="datum">© 2026 · All rights reserved</p>
       </div>
     </footer>
   );

@@ -7,6 +7,7 @@ name = "myai-server"
 version = "0.1.0"
 description = "Central account server for MyAI Academy—accounts, pairing, and device coordination."
 requires-python = ">=3.11"
+license = "LicenseRef-Proprietary"
 dependencies = [
     "fastapi>=0.120",
     "uvicorn[standard]>=0.32",

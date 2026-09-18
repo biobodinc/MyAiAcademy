@@ -1,5 +1,9 @@
 # Contributing
 
+This is internal setup documentation for whoever is working on MyAI Academy, not an
+invitation for outside contributions: the project is proprietary and the repository is
+private. See [`LICENSE`](LICENSE).
+
 ## Prerequisites
 
 - Python 3.11+ and [uv](https://docs.astral.sh/uv/)

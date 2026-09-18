@@ -2,7 +2,7 @@
   "id": "writing",
   "version": "1.0.0",
   "name": "Writing",
-  "license": "Apache-2.0",
+  "license": "LicenseRef-Proprietary",
   "summary": "Draft, edit and shape prose to a brief: length, structure, tense, tone and word choice.",
   "areas": ["constraints", "structure", "editing"],
   "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark. No download, no adapter."

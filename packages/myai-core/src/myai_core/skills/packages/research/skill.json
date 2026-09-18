@@ -2,7 +2,7 @@
   "id": "research",
   "version": "1.0.0",
   "name": "Research",
-  "license": "Apache-2.0",
+  "license": "LicenseRef-Proprietary",
   "summary": "Extract facts from given passages, summarise them, compare sources, cite where things came from, and say when something is not stated.",
   "areas": ["extraction", "summarisation", "citation"],
   "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark. No download, no adapter."

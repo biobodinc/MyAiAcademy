@@ -2,7 +2,7 @@
   "id": "science",
   "version": "1.0.0",
   "name": "Science",
-  "license": "Apache-2.0",
+  "license": "LicenseRef-Proprietary",
   "summary": "Arithmetic, unit conversion, quantitative reasoning and short scientific explanations.",
   "areas": ["arithmetic", "units", "reasoning", "explanation"],
   "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark. No download, no adapter."

@@ -2,7 +2,7 @@
   "id": "games",
   "version": "1.0.0",
   "name": "Games",
-  "license": "Apache-2.0",
+  "license": "LicenseRef-Proprietary",
   "summary": "Design game mechanics, levels and narrative: rules that hold together, difficulty that goes somewhere, and a hook that fits in a line.",
   "areas": ["mechanics", "level design", "narrative"],
   "resources": "Bundled with MyAI Academy: instructions and a 12-task benchmark. No download, no adapter. Game design is writing and arithmetic; generating art, music or video is not part of this skill and needs a provider this build does not have."
