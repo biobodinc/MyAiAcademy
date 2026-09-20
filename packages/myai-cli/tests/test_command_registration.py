@@ -48,5 +48,5 @@ def test_each_group_registers_its_subcommands(group: str, expected: set[str]):
 
 def test_the_main_guard_is_the_last_thing_in_the_file():
     """Anything added after it is invisible when the module is run as a script."""
-    lines = [line for line in MAIN.read_text().splitlines() if line.strip()]
+    lines = [line for line in MAIN.read_text(encoding="utf-8").splitlines() if line.strip()]
     assert lines[-2:] == ['if __name__ == "__main__":', "    entrypoint()"]

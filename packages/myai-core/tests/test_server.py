@@ -28,7 +28,7 @@ def test_choose_port_falls_back_when_busy() -> None:
 def test_discovery_file_has_no_secret(tmp_path: Path) -> None:
     paths = AppPaths(tmp_path).ensure()
     write_discovery_file(paths, "127.0.0.1", 41337)
-    data = json.loads(paths.discovery_file.read_text())
+    data = json.loads(paths.discovery_file.read_text(encoding="utf-8"))
     assert data["api_base"] == "http://127.0.0.1:41337/api"
     assert "token" not in json.dumps(data).lower()
     remove_discovery_file(paths)
