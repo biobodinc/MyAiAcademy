@@ -8,6 +8,19 @@ updates:
     schedule: { interval: weekly }
     groups:
       javascript: { patterns: ["*"] }
+    # Expo decides these versions together, per SDK, in its bundledNativeModules.json;
+    # `expo install --fix` is what moves them. Bumping one on its own produced an
+    # expo 57.0.22 alongside a react-native 0.87.1 that belongs to an unreleased SDK,
+    # and a phone that refused the bundle outright. Upgrading the SDK is a deliberate
+    # act, not a weekly one.
+    ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
   - package-ecosystem: pip
     directory: /
     schedule: { interval: weekly }
