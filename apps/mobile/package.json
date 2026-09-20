@@ -17,27 +17,27 @@
   "dependencies": {
     "@expo/metro-runtime": "~57.0.15",
     "@myai/api-client": "workspace:*",
-    "expo": "~57.0.21",
-    "expo-camera": "~57.0.4",
+    "expo": "~57.0.22",
+    "expo-camera": "~57.0.5",
     "expo-clipboard": "~57.0.2",
-    "expo-constants": "~57.0.17",
+    "expo-constants": "~57.0.18",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "react-native": "0.83.10",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.87.1",
     "react-native-safe-area-context": "~5.9.1",
     "react-native-web": "~0.21.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.0",
-    "@types/node": "^22.20.2",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.5.1",
     "@types/react": "^19.2.0",
-    "eslint": "^9.39.0",
+    "eslint": "^10.10.0",
     "eslint-plugin-react-hooks": "^7.0.0",
     "selfsigned": "^5.5.0",
-    "typescript": "~5.9.3",
+    "typescript": "~7.0.2",
     "typescript-eslint": "^8.46.0",
-    "vitest": "^3.2.0"
+    "vitest": "^5.0.0"
   }
 }
