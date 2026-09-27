@@ -18,7 +18,7 @@
     "api:types": "pnpm --filter @myai/api-client run generate"
   },
   "devDependencies": {
-    "prettier": "^3.6.0",
+    "prettier": "^3.9.8",
     "typescript": "~7.0.2"
   }
 }
