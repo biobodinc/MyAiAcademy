@@ -1,6 +1,6 @@
 [package]
 name = "myai-academy-desktop"
-version = "0.1.0"
+version = "0.1.1"
 description = "MyAI Academy desktop application"
 authors = ["MyAI Academy"]
 license = "LicenseRef-Proprietary"
