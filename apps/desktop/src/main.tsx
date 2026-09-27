@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router";
 
 import { App } from "./App";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 import { queryClient } from "./lib/query";
 
@@ -13,9 +14,11 @@ if (!container) throw new Error("#root missing from index.html");
 createRoot(container).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <HashRouter>
-        <App />
-      </HashRouter>
+      <ErrorBoundary>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>,
 );
