@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Route-level integration tests through the real app (migrations, auth, services)."""
 
 from __future__ import annotations

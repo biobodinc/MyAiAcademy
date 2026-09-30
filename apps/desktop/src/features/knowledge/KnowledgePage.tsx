@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import { formatBytes } from "@myai/api-client";
 import { FilePlus2, Search, Trash2 } from "lucide-react";
 import { useState } from "react";

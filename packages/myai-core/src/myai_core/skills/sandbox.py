@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Run model-written Python against benchmark tests in a separate, limited process.
 
 The coding benchmark cannot be graded without executing the candidate code. The code

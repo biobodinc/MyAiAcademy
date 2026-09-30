@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Process-wide inference runtime: one loaded model, one generation at a time."""
 
 from __future__ import annotations

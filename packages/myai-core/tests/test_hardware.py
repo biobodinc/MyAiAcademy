@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Hardware detection must never crash and must not over-claim capability."""
 
 from __future__ import annotations

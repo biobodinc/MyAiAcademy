@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Resumable, integrity-verified HTTP download for large model files.
 
 * Resumes an interrupted ``.part`` file with a ``Range`` request (restarts cleanly if the

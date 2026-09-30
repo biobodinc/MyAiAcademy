@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Reading the host's `/status` into what the phone shows (spec §6, §52).
  *

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """What a paired program is allowed to do.
 
 The property that matters most here is the *default*. An access-control list is only worth

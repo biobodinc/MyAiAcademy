@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Slash-command interpreter (spec §36–§39, §81).
 
 The parser is pure and fully unit-tested. Execution is delegated to

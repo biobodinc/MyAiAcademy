@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Sending the one email this server sends, and being honest when it cannot.
 
 There is no email provider wired up yet. The interesting decision is what to do about that,

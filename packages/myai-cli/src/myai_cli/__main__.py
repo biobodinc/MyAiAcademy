@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Entry point for ``python -m myai_cli`` and for the bundled ``myai`` binary.
 
 Importing the module and then calling ``entrypoint`` is the same path the installed console

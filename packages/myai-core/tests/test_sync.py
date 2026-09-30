@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Keeping a user's own devices in step, and the ways that can go wrong.
 
 Sync is the part of this program where a bug does not produce an error message — it produces

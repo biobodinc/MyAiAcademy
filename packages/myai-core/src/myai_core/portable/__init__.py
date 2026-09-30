@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Carrying an AI between machines, and keeping it as a backup (spec §23-§27, §77)."""
 
 from myai_core.portable.crypto import WrongPasswordError

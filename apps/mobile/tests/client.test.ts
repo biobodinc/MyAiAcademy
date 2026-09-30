@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * The phone's half of the connection, against a real TLS server with a real self-signed
  * certificate. Nothing here is mocked below the socket.

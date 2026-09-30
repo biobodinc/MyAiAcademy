@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Run a skill benchmark against the local model (spec §43, §89).
 
 The runner is backend-agnostic: it takes the same ``generate`` callable chat uses. It is

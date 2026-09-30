@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Maps GitHub Release assets to download cards. Uses the public, unauthenticated
  * Releases API (no secret required). Cached with ISR so the site never hammers GitHub.

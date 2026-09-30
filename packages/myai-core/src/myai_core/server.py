@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Process entry point: pick a loopback port, write the discovery file, run uvicorn."""
 
 from __future__ import annotations

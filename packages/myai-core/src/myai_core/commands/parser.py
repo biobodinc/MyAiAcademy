@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Turn ``"/train video 4h"`` or ``"teach yourself video"`` into a :class:`ParsedCommand`."""
 
 from __future__ import annotations

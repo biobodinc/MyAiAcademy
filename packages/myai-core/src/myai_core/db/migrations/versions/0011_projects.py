@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Projects: a named grouping for conversations, memories and documents.
 
 Membership is a nullable column on each of the three, not a join table. A row belongs to at

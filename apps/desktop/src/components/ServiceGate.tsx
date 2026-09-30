@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Blocks the UI until the local service is reachable, and explains failures instead of
  * showing a broken dashboard (spec §67: never hide failures).

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Projects, and the one decision that makes them safe to delete.
 
 A project groups conversations, memories and documents. It is a *label*, not a container:

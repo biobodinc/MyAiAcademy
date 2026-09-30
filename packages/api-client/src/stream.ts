@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Server-sent events over fetch (EventSource cannot send an Authorization header).
  * Parses the `event:` / `data:` framing the local service emits for chat.

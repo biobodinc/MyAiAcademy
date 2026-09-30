@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Signing in with a provider: start, come back, hand over.
 
 All four routes are unauthenticated by necessity — someone signing in has no session yet —

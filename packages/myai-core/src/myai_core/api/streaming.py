@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Bridge a blocking event generator to an SSE response with real cancellation.
 
 Starlette cancels the response task when the client disconnects, but it does not close

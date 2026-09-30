@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Static catalog of skills and their tree (spec §3, §35).
 
 The catalog describes *what can be learned*, not what has been learned. It contains no

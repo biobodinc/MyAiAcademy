@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import { describe, expect, it } from "vitest";
 
 import { PAIRING_PAYLOAD_VERSION, groupCode, pairingPayload } from "@/lib/pairing";

@@ -5,7 +5,7 @@ description = "MyAI Academy local AI service: the private, local-first core that
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-authors = [{ name = "MyAI Academy" }]
+authors = [{ name = "Biobodinc" }]
 dependencies = [
   "fastapi>=0.120",
   "uvicorn[standard]>=0.32",

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Installed models, licence acceptance, hardware fit and activation."""
 
 from __future__ import annotations

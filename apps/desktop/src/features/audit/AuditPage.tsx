@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import { Alert, Card, EmptyState, PageHeader, Spinner } from "../../components/ui";
 import { describeError, useAudit } from "../../lib/api";
 

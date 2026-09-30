@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Server settings, all of them from the environment.
 
 Nothing here has a secret as a default. A missing password gives an empty string and a

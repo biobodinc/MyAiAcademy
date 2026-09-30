@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The devices on an account, and the codes that add one.
 
 Two privilege levels, as in `myai_core`'s Security Center. A signed-in person may list, add

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """CLI commands for Phase 2: models, chat, memory and knowledge."""
 
 from __future__ import annotations

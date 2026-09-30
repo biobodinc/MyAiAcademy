@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Every practice task must be solvable exactly as written.
 
 Training selects on these tasks, so a task that cannot be satisfied is worse than useless:

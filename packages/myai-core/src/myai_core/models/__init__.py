@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Local model management and inference providers (spec §46, §69).
 
 * ``catalog``  – curated, licensed models the app can offer to download

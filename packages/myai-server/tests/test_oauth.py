@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Signing in with a provider.
 
 The HTTP calls out to Google, Apple and Facebook are thin wrappers over httpx and are

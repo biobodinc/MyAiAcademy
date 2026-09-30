@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Model catalog, hardware fit, downloader (against a local range-capable server),
 model service, llama.cpp provider control flow and the inference runtime."""
 

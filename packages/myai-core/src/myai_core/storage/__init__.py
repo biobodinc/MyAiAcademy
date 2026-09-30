@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """User-chosen MyAI storage root and its managed directory layout (spec §21–§22, §63)."""
 
 from myai_core.storage.layout import STORAGE_CATEGORIES, StorageCategory

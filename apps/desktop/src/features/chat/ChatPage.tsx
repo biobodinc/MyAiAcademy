@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Streaming chat with the local model. Every reply shows which knowledge passages were
  * retrieved and which model answered; failures are shown inline, never swallowed.

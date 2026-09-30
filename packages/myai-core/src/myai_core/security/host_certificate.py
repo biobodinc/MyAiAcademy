@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The certificate the host presents when you let a phone reach it (spec §52, §55).
 
 Why a self-signed certificate, and why that is not a compromise

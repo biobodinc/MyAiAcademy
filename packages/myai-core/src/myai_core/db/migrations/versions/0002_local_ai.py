@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 2 schema: installed models, downloads, conversations, memory, knowledge (FTS5).
 
 Revision ID: 0002_local_ai

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Level bands (spec §34). Levels are only ever awarded by evaluations."""
 
 from __future__ import annotations

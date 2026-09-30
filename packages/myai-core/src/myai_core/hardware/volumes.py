@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Mounted storage volumes, with a best-effort "removable" flag for spec §22."""
 
 from __future__ import annotations

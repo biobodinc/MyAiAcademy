@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Keeping a user's own devices in step (spec §16, §18, §72).
 
 The two halves of a sync are deliberately separate endpoints. A device *pulls* what this

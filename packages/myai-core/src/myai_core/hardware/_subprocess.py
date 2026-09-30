@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Tiny helper to run external probe tools with a timeout and no shell."""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Thin HTTP client for the local service.
 
 Discovery: read ``local-api.json`` (host/port) and ``local-api.token`` from the app data

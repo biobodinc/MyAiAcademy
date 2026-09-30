@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Stopping a reply must actually stop generation, persist the partial reply, and free
 the runtime for the next message (a suspended generator would otherwise hold the lock)."""
 

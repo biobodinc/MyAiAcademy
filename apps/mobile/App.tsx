@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import Constants from "expo-constants";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";

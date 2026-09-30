@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Metrics, benchmark, cleanup, advanced compute settings and the guide (spec §30, §31,
 §63, §65, §66, §84)."""
 

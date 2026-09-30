@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import type { MetadataRoute } from "next";
 
 import { SITE } from "@/lib/site";

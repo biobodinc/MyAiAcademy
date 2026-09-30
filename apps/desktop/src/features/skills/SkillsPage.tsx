@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Skills (spec §33-§36, §42-§43, §82-§83). Levels are shown exactly as the benchmark set
  * them; learning shows a preview, needs a confirmation, and reports the running job.

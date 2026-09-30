@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Deterministic graders for skill benchmarks (spec §43).
 
 Every check is a pure function of (task, answer) so a benchmark run is reproducible

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Orchestrates all probes into a single :class:`HardwareReport`."""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import { describe, expect, it } from "vitest";
 
 import { assertLoopback, formatBytes, formatPercent, titleCase } from "../src";

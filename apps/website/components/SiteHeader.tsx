@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import Link from "next/link";
 
 import { MobileNav } from "@/components/MobileNav";

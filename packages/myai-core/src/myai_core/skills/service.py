@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Skill progress for the current AI: catalog joined with persisted state."""
 
 from __future__ import annotations

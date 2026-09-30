@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import type { Theme } from "@myai/api-client";
 
 /** Apply the user's theme preference to <html data-theme>. "system" removes the attribute. */

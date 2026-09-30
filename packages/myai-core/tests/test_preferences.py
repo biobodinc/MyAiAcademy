@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 from sqlalchemy.orm import Session
 
 from myai_core.db.models import Preference

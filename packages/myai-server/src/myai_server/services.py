@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Account management: what the routes are allowed to do, and what always gets recorded.
 
 Every state change goes through here rather than through the routes, for two reasons. The

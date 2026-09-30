@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import type { ServiceStatus } from "@myai/api-client";
 
 import type { Tone } from "../../components/ui";

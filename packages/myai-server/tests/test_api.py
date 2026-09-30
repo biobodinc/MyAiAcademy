@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The account API, exercised through real HTTP requests.
 
 These go through the app rather than calling the service directly, because most of what could

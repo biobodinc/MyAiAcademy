@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Learning a skill (spec §3, §36, §88): install its package, benchmark it, set its level.
 
 Honesty rules enforced here:

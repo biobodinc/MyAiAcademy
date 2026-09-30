@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 //! Supervises the `myai-core` local service.
 //!
 //! Startup protocol: the service prints one line `MYAI_CORE_READY {json}` to stdout once

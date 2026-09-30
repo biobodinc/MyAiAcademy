@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The ``ModelProvider`` abstraction (spec §46).
 
 A provider turns chat messages into a stream of text. The local llama.cpp backend is the

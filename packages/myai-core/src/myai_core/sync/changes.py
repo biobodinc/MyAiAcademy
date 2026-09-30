@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Stamping every change so it can be sent somewhere else (spec §16, §72).
 
 The obvious way to do this is to have each service record what it changed. That fails in

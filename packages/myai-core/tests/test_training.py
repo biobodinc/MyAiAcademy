@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The training search: does it find a real gain, and does it refuse a fake one?
 
 The model here is scripted so the tests are about the search, not about any particular

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Per-client credentials for the local API (spec §47, §51-§53).
 
 What this is, and what it is not

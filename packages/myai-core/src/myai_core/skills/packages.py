@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Skill packages: the bundled resources that ``/learn`` installs (spec §3, §36, §43)."""
 
 from __future__ import annotations

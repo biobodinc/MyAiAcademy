@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Making pictures, music and video — and saying plainly that this build cannot (spec §49).
 
 Why there is a file here at all when nothing generates anything

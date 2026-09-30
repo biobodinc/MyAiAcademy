@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Stable AI identity identifiers.
 
 ``myai_<ULID>``: sortable, 26 characters of Crockford base32, no personal information.

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
+import { SITE } from "../lib/site";
+
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
@@ -5,7 +9,26 @@ export function SiteFooter() {
         <p className="display text-base text-fg">
           Private by default. Local by design. Sharing by choice.
         </p>
-        <p className="datum">Apache-2.0</p>
+        <p className="datum">
+          Created by{" "}
+          <a
+            className="underline underline-offset-4 hover:text-fg"
+            href={SITE.authorUrl}
+            rel="author noopener noreferrer"
+            target="_blank"
+          >
+            {SITE.author}
+          </a>{" "}
+          · ©&nbsp;2026 ·{" "}
+          <a
+            className="underline underline-offset-4 hover:text-fg"
+            href={SITE.repoUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {SITE.license}
+          </a>
+        </p>
       </div>
     </footer>
   );

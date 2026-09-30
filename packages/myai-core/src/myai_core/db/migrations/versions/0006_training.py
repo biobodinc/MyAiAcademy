@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 4: training runs and the marker for a trained skill.
 
 A training run is recorded from the moment it starts and updated after every round, so a

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /** Form primitives in the site's own language: squared, ruled, no pills. */
 
 import type { InputHTMLAttributes, ReactNode } from "react";

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Hardware detection (spec §29–§30).
 
 Every probe is best-effort: failures degrade to ``None``/``unknown`` fields plus a

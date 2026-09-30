@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Degrees and achievements (spec §82-§83): game concepts backed only by measured levels
 and benchmark area scores. Nothing here is awarded for time spent or clicks."""
 

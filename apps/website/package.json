@@ -32,5 +32,12 @@
     "tailwindcss": "^4.2.0",
     "typescript": "~5.9.3",
     "vitest": "^3.2.0"
-  }
+  },
+  "author": "Biobodinc (https://github.com/biobodinc)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biobodinc/MyAiAcademy"
+  },
+  "homepage": "https://my-ai-academy-website.vercel.app"
 }

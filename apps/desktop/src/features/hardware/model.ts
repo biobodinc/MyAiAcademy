@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import type { GpuInfo, HardwareReport } from "@myai/api-client";
 
 /** The GPU with the most VRAM, or null. Mirrors HardwareReport.primary_gpu on the service. */

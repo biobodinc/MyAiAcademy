@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Curated catalog of downloadable local models.
 
 Every entry names its licence and the exact Hugging Face file. Sizes are approximate

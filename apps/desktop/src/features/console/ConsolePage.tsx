@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Command console: the Phase 1 stand-in for chat. Every command is echoed with the
  * action it maps to, and the service answers honestly when a feature is not built yet.

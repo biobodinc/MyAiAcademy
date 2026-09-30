@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * The phone menu is the only way to reach the other pages below the `md` breakpoint, so
  * these tests cover the behaviour that would strand a visitor if it broke.

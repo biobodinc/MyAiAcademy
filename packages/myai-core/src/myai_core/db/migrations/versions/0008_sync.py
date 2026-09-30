@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 7: keeping a user's own devices in step.
 
 Adds a logical clock to the rows that travel, a stable identifier for messages, and the

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The `.myai` portable package: round trips, and every way one can go wrong.
 
 A backup is only worth having if it refuses to open when it is damaged rather than opening

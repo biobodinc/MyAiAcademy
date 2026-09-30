@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Training a skill (spec §37, §38, §40): a measured search over how the AI is instructed.
 
 What training is, exactly

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Take your data out, or destroy it (spec §62 Privacy Center).
 
 Two operations that have to be trustworthy in opposite directions.

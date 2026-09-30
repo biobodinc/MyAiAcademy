@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * A stand-in for the desktop host, over real TLS with a real self-signed certificate.
  *

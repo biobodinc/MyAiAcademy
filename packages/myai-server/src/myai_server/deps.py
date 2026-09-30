@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Dependencies: the transaction boundary, and who is calling.
 
 The session dependency owns the transaction. Services flush but never commit, so a request

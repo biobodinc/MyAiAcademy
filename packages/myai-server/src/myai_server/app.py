@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The account server, assembled.
 
 Unlike `myai_core`, there is no blanket authentication dependency here. This server's whole

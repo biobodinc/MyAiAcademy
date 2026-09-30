@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Secrets that identify a session or an email, and how they are kept.
 
 Two rules, both of which exist so that reading the database is not the same as holding the

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Instrument_Serif } from "next/font/google";
 import type { ReactNode } from "react";
@@ -40,6 +42,9 @@ export const metadata: Metadata = {
   title: { default: SITE.name, template: `%s · ${SITE.name}` },
   description: SITE.description,
   applicationName: SITE.name,
+  authors: [{ name: SITE.author, url: SITE.authorUrl }],
+  creator: SITE.author,
+  publisher: SITE.author,
   manifest: "/manifest.webmanifest",
   openGraph: { title: SITE.name, description: SITE.description, type: "website" },
   appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "default" },

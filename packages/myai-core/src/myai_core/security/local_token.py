@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Per-installation local API token.
 
 The local API is bound to loopback, but "same machine" is not "same user" and does not

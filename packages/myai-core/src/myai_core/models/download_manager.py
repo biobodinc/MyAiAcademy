@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Runs model downloads on background threads and persists their progress."""
 
 from __future__ import annotations

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """A short, honest hardware benchmark (spec §30).
 
 What is measured and why:

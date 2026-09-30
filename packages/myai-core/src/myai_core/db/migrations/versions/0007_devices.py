@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 5: per-client credentials and pairing codes.
 
 Credentials and codes are stored as SHA-256 hashes, never as the secret itself, so a copy

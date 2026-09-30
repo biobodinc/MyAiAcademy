@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Portable AI (spec §23-§27, §77): carry this AI, or keep it as a backup.
  *

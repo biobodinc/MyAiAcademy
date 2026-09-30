@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Alembic environment. Runs against the engine handed over by ``myai_core.db.migrate``."""
 
 from __future__ import annotations

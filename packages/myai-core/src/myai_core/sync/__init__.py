@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Keeping a user's own devices in step (spec §16, §18, §72)."""
 
 from myai_core.sync.changes import identity, install_change_tracking

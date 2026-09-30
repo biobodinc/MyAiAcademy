@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Projects, and above all what deleting one does.
 
 The delete question is the reason this feature needs careful tests rather than a smoke test.

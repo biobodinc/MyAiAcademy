@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Security (spec §47, §51-§53, §60): who may act as this AI, and how secrets are stored.
  *

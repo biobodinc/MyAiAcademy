@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The password hashing, checked for the properties that matter rather than its output."""
 
 from __future__ import annotations

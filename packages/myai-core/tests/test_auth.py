@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Authentication and origin/host validation on the local API."""
 
 from fastapi.testclient import TestClient

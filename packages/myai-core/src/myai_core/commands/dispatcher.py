@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Execute parsed commands against Phase 1 services.
 
 Every command that depends on a later phase returns ``UNAVAILABLE`` with a plain

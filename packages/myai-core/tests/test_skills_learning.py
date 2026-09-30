@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Learning a skill end to end with a scripted fake model: preview, job lifecycle with
 pause/cancel, level only from the benchmark, history, degrees, prompt integration."""
 

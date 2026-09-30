@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The opt-in network listener, against a real TLS socket.
 
 None of this is mocked: a real HTTPS server is started on a real port with the certificate

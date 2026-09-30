@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """What travels between a user's own devices, and what deliberately does not (spec §16, §72).
 
 This file is the whole answer to "will my AI be the same on my laptop?", and it is written

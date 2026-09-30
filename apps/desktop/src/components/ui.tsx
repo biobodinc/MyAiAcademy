@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Small, dependency-free UI primitives. Kept in one file on purpose: they are tiny and
  * they define the design language (cards, pills, badges, bars) used by every screen.

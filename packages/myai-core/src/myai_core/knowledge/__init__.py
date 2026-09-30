@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Local knowledge: documents chunked and indexed for lexical retrieval (spec §45).
 
 Retrieval is BM25 over SQLite FTS5. It is fast, private and works offline, and it is

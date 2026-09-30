@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Reading a pairing invite, and knowing what the phone may do with it (spec §52, §55).
  *

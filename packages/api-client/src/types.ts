@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Friendly aliases over the generated OpenAPI schema types.
  * Regenerate with `pnpm api:export && pnpm api:types` after changing the Python API.

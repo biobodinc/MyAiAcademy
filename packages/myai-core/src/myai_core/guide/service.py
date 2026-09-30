@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Keyword matching over the curated topics. Deterministic and fully offline."""
 
 from __future__ import annotations

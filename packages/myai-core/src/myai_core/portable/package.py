@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The `.myai` portable package: writing one, and reading one back (spec §23-§27, §77).
 
 What this is for

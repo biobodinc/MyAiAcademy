@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Record what an installed model's hash was verified against.
 
 Until now the UI showed a SHA-256 for every installed model, which read as "verified"

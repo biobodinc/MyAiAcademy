@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Generate the website's icons from one vector definition.
 
 No image library is available in every environment this repo builds in, and pulling a

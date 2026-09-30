@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The opt-in listener that lets a paired device on this network reach the service.
 
 Everything about this is deliberately separate from the loopback listener, which is

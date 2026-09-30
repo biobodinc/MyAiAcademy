@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Creative skills: the one that is real, and the three that say why they are not.
 
 Games is a learnable skill because designing mechanics, levels and narrative is prose and

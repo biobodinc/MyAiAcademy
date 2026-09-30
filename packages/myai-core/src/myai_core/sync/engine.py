@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Building a batch of changes, and applying one from another device (spec §16, §72).
 
 The shape of the exchange

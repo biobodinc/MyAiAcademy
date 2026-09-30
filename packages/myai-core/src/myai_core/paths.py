@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Filesystem locations owned by the core service.
 
 Two distinct roots exist and must not be confused:

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Projects: grouping conversations, memories and documents.
 
 The delete route is the one worth reading. `contents` has no default and no "are you sure"

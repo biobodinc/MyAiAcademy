@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Carrying your AI to another machine, and keeping it as a backup (spec §23-§27, §77).
 
 Importing replaces what is here. That is the right behaviour for restoring a backup and the

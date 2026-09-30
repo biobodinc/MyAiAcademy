@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 3: skill packages, jobs and evaluations.
 
 Revision ID: 0004_skills

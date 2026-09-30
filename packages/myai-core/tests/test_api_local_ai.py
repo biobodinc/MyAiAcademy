@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Route-level tests for models, chat (SSE), memory and knowledge with a fake provider."""
 
 from __future__ import annotations

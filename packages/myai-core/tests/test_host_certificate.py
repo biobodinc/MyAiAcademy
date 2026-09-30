@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """The certificate the host mints, including on machines whose names break the rules.
 
 These are the cases that only show up on someone else's computer: a hostname longer than

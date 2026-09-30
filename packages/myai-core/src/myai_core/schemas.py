@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Base class for every Pydantic model the API exposes.
 
 ``json_schema_serialization_defaults_required`` makes fields that have defaults show up

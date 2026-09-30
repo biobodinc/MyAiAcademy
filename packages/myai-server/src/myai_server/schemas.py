@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """What the account API accepts and returns.
 
 The response models exist partly to shape the JSON and partly as a guard: a hand-built dict

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Persist benchmark results so the report can show the last measurement."""
 
 from __future__ import annotations

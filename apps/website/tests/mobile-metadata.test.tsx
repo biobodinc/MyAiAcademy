@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * What a phone needs from the document itself: a real viewport that still allows zoom,
  * a manifest whose icons exist, and navigation links that point at pages that exist.

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * React Query hooks over the typed local-service client.
  * Query keys are centralised so mutations can invalidate precisely.

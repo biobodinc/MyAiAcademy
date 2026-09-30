@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /** One source of navigation links, shared by the desktop row and the mobile menu. */
 export interface NavLink {
   href: string;

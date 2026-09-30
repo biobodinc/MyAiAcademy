@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 1 schema: AI profile, preferences, storage config, skill state, audit log.
 
 Revision ID: 0001_initial

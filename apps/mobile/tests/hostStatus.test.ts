@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Reading the host's status is parsing input from the network, so it is tested the way
  * parsers are: mostly with what it must not do. The rule throughout is that anything

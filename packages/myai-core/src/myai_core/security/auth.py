@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """FastAPI authentication for the local API.
 
 Layers (defence in depth, spec §47/§73):

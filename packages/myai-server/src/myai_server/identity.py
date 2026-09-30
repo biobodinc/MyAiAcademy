@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Turning an authorization code into "who is this", per provider.
 
 Each provider answers the same question differently, and the differences are the whole of

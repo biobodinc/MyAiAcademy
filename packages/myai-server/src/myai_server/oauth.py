@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Signing in with Google, Apple or Facebook.
 
 Three decisions worth stating, because each one is a place this could be got wrong quietly.

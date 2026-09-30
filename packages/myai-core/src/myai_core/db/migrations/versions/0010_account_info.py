@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 5: Local account info linking device to central account.
 
 Each device stores its account_id here to know which account on the central server

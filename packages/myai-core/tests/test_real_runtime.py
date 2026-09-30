@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """End-to-end through the *real* llama.cpp runtime with a synthetic model.
 
 Skipped when ``llama_cpp`` (the optional ``local-inference`` extra) or the ``gguf``

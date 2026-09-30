@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Dump the local service's OpenAPI document for TypeScript type generation.
 
 Usage: uv run python scripts/export_openapi.py [output-path]

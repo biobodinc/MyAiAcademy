@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Turn a file into plain text. Only formats we can honestly parse are accepted."""
 
 from __future__ import annotations

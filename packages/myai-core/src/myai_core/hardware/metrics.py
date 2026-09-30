@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Live system metrics for the dashboard (spec §84 "System: GPU 42%, RAM 11 GB").
 
 Cheap and best-effort: every probe degrades to ``None`` rather than raising. Values are a

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Training as a user-facing feature: preview it, run it, record it, keep or discard it.
 
 The search itself lives in :mod:`myai_core.skills.training`. This module is the part with

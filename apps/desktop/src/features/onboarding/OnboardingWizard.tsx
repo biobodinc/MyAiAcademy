@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * First-run flow (spec §87). Progress is persisted in preferences.onboarding_step so a
  * closed app resumes where it left off. Steps that belong to later phases are shown as

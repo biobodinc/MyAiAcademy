@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Tests for account creation, pairing, and device management."""
 
 from myai_server.models import PairingCode

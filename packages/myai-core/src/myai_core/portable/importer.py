@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Bringing a `.myai` package onto this machine (spec §26, §77).
 
 Two rules shape this file.

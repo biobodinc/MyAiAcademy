@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * The built-in onboarding guide (spec §66). Deterministic answers about MyAI Academy
  * itself; every answer is labelled so it is never mistaken for the user's AI model.

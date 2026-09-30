@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Are this installation's secrets actually stored safely? (spec §60 secure storage)
 
 The local API token is the key to everything this service can do, so where it lives and

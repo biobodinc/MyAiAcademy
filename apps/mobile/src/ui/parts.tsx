@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /** The handful of pieces every screen is built from. */
 
 import type { ReactNode } from "react";

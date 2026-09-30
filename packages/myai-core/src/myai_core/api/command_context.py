@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Build the :class:`CommandContext` the console and chat share, with Phase 3 job hooks."""
 
 from __future__ import annotations

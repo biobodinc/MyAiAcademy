@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Local inference through llama.cpp (``llama-cpp-python``).
 
 The binding is an optional dependency (``myai-core[local-inference]``): the core service

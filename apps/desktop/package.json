@@ -48,5 +48,12 @@
     "typescript-eslint": "^8.46.0",
     "vite": "^7.1.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "author": "Biobodinc (https://github.com/biobodinc)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biobodinc/MyAiAcademy"
+  },
+  "homepage": "https://my-ai-academy-website.vercel.app"
 }

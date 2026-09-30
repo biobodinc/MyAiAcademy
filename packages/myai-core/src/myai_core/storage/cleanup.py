@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Storage cleanup (spec §63): find reclaimable files and delete only what the user picked.
 
 Rules that keep this safe:

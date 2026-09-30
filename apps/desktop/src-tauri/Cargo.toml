@@ -2,7 +2,9 @@
 name = "myai-academy-desktop"
 version = "0.1.2"
 description = "MyAI Academy desktop application"
-authors = ["MyAI Academy"]
+authors = ["Biobodinc"]
+repository = "https://github.com/biobodinc/MyAiAcademy"
+homepage = "https://my-ai-academy-website.vercel.app"
 license = "Apache-2.0"
 edition = "2021"
 rust-version = "1.77"

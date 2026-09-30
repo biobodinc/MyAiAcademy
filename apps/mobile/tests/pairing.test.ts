@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * A scanned QR code is data from outside the app, so the parser is tested the way an
  * input parser should be: mostly with the things it must refuse.

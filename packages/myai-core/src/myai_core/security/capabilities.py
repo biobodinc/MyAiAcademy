@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """What a paired program is allowed to do, stated as a list (spec §47, §53, §75).
 
 Until now a paired client could do anything the owner could, minus a handful of owner-only

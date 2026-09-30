@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Glue between the API process state and skill jobs: create, run and finish them."""
 
 from __future__ import annotations

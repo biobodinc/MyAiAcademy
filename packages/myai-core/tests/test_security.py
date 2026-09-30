@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Per-client credentials, pairing, revocation, secret storage, export and erase.
 
 These tests are about properties that have to hold, not about wiring: a revoked client

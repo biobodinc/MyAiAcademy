@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Pairing: scan the QR code your computer is showing, or paste it (spec §52, §55).
  *

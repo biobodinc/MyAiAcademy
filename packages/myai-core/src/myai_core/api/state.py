@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Objects that live for the lifetime of the app and are shared by request handlers."""
 
 from __future__ import annotations

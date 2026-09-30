@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Capability tier estimation (spec §30).
 
 The tier is derived from specifications. This is a *recommendation* used to suggest

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Security Center (spec §47, §51-§53, §61): who may act as your AI, and how it is stored.
 
 Two privilege levels exist here, and the difference matters. The **owner** is whoever can

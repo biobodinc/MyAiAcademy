@@ -1,0 +1,28 @@
+MyAI Academy
+Copyright 2026 Biobodinc
+
+Created by Biobodinc (https://github.com/biobodinc).
+Project home: https://my-ai-academy-website.vercel.app
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this work except in compliance with the License. A copy is distributed with this
+work in the file LICENSE, and is also available at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ATTRIBUTION
+
+Section 4(d) of the License requires that any Derivative Work you distribute
+carry the contents of this NOTICE file. Sections 4(b) and 4(c) require that you
+keep the copyright, patent, trademark and attribution notices in the source you
+redistribute. If you fork this project, those obligations travel with it.
+
+THIRD-PARTY COMPONENTS
+
+This work bundles third-party open-source components, each governed by its own
+licence. Nothing in this NOTICE restricts any right you hold under them, and
+this NOTICE describes only the original work of the copyright holder above.
+
+Locally run AI models are not part of this work. Each model carries the licence
+of whoever published it, which the application presents before a model is
+downloaded.

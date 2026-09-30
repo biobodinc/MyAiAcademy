@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Every command the CLI claims to have is actually registered.
 
 This exists because of a specific way the binary broke. PyInstaller was pointed at

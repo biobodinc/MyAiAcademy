@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /** One palette and one set of shapes, so the screens look like one app. */
 
 import { StyleSheet } from "react-native";

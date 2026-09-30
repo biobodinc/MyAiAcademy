@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Phase 9: what a paired client is allowed to do.
 
 Clients paired before this migration were granted everything a client could do — there was

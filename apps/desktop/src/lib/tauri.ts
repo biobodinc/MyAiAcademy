@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * Bridge to the Tauri shell. Every call degrades gracefully when the UI runs in a plain
  * browser during development, so the React app can be developed and tested without

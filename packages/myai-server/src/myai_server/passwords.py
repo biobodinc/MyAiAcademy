@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Storing a password so that a stolen database is not a stolen account.
 
 The threat here is offline guessing: someone takes the `accounts` table and grinds through

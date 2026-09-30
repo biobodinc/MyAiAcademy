@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
  * `next/font/google` is a build-time transform, not a real module: the Next compiler
  * rewrites each call into a generated font object. Under vitest nothing performs that

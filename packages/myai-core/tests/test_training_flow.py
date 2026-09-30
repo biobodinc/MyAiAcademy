@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Training end to end over the API, with a scripted model.
 
 The model is scripted to follow exactly one rule: when that rule is in its instructions it

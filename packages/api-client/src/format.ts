@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 /** Presentation helpers shared by desktop and mobile. */
 
 const UNITS = ["B", "KB", "MB", "GB", "TB"] as const;

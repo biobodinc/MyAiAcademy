@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Curated guide topics. Answers must stay true for the current build: say what exists,
 what is planned, and which phase brings it. Keep each answer to a short paragraph."""
 

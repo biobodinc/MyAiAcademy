@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Build the standalone ``myai`` command.
 
 The point of this binary is that someone can type ``myai`` in a terminal without having

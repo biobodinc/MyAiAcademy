@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 //! MyAI Academy desktop shell.
 //!
 //! The shell is deliberately thin. Its jobs are:

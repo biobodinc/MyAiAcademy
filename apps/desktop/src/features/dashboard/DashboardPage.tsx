@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import { formatBytes, TIER_LABELS } from "@myai/api-client";
 import { Link } from "react-router";
 

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Biobodinc. Part of MyAI Academy.
 """Background jobs (spec §40): one at a time, pausable, cancellable, persisted."""
 
 from __future__ import annotations
