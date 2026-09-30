@@ -81,6 +81,19 @@ async function main() {
     console.log(`${fileName}  ${(size / 1024 ** 2).toFixed(1)} MB  ${sha256.slice(0, 16)}…`);
   }
 
+  // A SHA256SUMS file alongside the installers, in the format sha256sum -c reads, so the
+  // check is one command rather than comparing a hex string by eye against a web page.
+  if (base) {
+    const sums = files.map((f) => `${f.sha256}  ${f.fileName}`).join("\n") + "\n";
+    await put(`releases/${version}/SHA256SUMS`, sums, {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "text/plain; charset=utf-8",
+    });
+    console.log("SHA256SUMS written");
+  }
+
   await writeFile(
     MANIFEST,
     JSON.stringify({ version, publishedAt: new Date().toISOString(), files }, null, 2) + "\n",

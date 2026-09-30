@@ -9,7 +9,7 @@ export const DISCLOSURES = [
   },
   {
     title: "No signed installers are published yet.",
-    body: "The release workflow builds Windows, Linux and macOS packages and CLI archives, but nothing has been published to the download page, to Google Play or to the App Store. No build is signed by a certificate authority: Windows SmartScreen warns on first run, and the macOS app is ad-hoc signed rather than notarised, so it needs right-click then Open. Every published file is listed with its SHA-256 so it can be checked, which is what an unsigned build can honestly offer instead. The source is not public, so building it yourself is not an alternative.",
+    body: "The release workflow builds Windows, Linux and macOS packages and CLI archives, but nothing has been published to the download page, to Google Play or to the App Store. No build is signed by a certificate authority, and self-signing cannot change that: Windows reports a self-signed signature as untrusted and SmartScreen warns anyway, and Gatekeeper accepts only an Apple-issued Developer ID certificate with notarisation. So Windows warns on first run and macOS refuses the first launch until you allow it in Privacy & Security. The download page says exactly which prompt each system shows and what to do about it. Every published file is listed with its SHA-256 so it can be checked, which is what an unsigned build can honestly offer instead. The source is not public, so building it yourself is not an alternative.",
   },
   {
     title: "The phone app can only pair, and cannot finish even that yet.",

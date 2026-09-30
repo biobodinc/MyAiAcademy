@@ -28,7 +28,34 @@ const ORDER: Array<{ platform: Platform; title: string; note?: string }> = [
   {
     platform: "macos",
     title: "macOS",
-    note: "Ad-hoc signed only, not notarised: right-click the app and choose Open the first time.",
+    note: "Not notarised by Apple, so Gatekeeper refuses it on first launch. See First run below.",
+  },
+];
+
+/**
+ * What each operating system actually does on first launch, and the click-path out of it.
+ *
+ * This section exists because no amount of signing we can do removes these prompts. A
+ * self-signed certificate does not chain to a root Windows trusts, so Windows reports the
+ * signature as untrusted and SmartScreen warns regardless; Gatekeeper accepts only an
+ * Apple-issued Developer ID certificate with notarisation. Telling someone exactly which
+ * dialog to expect is worth more than a signature that does not change the dialog.
+ */
+const FIRST_RUN: Array<{ os: string; sees: string; does: string }> = [
+  {
+    os: "Windows",
+    sees: "“Windows protected your PC” from SmartScreen, because this installer has no reputation with Microsoft yet.",
+    does: "Click More info, check that the publisher and file name match what is listed above, then Run anyway. If Defender quarantines the file instead, that is a heuristic match on the bundled Python runtime rather than a detection of anything in it — the hash above is what you should check.",
+  },
+  {
+    os: "macOS",
+    sees: "“Apple could not verify that this app is free of malware”, because the app is not notarised by Apple.",
+    does: "Open it once and let it be refused, then go to System Settings, Privacy & Security, scroll to the message about MyAI Academy and choose Open Anyway. On macOS 14 and earlier you can right-click the app and choose Open instead; Apple removed that shortcut in macOS 15.",
+  },
+  {
+    os: "Linux and ChromeOS",
+    sees: "Nothing. There is no gatekeeper to get past.",
+    does: "Install the .deb with your package manager, or mark the AppImage executable and run it. Check the hash first if you care to; nothing else will check it for you.",
   },
 ];
 
@@ -106,6 +133,36 @@ export default function DownloadPage() {
           );
         })}
       </div>
+
+      <section>
+        <h2 className="display text-2xl sm:text-3xl">First run</h2>
+        <p className="mt-2 max-w-2xl text-sm text-fg-muted">
+          None of these builds is signed by a certificate authority, so two of the three systems
+          will stop you the first time. Signing them ourselves would not change that — Windows
+          treats a self-signed signature as untrusted, and Gatekeeper accepts only Apple&apos;s own.
+          So here is the prompt you will get and what to do with it.
+        </p>
+        <dl className="mt-6">
+          {FIRST_RUN.map((entry) => (
+            <div
+              key={entry.os}
+              className="grid gap-x-6 gap-y-2 border-b border-border py-5 sm:grid-cols-12"
+            >
+              <dt className="font-semibold sm:col-span-3">{entry.os}</dt>
+              <dd className="space-y-2 text-sm text-fg-muted sm:col-span-9">
+                <p>
+                  <span className="datum text-accent uppercase">You see</span>{" "}
+                  <span className="mt-1 block">{entry.sees}</span>
+                </p>
+                <p>
+                  <span className="datum uppercase">You do</span>{" "}
+                  <span className="mt-1 block">{entry.does}</span>
+                </p>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <div role="note" className="border-l-2 border-border py-1 pl-5 text-sm text-fg-muted">
