@@ -1,13 +1,25 @@
 name: Release
 
-# Builds every installer on a version tag (v0.1.0) and attaches them to a GitHub Release.
-# Signing/notarisation material is supplied through repository secrets and is never
-# stored in the repository:
-#   TAURI_SIGNING_PRIVATE_KEY / TAURI_SIGNING_PRIVATE_KEY_PASSWORD  (updater artifacts, optional)
+# Builds every installer on a version tag (v0.1.0) and publishes them to the website, which
+# is where downloads are served from: the repository is private, so GitHub release assets are
+# not reachable by a visitor.
+#
+# Repository VARIABLES (Settings -> Secrets and variables -> Actions -> Variables):
+#   WINDOWS_SIGNING = certificate   sign the Windows build with WINDOWS_CERTIFICATE
+#   MACOS_SIGNING   = certificate   sign and notarise macOS with the APPLE_* secrets
+#                                   (anything else, including unset, means ad-hoc signing)
+#   LINUX_ARM64     = true          also build the ARM64 Linux packages, for ARM Chromebooks
+#                                   and ARM single-board machines. Needs ARM64 runners, which
+#                                   are not available on every plan for private repositories.
+#   EAS_ENABLED     = true          build the phone apps
+#
+# Repository SECRETS, never stored in the repository:
+#   BLOB_READ_WRITE_TOKEN                                            (publish to the website)
+#   TAURI_SIGNING_PRIVATE_KEY / TAURI_SIGNING_PRIVATE_KEY_PASSWORD   (updater artifacts)
 #   APPLE_CERTIFICATE / APPLE_CERTIFICATE_PASSWORD / APPLE_SIGNING_IDENTITY / APPLE_ID /
-#   APPLE_PASSWORD / APPLE_TEAM_ID                                   (macOS signing + notarisation)
+#   APPLE_PASSWORD / APPLE_TEAM_ID                                   (macOS signing)
 #   WINDOWS_CERTIFICATE / WINDOWS_CERTIFICATE_PASSWORD               (Authenticode)
-#   EXPO_TOKEN                                                       (EAS builds for Android/iOS)
+#   EXPO_TOKEN                                                       (EAS builds)
 
 on:
   push:
@@ -22,25 +34,39 @@ env:
   NODE_VERSION: "22"
 
 jobs:
+  # The version every artifact is named after. On a tag it is the tag. On workflow_dispatch
+  # the ref is a branch, and a branch name containing a slash used to be pasted straight into
+  # an archive path, where tar failed on a directory that did not exist while the Windows leg
+  # quietly succeeded because 7z creates parents.
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    outputs:
+      value: ${{ steps.pick.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: pick
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            APP=$(python3 -c "import json;print(json.load(open('apps/desktop/src-tauri/tauri.conf.json'))['version'])")
+            V="${APP}-${GITHUB_SHA::7}"
+          fi
+          echo "value=$V" >> "$GITHUB_OUTPUT"
+          echo "Building version $V"
+
   desktop:
     name: Desktop (${{ matrix.name }})
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: windows-x64
-            os: windows-latest
-            triple: x86_64-pc-windows-msvc
-          - name: macos-arm64
-            os: macos-latest
-            triple: aarch64-apple-darwin
-          - name: macos-x64
-            os: macos-13
-            triple: x86_64-apple-darwin
-          - name: linux-x64
-            os: ubuntu-22.04
-            triple: x86_64-unknown-linux-gnu
+        # Gated rather than conditional per entry: a matrix cannot skip one of its own
+        # combinations, and a permanently failing ARM64 leg would make every release red.
+        include: ${{ fromJSON(vars.LINUX_ARM64 == 'true' && '[{"name":"windows-x64","os":"windows-latest","triple":"x86_64-pc-windows-msvc"},{"name":"macos-arm64","os":"macos-latest","triple":"aarch64-apple-darwin"},{"name":"macos-x64","os":"macos-13","triple":"x86_64-apple-darwin"},{"name":"linux-x64","os":"ubuntu-22.04","triple":"x86_64-unknown-linux-gnu"},{"name":"linux-arm64","os":"ubuntu-22.04-arm","triple":"aarch64-unknown-linux-gnu"}]' || '[{"name":"windows-x64","os":"windows-latest","triple":"x86_64-pc-windows-msvc"},{"name":"macos-arm64","os":"macos-latest","triple":"aarch64-apple-darwin"},{"name":"macos-x64","os":"macos-13","triple":"x86_64-apple-darwin"},{"name":"linux-x64","os":"ubuntu-22.04","triple":"x86_64-unknown-linux-gnu"}]') }}
     steps:
       - uses: actions/checkout@v4
       - name: Tauri Linux prerequisites
@@ -67,8 +93,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build myai-core sidecar
         run: uv run python scripts/build_sidecar.py --target-triple ${{ matrix.triple }}
+
       - name: Import Windows code-signing certificate
-        if: runner.os == 'Windows' && env.WINDOWS_CERTIFICATE != ''
+        if: runner.os == 'Windows' && vars.WINDOWS_SIGNING == 'certificate'
         shell: pwsh
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
@@ -76,19 +103,38 @@ jobs:
         run: |
           $bytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
           [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\cert.pfx", $bytes)
-          Import-PfxCertificate -FilePath "$env:RUNNER_TEMP\cert.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force)
+          $pw = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath "$env:RUNNER_TEMP\cert.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password $pw
+          # Importing the certificate was never enough on its own: tauri.conf.json carried no
+          # certificateThumbprint, so the bundler skipped signing and every "signed" Windows
+          # build shipped unsigned. The thumbprint is a fingerprint, not a secret, but it is
+          # specific to this certificate, so it is written here rather than committed.
+          $conf = "apps/desktop/src-tauri/tauri.conf.json"
+          $json = Get-Content $conf -Raw | ConvertFrom-Json
+          $json.bundle.windows | Add-Member -NotePropertyName certificateThumbprint -NotePropertyValue $cert.Thumbprint -Force
+          $json.bundle.windows | Add-Member -NotePropertyName digestAlgorithm -NotePropertyValue "sha256" -Force
+          $json.bundle.windows | Add-Member -NotePropertyName timestampUrl -NotePropertyValue "http://timestamp.digicert.com" -Force
+          $json | ConvertTo-Json -Depth 32 | Set-Content $conf -Encoding utf8
+          Write-Host "Signing with thumbprint $($cert.Thumbprint)"
+
       - name: Build and publish desktop bundles
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Ad-hoc signing unless a real certificate is configured. Passing an empty or
+          # malformed APPLE_CERTIFICATE made `security import` fail, and that failure took the
+          # whole macOS bundle with it — a missing certificate stopped the app being built at
+          # all rather than producing an unsigned one. "-" is codesign's ad-hoc identity: the
+          # app is signed by nobody, which Gatekeeper still warns about, but it builds and it
+          # runs after right-click then Open.
+          APPLE_CERTIFICATE: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_SIGNING_IDENTITY || '-' }}
+          APPLE_ID: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_ID || '' }}
+          APPLE_PASSWORD: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_TEAM_ID || '' }}
         with:
           projectPath: apps/desktop
           tagName: ${{ github.ref_name }}
@@ -98,8 +144,23 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           args: --target ${{ matrix.triple }}
 
+      - name: Collect installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.name }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/nsis/*-setup.exe
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/msi/*.msi
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/dmg/*.dmg
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/appimage/*.AppImage
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/deb/*.deb
+            apps/desktop/src-tauri/target/${{ matrix.triple }}/release/bundle/rpm/*.rpm
+
   cli:
     name: CLI (${{ matrix.name }})
+    needs: version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -135,18 +196,66 @@ jobs:
           "$BIN" projects --help | grep -q delete
       - name: Archive
         shell: bash
+        env:
+          VERSION: ${{ needs.version.outputs.value }}
         run: |
           cd dist/bin
-          if [ "$RUNNER_OS" = Windows ]; then 7z a ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.zip myai.exe; \
-          else tar czf ../myai-cli-${GITHUB_REF_NAME#v}-${{ matrix.name }}.tar.gz myai; fi
-      - name: Attach to release
-        uses: softprops/action-gh-release@v2
+          if [ "$RUNNER_OS" = Windows ]; then 7z a "../myai-cli-${VERSION}-${{ matrix.name }}.zip" myai.exe; \
+          else tar czf "../myai-cli-${VERSION}-${{ matrix.name }}.tar.gz" myai; fi
+      - name: Collect archives
+        uses: actions/upload-artifact@v4
         with:
-          draft: true
-          files: |
+          name: cli-${{ matrix.name }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
             dist/*.whl
             dist/*.tar.gz
             dist/*.zip
+
+  publish:
+    name: Publish to the website
+    needs: [version, desktop, cli]
+    # Runs on whatever succeeded. One platform failing should not stop the others reaching
+    # the download page, and a release with three of five installers is still a release.
+    if: ${{ always() && needs.version.result == 'success' }}
+    runs-on: ubuntu-latest
+    # Job level, not step level: a step's `if` cannot see that step's own `env`, so testing
+    # the token inside the step that defines it would have skipped the publish every time.
+    env:
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: false
+      - name: Publish installers and record the manifest
+        if: ${{ env.BLOB_READ_WRITE_TOKEN != '' }}
+        env:
+          VERSION: ${{ needs.version.outputs.value }}
+        run: |
+          npm install --no-save --no-audit --no-fund @vercel/blob
+          node scripts/publish_downloads.mjs --dir artifacts --version "$VERSION"
+      - name: Commit the manifest
+        if: ${{ env.BLOB_READ_WRITE_TOKEN != '' && github.ref_type != 'tag' }}
+        run: |
+          if git diff --quiet -- apps/website/lib/release-manifest.json; then
+            echo "manifest unchanged"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/website/lib/release-manifest.json
+          git commit -m "Record the published downloads for ${{ needs.version.outputs.value }}"
+          git push origin HEAD:${{ github.ref_name }}
+      - name: Say what is missing
+        if: ${{ env.BLOB_READ_WRITE_TOKEN == '' }}
+        run: |
+          echo "::warning::BLOB_READ_WRITE_TOKEN is not set, so nothing was published to the website."
+          echo "Add it under Settings -> Secrets and variables -> Actions, then re-run."
 
   mobile:
     name: Mobile (EAS)
