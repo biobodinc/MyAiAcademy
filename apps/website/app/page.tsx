@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 Biobodinc. Part of MyAI Academy.
 import Link from "next/link";
 
 import { SITE } from "@/lib/site";
@@ -31,12 +33,16 @@ const pillars = [
  * spec sheet in monospace, so a state reads as a measurement rather than a promise.
  */
 const status = [
-  { label: "Desktop app (Windows first)", phase: "1", state: "done" },
-  { label: "Local chat, memory and knowledge", phase: "2", state: "done, see disclosures" },
+  { label: "Desktop app, dashboard, hardware and storage", phase: "1", state: "done" },
+  { label: "Local chat, memory, knowledge and models", phase: "2", state: "done, see disclosures" },
   { label: "Skills, /learn, benchmarks and levels", phase: "3", state: "done" },
   { label: "/train, training jobs and checkpoints", phase: "4", state: "done" },
-  { label: "Accounts, device pairing, mobile", phase: "5–6", state: "in progress" },
-  { label: "Encrypted sync and portable .myai export", phase: "7–8", state: "in progress" },
+  { label: "Device pairing, revocation and audit", phase: "5", state: "no account server" },
+  { label: "Mobile pairing over a pinned certificate", phase: "6", state: "needs a dev build" },
+  { label: "Direct device sync, projects, encrypted relay", phase: "7", state: "no relay server" },
+  { label: "Portable .myai export, import and encryption", phase: "8", state: "no scheduled backup" },
+  { label: "Local API and scoped capability permissions", phase: "9", state: "no web authorization" },
+  { label: "Creative skills: games learnable, media honest", phase: "10", state: "no generation yet" },
 ];
 
 export default function HomePage() {
@@ -73,7 +79,7 @@ export default function HomePage() {
           <p className="datum text-fg-muted uppercase">Read first</p>
           <p className="mt-3 text-sm text-fg-muted">
             Installers are not published yet, no catalog model has been run on consumer hardware by
-            the authors, and the mobile app is a skeleton.
+            the author, and the phone app cannot finish pairing without a development build.
           </p>
           <Link
             href="/disclosures"
@@ -106,8 +112,26 @@ export default function HomePage() {
         <div className="max-w-2xl">
           <h2 className="display text-3xl sm:text-4xl">Where the project is</h2>
           <p className="mt-4 text-fg-muted">
-            MyAI Academy is built phase by phase. The source is not public, so this page and the app
-            itself are where we say what works today and what does not yet.
+            MyAI Academy is built phase by phase, by{" "}
+            <a
+              className="underline underline-offset-4 hover:text-fg"
+              href={SITE.authorUrl}
+              rel="author noopener noreferrer"
+              target="_blank"
+            >
+              {SITE.author}
+            </a>
+            . The{" "}
+            <a
+              className="underline underline-offset-4 hover:text-fg"
+              href={SITE.repoUrl}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              source is public
+            </a>{" "}
+            under {SITE.license}, so nothing below has to be taken on trust — the code, this page
+            and the app itself all have to agree about what works and what does not.
           </p>
         </div>
 
