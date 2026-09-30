@@ -5,11 +5,16 @@ import Link from "next/link";
 
 import { PhaseNotice } from "@/components/PhaseNotice";
 import { fetchLatestRelease, formatSize, type Platform } from "@/lib/releases";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Download" };
 
 const ORDER: Array<{ platform: Platform; title: string; note?: string }> = [
-  { platform: "windows", title: "Windows 10/11 (64-bit)" },
+  {
+    platform: "windows",
+    title: "Windows 10/11 (64-bit)",
+    note: "Not code-signed yet, so SmartScreen warns on first run until a certificate is in place.",
+  },
   { platform: "cli", title: "Command line (myai)" },
   {
     platform: "macos",
@@ -27,8 +32,9 @@ export default async function DownloadPage() {
       <div>
         <h1 className="display text-4xl sm:text-5xl">Download</h1>
         <p className="mt-3 text-fg-muted">
-          Signed checksums will accompany every build. The desktop app bundles the local AI service;
-          nothing phones home.
+          This page reads the repository&apos;s public release feed directly, so whatever is listed
+          here is whatever has actually been published. The desktop app bundles the local AI
+          service; nothing phones home.
         </p>
       </div>
 
@@ -42,16 +48,19 @@ export default async function DownloadPage() {
         </p>
       ) : (
         <PhaseNotice phase={1}>
-          No public release has been published yet, and there is no download to link to. Where
-          builds will be hosted is not decided; this page will carry them when it is. The{" "}
-          <Link className="underline" href="/cli">
-            command-line interface
+          No release has been published yet, so there is nothing to link to. The release workflow
+          does build Windows, macOS and Linux bundles and command-line archives and attach them to a
+          GitHub release, but every one so far is a draft: unsigned, and offered to nobody. This
+          page reads the public release feed, so it will list them by itself once one is published.
+          Meanwhile the{" "}
+          <Link className="underline" href="/features">
+            feature list
           </Link>{" "}
-          describes what it will do, and the{" "}
+          says what the program does, and the{" "}
           <Link className="underline" href="/disclosures">
             disclosures
           </Link>{" "}
-          say what else is unfinished.
+          say what is unfinished.
         </PhaseNotice>
       )}
 
@@ -92,11 +101,17 @@ export default async function DownloadPage() {
           They arrive after accounts and device pairing exist, and will be listed on Google Play and
           the App Store here.
         </PhaseNotice>
-        <PhaseNotice phase={1}>
-          <strong>No source checkout.</strong> Development happens in a private repository, so
-          building it yourself is not an option today. Everything here will arrive as a signed build
-          instead.
-        </PhaseNotice>
+        <div role="note" className="border-l-2 border-border py-1 pl-5 text-sm text-fg-muted">
+          <p className="datum uppercase">Available now</p>
+          <div className="mt-2">
+            <strong className="text-fg">Build it yourself.</strong> The source is public under{" "}
+            {SITE.license}, so a signed installer is not the only way to run this. Clone{" "}
+            <a className="underline" href={SITE.repoUrl} rel="noopener noreferrer" target="_blank">
+              the repository
+            </a>{" "}
+            and build the desktop app or the command line from it.
+          </div>
+        </div>
       </div>
     </div>
   );

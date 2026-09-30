@@ -40,9 +40,21 @@ const status = [
   { label: "Device pairing, revocation and audit", phase: "5", state: "no account server" },
   { label: "Mobile pairing over a pinned certificate", phase: "6", state: "needs a dev build" },
   { label: "Direct device sync, projects, encrypted relay", phase: "7", state: "no relay server" },
-  { label: "Portable .myai export, import and encryption", phase: "8", state: "no scheduled backup" },
-  { label: "Local API and scoped capability permissions", phase: "9", state: "no web authorization" },
-  { label: "Creative skills: games learnable, media honest", phase: "10", state: "no generation yet" },
+  {
+    label: "Portable .myai export, import and encryption",
+    phase: "8",
+    state: "no scheduled backup",
+  },
+  {
+    label: "Local API and scoped capability permissions",
+    phase: "9",
+    state: "no web authorization",
+  },
+  {
+    label: "Creative skills: games learnable, media honest",
+    phase: "10",
+    state: "no generation yet",
+  },
 ];
 
 export default function HomePage() {
@@ -73,6 +85,13 @@ export default function HomePage() {
               Read the privacy promise
             </Link>
           </div>
+          <p className="mt-4 text-sm text-fg-muted">
+            Or read the{" "}
+            <Link className="underline underline-offset-4 hover:text-fg" href="/features">
+              full feature list
+            </Link>{" "}
+            — every capability, with its limits printed beside it.
+          </p>
         </div>
 
         <aside className="border-accent border-l-2 pl-5 md:col-span-4 md:pt-2">

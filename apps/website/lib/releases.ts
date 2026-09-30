@@ -70,16 +70,44 @@ export function toReleaseInfo(release: GitHubRelease): ReleaseInfo {
   };
 }
 
+/** The public repository whose Releases feed the download page reads. */
+const REPO = "biobodinc/MyAiAcademy";
+
+/** GitHub can answer with an error object, so the shape is checked before it is trusted. */
+export function isGitHubRelease(value: unknown): value is GitHubRelease {
+  if (typeof value !== "object" || value === null) return false;
+  const r = value as Record<string, unknown>;
+  return (
+    typeof r["tag_name"] === "string" &&
+    typeof r["published_at"] === "string" &&
+    typeof r["html_url"] === "string" &&
+    Array.isArray(r["assets"])
+  );
+}
+
 /**
- * Where published builds come from.
+ * Reads the newest published release from GitHub's public Releases API. No token: the
+ * repository is public, and `releases/latest` already skips drafts and prereleases, which is
+ * exactly the behaviour this page wants — a build is offered here only once it has really
+ * been published, so the page fills itself in when that happens instead of needing an edit.
  *
- * Nowhere, currently. The source repository is private, so there is no public releases feed
- * to read and this returns null rather than calling one that would only ever 404. The
- * classification helpers above stay because they describe what a release *is*, and whatever
- * hosts the first signed installer will need them.
+ * Revalidated hourly, so a burst of visitors cannot become a burst of API calls. Every
+ * failure — no release yet, rate limit, GitHub down, an unexpected body — degrades to the
+ * same honest empty state rather than breaking the page.
  */
 export async function fetchLatestRelease(): Promise<ReleaseInfo | null> {
-  return null;
+  try {
+    const response = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+      headers: { Accept: "application/vnd.github+json" },
+      next: { revalidate: 3600 },
+    });
+    if (!response.ok) return null;
+    const payload: unknown = await response.json();
+    if (!isGitHubRelease(payload) || payload.draft || payload.prerelease) return null;
+    return toReleaseInfo(payload);
+  } catch {
+    return null;
+  }
 }
 
 export function formatSize(bytes: number): string {

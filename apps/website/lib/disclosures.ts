@@ -9,11 +9,11 @@ export const DISCLOSURES = [
   },
   {
     title: "No signed installers are published yet.",
-    body: "The release workflow builds Windows, macOS and Linux packages and CLI archives, but nothing has been signed, notarised or published anywhere — not to a download page, not to Google Play, not to the App Store. Downloads say “Not available yet” until that happens.",
+    body: "The release workflow builds Windows, macOS and Linux packages and CLI archives and attaches them to a GitHub release, but every release so far is a draft: nothing has been signed, notarised or offered to anyone — not on the download page, not to Google Play, not to the App Store. The Windows build is unsigned, so SmartScreen warns on first run, and the macOS build is neither signed nor notarised. The download page reads the public release feed and says “Not available yet” until a release is really published. The source is public, so building it yourself is a genuine option in the meantime.",
   },
   {
-    title: "The mobile app is a skeleton.",
-    body: "It shows its connection state truthfully (“not paired”) and nothing else. Pairing, chat and controls arrive in Phase 6.",
+    title: "The phone app can only pair, and cannot finish even that yet.",
+    body: "It has two screens: a status screen that reports its connection state truthfully, and a pairing screen that scans the QR or takes a pasted code and makes you compare the certificate fingerprint before it trusts anything. Chat, status detail and training control from the phone are not built. Pairing itself cannot complete in Expo Go either — see below.",
   },
   {
     title: "Knowledge retrieval is keyword-based, not semantic.",
@@ -57,4 +57,4 @@ export const DISCLOSURES = [
   },
 ] as const;
 
-export const DISCLOSURES_UPDATED = "2026-09-11";
+export const DISCLOSURES_UPDATED = "2026-09-30";
