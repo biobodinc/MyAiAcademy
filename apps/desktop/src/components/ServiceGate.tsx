@@ -44,6 +44,21 @@ export function ServiceGate({ children }: { children: ReactNode }) {
     );
   }
 
+  // Asking the shell for the service state can itself fail. Without this the failure fell
+  // through to the checks below and the one-second retry spun on in silence.
+  if (!shell.data) {
+    return (
+      <Centered>
+        <Alert tone="danger" title="Could not ask the app about the local AI service">
+          <p>{shell.isError ? describeError(shell.error) : "The shell reported no state."}</p>
+          <div className="mt-3">
+            <Button onClick={() => void shell.refetch()}>Try again</Button>
+          </div>
+        </Alert>
+      </Centered>
+    );
+  }
+
   if (status.isPending) {
     return (
       <Centered>
@@ -52,7 +67,16 @@ export function ServiceGate({ children }: { children: ReactNode }) {
     );
   }
 
-  if (status.isError) {
+  /**
+   * Only fatal when there is nothing to show. This check used to fire on `status.isError`
+   * alone, so a single failed poll of a status endpoint — it polls every ten seconds —
+   * replaced the whole running application, sidebar included, with this card, and it stayed
+   * until a later poll happened to succeed. The query keeps the last good status on a failed
+   * refetch, so when there is data the honest thing is to keep the app on screen and let the
+   * poll recover. A service that has actually gone away shows up as a `failed` shell state
+   * above, and anything done against it reports its own error.
+   */
+  if (status.isError && !status.data) {
     return (
       <Centered>
         <Alert tone="danger" title="Cannot reach the local AI service">

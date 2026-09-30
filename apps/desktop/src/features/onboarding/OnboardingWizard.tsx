@@ -59,7 +59,14 @@ const TITLES: Record<OnboardingStep, string> = {
 
 export function OnboardingWizard() {
   const prefs = usePreferences();
-  if (!prefs.data) return <Spinner />;
+  // Centred and labelled: an unstyled spinner at the top-left of an otherwise empty window
+  // reads as a blank app rather than as a wait.
+  if (!prefs.data)
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <Spinner label="Loading your preferences…" />
+      </div>
+    );
   return (
     <WizardSteps
       initialStep={prefs.data.onboarding_step}

@@ -1,6 +1,6 @@
 {
   "name": "@myai/desktop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "MyAI Academy desktop application (Tauri + React).",
   "type": "module",

@@ -5,7 +5,7 @@ import { Navigate, Route, Routes } from "react-router";
 
 import { Layout } from "./components/Layout";
 import { ServiceGate } from "./components/ServiceGate";
-import { Spinner } from "./components/ui";
+import { Alert, Button, Spinner } from "./components/ui";
 import { AuditPage } from "./features/audit/AuditPage";
 import { ChatPage } from "./features/chat/ChatPage";
 import { ConsolePage } from "./features/console/ConsolePage";
@@ -24,7 +24,7 @@ import { ProfilePage } from "./features/profile/ProfilePage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { SkillsPage } from "./features/skills/SkillsPage";
 import { StoragePage } from "./features/storage/StoragePage";
-import { usePreferences } from "./lib/api";
+import { describeError, usePreferences } from "./lib/api";
 import { applyTheme } from "./lib/theme";
 
 export function App() {
@@ -44,11 +44,40 @@ function ThemedRoutes() {
   if (prefs.isPending) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Spinner />
+        <Spinner label="Loading your preferences…" />
       </div>
     );
   }
-  const onboarded = prefs.data?.onboarding_completed ?? false;
+
+  /**
+   * A failed read is not the same fact as "not onboarded yet", and conflating the two emptied
+   * the window. `onboarded` used to fall back to false whenever preferences were missing for
+   * any reason, so one failed GET /api/preferences redirected to /onboarding, where the wizard
+   * had no preferences either and rendered a bare spinner. The result was a white window
+   * reading "Loading" — no sidebar, no message, no way back, and permanent, because nothing
+   * refetches preferences on its own. Nothing threw, so the error boundary never saw it: the
+   * app was not crashing, it was confidently showing a loading state for data that was never
+   * going to arrive. A burst of requests from switching pages quickly, or a second copy of
+   * myai-core holding the SQLite file, is enough to produce that one failure.
+   */
+  if (!prefs.data) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <Alert tone="danger" title="Could not read your preferences">
+          <p>{prefs.isError ? describeError(prefs.error) : "The service returned no settings."}</p>
+          <p className="mt-2 text-fg-muted">
+            Your AI and its data are untouched. This is the app failing to read its own settings,
+            which it needs before it can decide which screen to show you.
+          </p>
+          <div className="mt-3">
+            <Button onClick={() => void prefs.refetch()}>Try again</Button>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
+
+  const onboarded = prefs.data.onboarding_completed;
 
   return (
     <Routes>
