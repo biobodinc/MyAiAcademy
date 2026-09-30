@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PhaseNotice } from "@/components/PhaseNotice";
-import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Command line" };
 
@@ -57,12 +56,8 @@ export default function CliPage() {
           <Link className="underline" href="/download">
             download page
           </Link>
-          . This describes what the command does once there is one. In the meantime the source is
-          public, so you can build it from{" "}
-          <a className="underline" href={SITE.repoUrl} rel="noopener noreferrer" target="_blank">
-            the repository
-          </a>{" "}
-          yourself.
+          . This describes what the command does once there is one. The source is not public, so
+          building it yourself is not an option today.
         </PhaseNotice>
       </div>
 

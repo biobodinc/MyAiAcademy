@@ -9,7 +9,7 @@ export const DISCLOSURES = [
   },
   {
     title: "No signed installers are published yet.",
-    body: "The release workflow builds Windows, macOS and Linux packages and CLI archives and attaches them to a GitHub release, but every release so far is a draft: nothing has been signed, notarised or offered to anyone — not on the download page, not to Google Play, not to the App Store. The Windows build is unsigned, so SmartScreen warns on first run, and the macOS build is neither signed nor notarised. The download page reads the public release feed and says “Not available yet” until a release is really published. The source is public, so building it yourself is a genuine option in the meantime.",
+    body: "The release workflow builds Windows, Linux and macOS packages and CLI archives, but nothing has been published to the download page, to Google Play or to the App Store. No build is signed by a certificate authority: Windows SmartScreen warns on first run, and the macOS app is ad-hoc signed rather than notarised, so it needs right-click then Open. Every published file is listed with its SHA-256 so it can be checked, which is what an unsigned build can honestly offer instead. The source is not public, so building it yourself is not an alternative.",
   },
   {
     title: "The phone app can only pair, and cannot finish even that yet.",

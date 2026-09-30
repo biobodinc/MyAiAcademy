@@ -18,7 +18,7 @@ in the product as clearly labelled "Planned · Phase N" states; nothing is faked
 | **Desktop app** (Tauri + React, Windows first) | First-run flow, dashboard, hardware assessment, storage location management, AI profile, skill tree, settings, Privacy Center, security activity log, command console (`/help`, `/status`, `/hardware`, `/skills`, `/settings`, natural-language mapping). |
 | **Local service** (`myai-core`, Python)        | Loopback-only authenticated API, SQLite with migrations, hardware detection, storage manager, profile, preferences, audit log.                                                                                                                             |
 | **CLI** (`myai`)                               | Same features from a terminal.                                                                                                                                                                                                                             |
-| **Website** (Next.js, Vercel)                  | Landing with the phase table, feature list, downloads read from the public release feed, disclosures, privacy and security pages, account pages (Phase 5).                                                                                                                                                                                   |
+| **Website** (Next.js, Vercel)                  | Landing with the phase table, feature list, downloads served from the site with published hashes, disclosures, privacy and security pages, account pages (Phase 5).                                                                                                                                                                                   |
 | **Mobile** (Expo)                              | Status screen and a pairing screen that scans the QR and compares the certificate fingerprint; cannot complete a pairing without a development build.                                                                                                                                                                          |
 
 ## Disclosures
@@ -33,14 +33,13 @@ updated.
   remains unconfirmed is the full path with a catalog model from Hugging Face on an
   ordinary PC, because the environment the code was written in could not reach Hugging
   Face. Any failure is reported in the UI rather than hidden.
-- **No signed installers are published yet.** The release workflow builds Windows, macOS
-  and Linux packages and CLI archives and attaches them to a GitHub release, but every
-  release so far is a draft: nothing has been signed, notarised or uploaded anywhere,
-  including Google Play and the App Store. The Windows build is unsigned, so SmartScreen
-  warns on first run, and the macOS build is neither signed nor notarised. The download
-  page reads the public release feed and says "Not available yet" until a release is
-  really published. The source is public, so building it yourself is a genuine option in
-  the meantime.
+- **No signed installers are published yet.** The release workflow builds Windows, Linux
+  and macOS packages and CLI archives, but nothing has been published to the download
+  page, to Google Play or to the App Store. No build is signed by a certificate authority:
+  Windows SmartScreen warns on first run, and the macOS app is ad-hoc signed rather than
+  notarised, so it needs right-click then Open. Every published file is listed with its
+  SHA-256 so it can be checked, which is what an unsigned build can honestly offer
+  instead. The repository is private, so building it yourself is not an alternative.
 - **Your AI is reachable from your network only if you say so.** The service listens on
   127.0.0.1 until you turn on network access; then it starts a second, HTTPS-only listener
   with a certificate your device pins when it pairs, and it refuses this installation's own

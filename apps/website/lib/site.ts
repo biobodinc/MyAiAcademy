@@ -10,4 +10,6 @@ export const SITE = {
   authorUrl: "https://github.com/biobodinc",
   repoUrl: "https://github.com/biobodinc/MyAiAcademy",
   license: "Apache-2.0",
+  // The repository is private, so the licence links to its text rather than to a 404.
+  licenseUrl: "https://www.apache.org/licenses/LICENSE-2.0",
 } as const;

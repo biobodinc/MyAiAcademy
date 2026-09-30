@@ -140,17 +140,9 @@ export default function HomePage() {
             >
               {SITE.author}
             </a>
-            . The{" "}
-            <a
-              className="underline underline-offset-4 hover:text-fg"
-              href={SITE.repoUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              source is public
-            </a>{" "}
-            under {SITE.license}, so nothing below has to be taken on trust — the code, this page
-            and the app itself all have to agree about what works and what does not.
+            . The source is not public while it is being built, so the table below is a claim
+            rather than something you can go and check. That is exactly why it names what is
+            missing instead of only what works.
           </p>
         </div>
 

@@ -22,7 +22,7 @@ export function SiteFooter() {
           · ©&nbsp;2026 ·{" "}
           <a
             className="underline underline-offset-4 hover:text-fg"
-            href={SITE.repoUrl}
+            href={SITE.licenseUrl}
             rel="noopener noreferrer"
             target="_blank"
           >

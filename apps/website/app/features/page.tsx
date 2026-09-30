@@ -3,8 +3,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { SITE } from "@/lib/site";
-
 export const metadata: Metadata = {
   title: "Features",
   description:
@@ -189,20 +187,13 @@ export default function FeaturesPage() {
         <h1 className="display text-4xl sm:text-5xl">Features</h1>
         <p className="mt-4 text-base text-fg-muted sm:text-lg">
           Everything the program does today. Where a capability is unfinished, the limit is printed
-          next to it rather than left for you to discover — the{" "}
+          next to it rather than left for you to discover, and the{" "}
           <Link className="underline underline-offset-4 hover:text-fg" href="/disclosures">
             disclosures
           </Link>{" "}
-          collect those in one place, and the{" "}
-          <a
-            className="underline underline-offset-4 hover:text-fg"
-            href={SITE.repoUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            source
-          </a>{" "}
-          is public under {SITE.license}, so none of it has to be taken on trust.
+          collect those in one place. The source is not public while the project is being built, so
+          every line here is something you are taking on trust — which is the reason the limits are
+          printed at all.
         </p>
       </header>
 

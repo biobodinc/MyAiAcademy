@@ -1,113 +1,116 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Biobodinc. Part of MyAI Academy.
 /**
- * Maps GitHub Release assets to download cards. Uses the public, unauthenticated
- * Releases API (no secret required). Cached with ISR so the site never hammers GitHub.
+ * What the download page offers, and where the bytes come from.
+ *
+ * This used to read GitHub's public Releases API. The repository is private, so that feed
+ * would answer 404 forever and the page would claim there was nothing to download while
+ * installers existed. Builds are published to the site's own storage instead, and the list of
+ * what was published is committed here as a manifest: no API, no token, no runtime dependency
+ * on anything outside this deployment.
+ *
+ * The manifest holds names, sizes and hashes; it does not hold URLs. The host is one
+ * environment variable, so moving the files does not mean rewriting a release record, and a
+ * deployment with no host configured says so rather than rendering links that 404.
  */
+import manifest from "./release-manifest.json";
 
-export type Platform = "windows" | "macos" | "linux" | "android" | "ios" | "cli";
+export type Platform = "windows" | "macos" | "linux" | "chromeos" | "android" | "ios" | "cli";
 
-export interface DownloadAsset {
+export interface DownloadFile {
   platform: Platform;
   label: string;
-  url: string;
-  sizeBytes: number;
   fileName: string;
+  sizeBytes: number;
+  /** Hex SHA-256 of the file as published, so an unsigned installer is still checkable. */
+  sha256: string;
+  url: string;
 }
 
 export interface ReleaseInfo {
   version: string;
   publishedAt: string;
-  notesUrl: string;
-  assets: DownloadAsset[];
+  files: DownloadFile[];
 }
 
-interface GitHubAsset {
-  name: string;
-  browser_download_url: string;
-  size: number;
+interface ManifestFile {
+  fileName: string;
+  sizeBytes: number;
+  sha256: string;
+  /** Set only to override the filename-based guess. */
+  platform?: Platform;
+  label?: string;
 }
 
-interface GitHubRelease {
-  tag_name: string;
-  published_at: string;
-  html_url: string;
-  draft: boolean;
-  prerelease: boolean;
-  assets: GitHubAsset[];
+interface Manifest {
+  version: string;
+  publishedAt: string;
+  files: ManifestFile[];
 }
 
+/**
+ * Filename to platform. The release workflow names its own artifacts, so this stays the one
+ * place that decides which card a file belongs on, and the manifest only overrides it for a
+ * file whose name cannot say (an .AppImage built for a Chromebook is still an .AppImage).
+ */
 const RULES: Array<{ test: RegExp; platform: Platform; label: string }> = [
   { test: /-setup\.exe$/i, platform: "windows", label: "Windows installer (.exe)" },
   { test: /\.msi$/i, platform: "windows", label: "Windows installer (.msi)" },
   { test: /\.dmg$/i, platform: "macos", label: "macOS disk image (.dmg)" },
-  { test: /\.AppImage$/i, platform: "linux", label: "Linux AppImage" },
-  { test: /\.deb$/i, platform: "linux", label: "Debian / Ubuntu package (.deb)" },
+  {
+    test: /_arm64\.AppImage$|-aarch64\.AppImage$/i,
+    platform: "linux",
+    label: "Linux AppImage (ARM64)",
+  },
+  { test: /\.AppImage$/i, platform: "linux", label: "Linux AppImage (x86-64)" },
+  { test: /_arm64\.deb$/i, platform: "linux", label: "Debian / Ubuntu package (.deb, ARM64)" },
+  { test: /\.deb$/i, platform: "linux", label: "Debian / Ubuntu package (.deb, x86-64)" },
   { test: /\.rpm$/i, platform: "linux", label: "Fedora / RHEL package (.rpm)" },
   { test: /\.apk$/i, platform: "android", label: "Android package (.apk)" },
   { test: /^myai-cli-.*\.(zip|tar\.gz)$/i, platform: "cli", label: "Command-line interface" },
   { test: /^myai_cli-.*\.whl$/i, platform: "cli", label: "Command-line interface (Python wheel)" },
 ];
 
-export function classifyAsset(asset: GitHubAsset): DownloadAsset | null {
-  const rule = RULES.find((r) => r.test.test(asset.name));
-  if (!rule) return null;
-  return {
-    platform: rule.platform,
-    label: rule.label,
-    url: asset.browser_download_url,
-    sizeBytes: asset.size,
-    fileName: asset.name,
-  };
+export function classifyFile(fileName: string): { platform: Platform; label: string } | null {
+  const rule = RULES.find((r) => r.test.test(fileName));
+  return rule ? { platform: rule.platform, label: rule.label } : null;
 }
 
-export function toReleaseInfo(release: GitHubRelease): ReleaseInfo {
-  return {
-    version: release.tag_name.replace(/^v/, ""),
-    publishedAt: release.published_at,
-    notesUrl: release.html_url,
-    assets: release.assets.map(classifyAsset).filter((a): a is DownloadAsset => a !== null),
-  };
+/** Where published builds are served from, without a trailing slash. */
+export function downloadBase(): string | null {
+  const base = process.env.NEXT_PUBLIC_DOWNLOAD_BASE?.trim();
+  return base ? base.replace(/\/+$/, "") : null;
 }
 
-/** The public repository whose Releases feed the download page reads. */
-const REPO = "biobodinc/MyAiAcademy";
-
-/** GitHub can answer with an error object, so the shape is checked before it is trusted. */
-export function isGitHubRelease(value: unknown): value is GitHubRelease {
-  if (typeof value !== "object" || value === null) return false;
-  const r = value as Record<string, unknown>;
-  return (
-    typeof r["tag_name"] === "string" &&
-    typeof r["published_at"] === "string" &&
-    typeof r["html_url"] === "string" &&
-    Array.isArray(r["assets"])
-  );
+export function toReleaseInfo(data: Manifest, base: string): ReleaseInfo | null {
+  if (!data.version.trim()) return null;
+  const files: DownloadFile[] = [];
+  for (const file of data.files) {
+    const guess = classifyFile(file.fileName);
+    const platform = file.platform ?? guess?.platform;
+    const label = file.label ?? guess?.label;
+    if (!platform || !label) continue;
+    files.push({
+      platform,
+      label,
+      fileName: file.fileName,
+      sizeBytes: file.sizeBytes,
+      sha256: file.sha256,
+      url: `${base}/${encodeURIComponent(data.version)}/${encodeURIComponent(file.fileName)}`,
+    });
+  }
+  return { version: data.version, publishedAt: data.publishedAt, files };
 }
 
 /**
- * Reads the newest published release from GitHub's public Releases API. No token: the
- * repository is public, and `releases/latest` already skips drafts and prereleases, which is
- * exactly the behaviour this page wants — a build is offered here only once it has really
- * been published, so the page fills itself in when that happens instead of needing an edit.
- *
- * Revalidated hourly, so a burst of visitors cannot become a burst of API calls. Every
- * failure — no release yet, rate limit, GitHub down, an unexpected body — degrades to the
- * same honest empty state rather than breaking the page.
+ * The published release, or null when there is nothing to offer — either because no release
+ * has been recorded or because this deployment has no download host configured. Both read the
+ * same way on the page, which is the honest answer: there is no file you can fetch.
  */
-export async function fetchLatestRelease(): Promise<ReleaseInfo | null> {
-  try {
-    const response = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
-      headers: { Accept: "application/vnd.github+json" },
-      next: { revalidate: 3600 },
-    });
-    if (!response.ok) return null;
-    const payload: unknown = await response.json();
-    if (!isGitHubRelease(payload) || payload.draft || payload.prerelease) return null;
-    return toReleaseInfo(payload);
-  } catch {
-    return null;
-  }
+export function getLatestRelease(): ReleaseInfo | null {
+  const base = downloadBase();
+  if (!base) return null;
+  return toReleaseInfo(manifest as Manifest, base);
 }
 
 export function formatSize(bytes: number): string {
