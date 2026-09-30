@@ -157,5 +157,4 @@ in CI secrets and the Vercel/EAS dashboards.
 
 ## Licence
 
-Proprietary. All rights reserved — no permission is granted to copy, modify, distribute
-or fork this work. See [`LICENSE`](LICENSE).
+Apache-2.0. See [`LICENSE`](LICENSE).
