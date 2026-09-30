@@ -186,14 +186,30 @@ jobs:
         # proved on a laptop instead of only being exercised during a release.
         run: uv run --group bundle python scripts/build_cli.py --out dist/bin
       - name: Check the binary runs and carries every command
-        # The second line is not ceremony: pointing PyInstaller at a script rather than a
-        # module once shipped a binary whose `myai projects` had no subcommands at all, and
-        # nothing failed at build time to say so.
+        # Not ceremony: pointing PyInstaller at a script rather than a module once shipped a
+        # binary whose `myai projects` had no subcommands at all, and nothing failed at build
+        # time to say so.
+        #
+        # This used to be `"$BIN" projects --help | grep -q delete` under `set -o pipefail`,
+        # which fails identically whether the command crashed or the subcommand is missing —
+        # and grep -q prints nothing, so the log showed a bare exit 1 with no evidence either
+        # way. The macOS leg has been failing here since before this workflow was touched, so
+        # the check now keeps the output and says which of the two happened.
         shell: bash
         run: |
           BIN=./dist/bin/myai; [ "$RUNNER_OS" = Windows ] && BIN=./dist/bin/myai.exe
           "$BIN" --version
-          "$BIN" projects --help | grep -q delete
+          if ! "$BIN" projects --help > help.txt 2>&1; then
+            echo "::error::\`myai projects --help\` exited non-zero. Output:"
+            cat help.txt
+            exit 1
+          fi
+          if ! grep -q delete help.txt; then
+            echo "::error::the binary has no \`projects delete\` subcommand. Help was:"
+            cat help.txt
+            exit 1
+          fi
+          echo "projects subcommands present"
       - name: Archive
         shell: bash
         env:
