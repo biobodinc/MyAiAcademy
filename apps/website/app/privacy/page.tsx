@@ -25,6 +25,12 @@ export default function PrivacyPage() {
   return (
     <article className="prose max-w-3xl">
       <h1 className="display text-4xl sm:text-5xl">Privacy promise</h1>
+      <p className="datum mt-3 text-fg-muted uppercase">
+        Plain language · the binding version is the{" "}
+        <a className="text-accent underline" href="/legal/privacy">
+          Privacy Policy
+        </a>
+      </p>
       <p className="mt-4 text-base text-fg-muted sm:text-lg">
         If you do not opt into sharing, MyAI Academy does not intentionally transmit your private AI
         data to MyAI Academy servers. External services you choose to connect are a separate matter
