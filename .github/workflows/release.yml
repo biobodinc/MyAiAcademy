@@ -117,24 +117,49 @@ jobs:
           $json | ConvertTo-Json -Depth 32 | Set-Content $conf -Encoding utf8
           Write-Host "Signing with thumbprint $($cert.Thumbprint)"
 
-      - name: Build and publish desktop bundles
+      # Two steps, not one with conditional values, and the duplication is the point.
+      #
+      # The first attempt set APPLE_CERTIFICATE to '' when no certificate was configured, on
+      # the assumption that an empty variable reads as absent. It does not: Actions still puts
+      # APPLE_CERTIFICATE="" in the environment, Tauri's `env::var` returns Ok("") and treats
+      # the certificate as supplied, and `security import` then fails on empty base64 —
+      # exactly the failure the change was meant to remove, after a five-minute compile. The
+      # only way to leave a variable genuinely unset is to not write the key, which means two
+      # steps.
+      - name: Build and publish desktop bundles (signed and notarised)
+        if: runner.os == 'macOS' && vars.MACOS_SIGNING == 'certificate'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          # Ad-hoc signing unless a real certificate is configured. Passing an empty or
-          # malformed APPLE_CERTIFICATE made `security import` fail, and that failure took the
-          # whole macOS bundle with it — a missing certificate stopped the app being built at
-          # all rather than producing an unsigned one. "-" is codesign's ad-hoc identity: the
-          # app is signed by nobody, which Gatekeeper still warns about, but it builds and it
-          # runs after right-click then Open.
-          APPLE_CERTIFICATE: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_SIGNING_IDENTITY || '-' }}
-          APPLE_ID: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_ID || '' }}
-          APPLE_PASSWORD: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_PASSWORD || '' }}
-          APPLE_TEAM_ID: ${{ vars.MACOS_SIGNING == 'certificate' && secrets.APPLE_TEAM_ID || '' }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: MyAI Academy ${{ github.ref_name }}
+          releaseBody: See CHANGELOG and docs/phases.md for what this release contains.
+          releaseDraft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          args: --target ${{ matrix.triple }}
+
+      # No APPLE_CERTIFICATE key at all, so nothing tries to import one. APPLE_SIGNING_IDENTITY
+      # is '-', codesign's ad-hoc identity, which matters on Apple Silicon: an arm64 bundle with
+      # no signature at all is refused by the kernel rather than merely warned about. Windows and
+      # Linux ignore the variable.
+      - name: Build and publish desktop bundles
+        if: ${{ !(runner.os == 'macOS' && vars.MACOS_SIGNING == 'certificate') }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: "-"
         with:
           projectPath: apps/desktop
           tagName: ${{ github.ref_name }}
