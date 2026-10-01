@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Email **security@my-ai-academy.example** with what you found and how to reproduce it. Please
+Email **MyAIcontact@biobod.net** with what you found and how to reproduce it. Please
 do not open a public issue for a security problem, and please give us a chance to fix it
 before publishing.
 

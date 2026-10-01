@@ -17,14 +17,20 @@ export const LEGAL = {
   entity: "Biobodinc",
   entityKind: "individual" as "individual" | "company",
 
-  /** Governing law and the courts that hear a dispute. */
-  jurisdiction: "the State of Michigan, United States",
-  courts: "the state and federal courts located in Michigan",
+  /**
+   * Governing law and the courts that hear a dispute. Deliberately blank rather than filled
+   * with a plausible guess: for an individual publisher the defensible choice is the state you
+   * actually live in, because a forum with no real connection to either party is the kind of
+   * clause a court disregards. Naming the wrong state makes this weaker than naming none, so
+   * it renders as a visible placeholder until the real one is known.
+   */
+  jurisdiction: "",
+  courts: "",
 
   /** Where legal, privacy and security notices are received. */
-  contactEmail: "legal@my-ai-academy.example",
-  privacyEmail: "privacy@my-ai-academy.example",
-  securityEmail: "security@my-ai-academy.example",
+  contactEmail: "MyAIcontact@biobod.net",
+  privacyEmail: "MyAIcontact@biobod.net",
+  securityEmail: "MyAIcontact@biobod.net",
 
   /**
    * 13 is the floor set by COPPA in the United States; the EU's GDPR lets member states set

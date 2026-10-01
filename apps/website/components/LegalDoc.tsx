@@ -4,6 +4,18 @@ import type { ReactNode } from "react";
 
 import { LEGAL } from "@/lib/legal";
 
+/**
+ * Marks a value that has not been decided yet. Legal drafts carry bracketed placeholders for
+ * exactly this reason, and it reads as unfinished on purpose rather than as a quiet fiction.
+ */
+export function Unset({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-sharp border border-accent px-1.5 py-0.5 text-sm text-accent">
+      [{children}]
+    </span>
+  );
+}
+
 export interface Clause {
   heading: string;
   body: ReactNode;

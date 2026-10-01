@@ -3,7 +3,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalDoc, type Clause } from "@/components/LegalDoc";
+import { LegalDoc, Unset, type Clause } from "@/components/LegalDoc";
 import { LEGAL } from "@/lib/legal";
 import { SITE } from "@/lib/site";
 
@@ -244,9 +244,11 @@ const clauses: Clause[] = [
     body: (
       <>
         <p>
-          These terms are governed by the laws of {LEGAL.jurisdiction}, without regard to its
-          conflict-of-laws rules. Any dispute will be heard in {LEGAL.courts}, and you and we each
-          consent to that.
+          These terms are governed by the laws of{" "}
+          {LEGAL.jurisdiction || <Unset>publisher&apos;s state or country of residence</Unset>},
+          without regard to its conflict-of-laws rules. Any dispute will be heard in{" "}
+          {LEGAL.courts || <Unset>the courts of that place</Unset>}, and you and we each consent to
+          that.
         </p>
         <p>
           If you are a consumer in the European Economic Area or the United Kingdom, nothing here
